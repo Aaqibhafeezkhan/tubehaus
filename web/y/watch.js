@@ -2,6 +2,7 @@
 import { $, $$, el, esc, icon, api, lib, settings, toast, fmtTime, fmtViews, fmtCount, ago, thumb, normVideo, metaOf, pickThumb, safeHtml, linkify, parseT, copy } from "./util.js";
 import { videoInfo, prefetch, player, state, card, norm, remember, known, fillProgress, avatar, subBtn, navigate, videoMenu, shareDialog, saveDialog, downloadDialog, keysDialog, setList, inList, queue, setPosCache, getPos, pageCleanup, popup, mi } from "./core.js";
 import { loadPlaylist } from "./pages.js";
+import { $t, LANG, LOCALE, REGION } from "./i18n.js";
 
 const W = {
   id: null, info: null, v: null,        // now playing
@@ -77,7 +78,7 @@ player.on.reload = async (id, t) => {
   try {
     const info = await api(`/api/v1/videos/${id}`);
     await player.load(info, { start: t });
-  } catch (e) { player.showErr(e.message, "다시 시도", () => player.on.reload(id, t)); }
+  } catch (e) { player.showErr(e.message, $t("다시 시도"), () => player.on.reload(id, t)); }
 };
 player.on.keys = () => keysDialog();
 player.on.chapters = () => openPanel("chapters");
@@ -201,7 +202,7 @@ export async function watch(page, m, alive) {
       if (!alive()) return;
       W.id = null;
       player.stop();
-      player.showErr(e.status === 500 || e.status === 502 ? "영상을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요." : e.message, "다시 시도", () => navigate(location.pathname + location.search, { replace: true }));
+      player.showErr(e.status === 500 || e.status === 502 ? $t("영상을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.") : e.message, $t("다시 시도"), () => navigate(location.pathname + location.search, { replace: true }));
       $(".w-info", page).innerHTML = "";
       return;
     }
@@ -212,7 +213,7 @@ export async function watch(page, m, alive) {
   W.v = remember([normVideo(info)])[0];
   W.v.authorThumb = pickThumb(info.authorThumbnails, 88);
   W.related = norm(info.recommendedVideos || []);
-  document.title = info.title + " - 홈튜브";
+  document.title = info.title + $t(" - 홈튜브");
 
   // playlist context
   W.pl = null;
@@ -278,25 +279,25 @@ function renderInfo(page, info) {
     <div class="w-row">
       <div class="w-owner">
         <a href="/channel/${esc(info.authorId)}" data-nav>${avatar(av, "md")}</a>
-        <div class="w-ch"><a href="/channel/${esc(info.authorId)}" data-nav class="nm">${esc(info.author)}${info.authorVerified ? icon("verified", "vf") : ""}</a><div class="s">${esc(info.subCountText ? "구독자 " + info.subCountText.replace(/subscribers?/i, "").trim() : "")}</div></div>
+        <div class="w-ch"><a href="/channel/${esc(info.authorId)}" data-nav class="nm">${esc(info.author)}${info.authorVerified ? icon("verified", "vf") : ""}</a><div class="s">${esc(info.subCountText ? $t("구독자 {0}명", info.subCountText.replace(/subscribers?/i, "").trim()) : "")}</div></div>
         ${subBtn(info.authorId, info.author, av)}
       </div>
       <div class="w-actions">
-        <div class="seg-btn"><button class="like ${liked ? "on" : ""}" title="좋아요">${icon("like")}<span>${info.likeCount ? fmtCount(info.likeCount) : ""}</span></button><button class="dislike ${disliked ? "on" : ""}" title="싫어요">${icon("dislike")}<span class="dc"></span></button></div>
-        <button class="pill cast" title="TV로 보내기">${icon("tv")}<span>TV로</span></button>
-        <button class="pill share">${icon("share")}<span>공유</span></button>
-        ${info.liveNow ? "" : `<button class="pill dl">${icon("download")}<span>오프라인 저장</span></button>`}
-        <button class="pill save">${icon("save")}<span>저장</span></button>
+        <div class="seg-btn"><button class="like ${liked ? "on" : ""}" title="${$t("좋아요")}">${icon("like")}<span>${info.likeCount ? fmtCount(info.likeCount) : ""}</span></button><button class="dislike ${disliked ? "on" : ""}" title="${$t("싫어요")}">${icon("dislike")}<span class="dc"></span></button></div>
+        <button class="pill cast" title="${$t("TV로 보내기")}">${icon("tv")}<span>${$t("TV로")}</span></button>
+        <button class="pill share">${icon("share")}<span>${$t("공유")}</span></button>
+        ${info.liveNow ? "" : `<button class="pill dl">${icon("download")}<span>${$t("오프라인 저장")}</span></button>`}
+        <button class="pill save">${icon("save")}<span>${$t("저장")}</span></button>
         <button class="pill round more">${icon("moreh")}</button>
       </div>
     </div>
     <div class="w-desc collapsed">
-      <div class="w-dmeta"><b>${info.liveNow ? `${fmtCount(info.viewCount)}명 시청 중` : fmtViews(info.viewCount)}</b> <b>${pub ? (info.liveNow ? "실시간 스트리밍 시작: " + ago(info.published) : ago(info.published)) : esc(info.publishedText || "")}</b>
-        ${pub ? `<span class="full-date">${pub.toLocaleDateString("ko-KR")}</span>` : ""}</div>
+      <div class="w-dmeta"><b>${info.liveNow ? `${$t("{0}명 시청 중", fmtCount(info.viewCount))}` : fmtViews(info.viewCount)}</b> <b>${pub ? (info.liveNow ? $t("실시간 스트리밍 시작: ") + ago(info.published) : ago(info.published)) : esc(info.publishedText || "")}</b>
+        ${pub ? `<span class="full-date">${pub.toLocaleDateString(LOCALE)}</span>` : ""}</div>
       <div class="w-dtext">${info.descriptionHtml ? safeHtml(info.descriptionHtml.replace(/\n/g, "<br>")) : linkify(info.description || "")}</div>
-      ${player.chapters.length ? `<div class="w-dchap"><h4>챕터</h4><div class="chap-row">${player.chapters.map((c) => `<button data-seek="${c.start}"><span class="ct">${fmtTime(c.start)}</span><span>${esc(c.title)}</span></button>`).join("")}</div></div>` : ""}
-      <div class="w-dbtns"><button class="pill ghost transcript">${icon("notes")} 스크립트 표시</button></div>
-      <button class="w-dmore">더보기</button><button class="w-dless">간략히</button>
+      ${player.chapters.length ? `<div class="w-dchap"><h4>${$t("챕터")}</h4><div class="chap-row">${player.chapters.map((c) => `<button data-seek="${c.start}"><span class="ct">${fmtTime(c.start)}</span><span>${esc(c.title)}</span></button>`).join("")}</div></div>` : ""}
+      <div class="w-dbtns"><button class="pill ghost transcript">${$t("{0} 스크립트 표시", icon("notes"))}</button></div>
+      <button class="w-dmore">${$t("더보기")}</button><button class="w-dless">${$t("간략히")}</button>
     </div>`;
   const desc = $(".w-desc", box);
   desc.addEventListener("click", (e) => {
@@ -333,18 +334,18 @@ function renderInfo(page, info) {
   $(".save", box).onclick = () => saveDialog(v);
   $(".dl", box)?.addEventListener("click", () => downloadDialog(v));
   $(".more", box).onclick = (e) => popup(e.currentTarget, [
-    mi("queue", "playlists", "현재 재생목록에 추가"),
-    mi("transcript", "notes", "스크립트 표시"),
-    player.chapters.length ? mi("chapters", "sort", "챕터") : "",
-    mi("yt", "open", "YouTube 에서 열기"),
-    mi("loop", "loop", player.video.loop ? "반복 재생 끄기" : "반복 재생"),
-    mi("keys", "keyboard", "단축키"),
+    mi("queue", "playlists", $t("현재 재생목록에 추가")),
+    mi("transcript", "notes", $t("스크립트 표시")),
+    player.chapters.length ? mi("chapters", "sort", $t("챕터")) : "",
+    mi("yt", "open", $t("YouTube 에서 열기")),
+    mi("loop", "loop", player.video.loop ? $t("반복 재생 끄기") : $t("반복 재생")),
+    mi("keys", "keyboard", $t("단축키")),
   ].join(""), (a) => {
     if (a === "queue") queue.add(v);
     if (a === "transcript") openPanel("transcript");
     if (a === "chapters") openPanel("chapters");
     if (a === "yt") open(`https://www.youtube.com/watch?v=${v.id}`, "_blank", "noopener");
-    if (a === "loop") { player.video.loop = !player.video.loop; toast(player.video.loop ? "반복 재생 켜짐" : "반복 재생 꺼짐"); }
+    if (a === "loop") { player.video.loop = !player.video.loop; toast(player.video.loop ? $t("반복 재생 켜짐") : $t("반복 재생 꺼짐")); }
     if (a === "keys") keysDialog();
   });
   // dislike count (Return YouTube Dislike)
@@ -361,8 +362,8 @@ function renderInfo(page, info) {
 
 function renderRelated(page) {
   const box = $(".w-related", page);
-  const chips = [...new Set(["전체", W.info.author, "관련 콘텐츠"])];
-  box.innerHTML = `<div class="rel-auto"><b>다음 동영상</b><label class="autosw">자동재생 <input type="checkbox" class="sw" ${settings.autoplay ? "checked" : ""}></label></div>` +
+  const chips = [...new Set([$t("전체"), W.info.author, $t("관련 콘텐츠")])];
+  box.innerHTML = `<div class="rel-auto"><b>${$t("다음 동영상")}</b><label class="autosw">${$t("자동재생")} <input type="checkbox" class="sw" ${settings.autoplay ? "checked" : ""}></label></div>` +
     W.related.map((v) => card(v, "compact")).join("");
   box.querySelector(".autosw input").onchange = (e) => { settings.autoplay = e.target.checked; player.setIcons(); };
   fillProgress(box);
@@ -375,8 +376,8 @@ function renderPlaylistPanel(page) {
   const loopOn = sessionStorage.getItem("yt.plloop") === p.id, shufOn = sessionStorage.getItem("yt.shuffle") === p.id;
   box.innerHTML = `<div class="plp">
     <div class="plp-h"><div><b>${esc(p.title)}</b><div class="s">${esc(p.author || "")} - ${W.plIndex + 1}/${p.videos.length}</div></div>
-      <div class="plp-btns"><button class="lp ${loopOn ? "on" : ""}" title="재생목록 반복">${icon("loop")}</button><button class="sf ${shufOn ? "on" : ""}" title="셔플">${icon("shuffle")}</button>
-      <button class="cl" title="접기">${icon("expand")}</button></div></div>
+      <div class="plp-btns"><button class="lp ${loopOn ? "on" : ""}" title="${$t("재생목록 반복")}">${icon("loop")}</button><button class="sf ${shufOn ? "on" : ""}" title="${$t("셔플")}">${icon("shuffle")}</button>
+      <button class="cl" title="${$t("접기")}">${icon("expand")}</button></div></div>
     <div class="plp-list">${p.videos.map((v, i) => `<a class="plp-it ${i === W.plIndex ? "cur" : ""}" href="/watch?v=${esc(v.id)}&list=${encodeURIComponent(p.id)}&index=${i + 1}" data-nav>
       <span class="ix">${i === W.plIndex ? icon("play") : i + 1}</span><span class="th"><img loading="lazy" src="${thumb(v.id, "mqdefault")}" alt="">${v.len ? `<span class="dur">${fmtTime(v.len)}</span>` : ""}</span>
       <span class="tx"><span class="t">${esc(v.title)}</span><span class="s">${esc(v.author)}</span></span></a>`).join("")}</div></div>`;
@@ -395,17 +396,17 @@ async function openPanel(kind) {
   box.dataset.kind = kind;
   const head = (t) => `<div class="pn-h"><b>${t}</b><button class="x">${icon("close")}</button></div>`;
   if (kind === "chapters") {
-    box.innerHTML = `<div class="pn">${head("챕터")}<div class="pn-list">${player.chapters.map((c) => {
+    box.innerHTML = `<div class="pn">${head($t("챕터"))}<div class="pn-list">${player.chapters.map((c) => {
       const f = player.sbFrame(c.start + 1);
       const img = f ? `<span class="cthumb" style="background-image:url('${f.url}');background-size:${(f.cols * f.w * 96) / f.w}px auto;background-position:-${(f.x * 96) / f.w}px -${(f.y * 96) / f.w}px;width:96px;height:${(f.h * 96) / f.w}px"></span>` : "";
       return `<button class="pn-it" data-seek="${c.start}">${img}<span><b>${esc(c.title)}</b><em>${fmtTime(c.start)}</em></span></button>`;
     }).join("")}</div></div>`;
   } else {
-    box.innerHTML = `<div class="pn">${head("스크립트")}<div class="pn-list tr"><div class="spinner"></div></div></div>`;
+    box.innerHTML = `<div class="pn">${head($t("스크립트"))}<div class="pn-list tr"><div class="spinner"></div></div></div>`;
     const list = player.captionList();
-    const pick = player.capTrack || list.find((c) => c.lang.startsWith("ko") && !/auto/i.test(c.label)) || list.find((c) => c.lang.startsWith("ko")) || list[0];
+    const pick = player.capTrack || list.find((c) => c.lang.startsWith(LANG) && !/auto/i.test(c.label)) || list.find((c) => c.lang.startsWith(LANG)) || list[0];
     const L = box.querySelector(".pn-list");
-    if (!pick) { L.innerHTML = "<p class='sub'>이 영상에는 자막이 없어요</p>"; }
+    if (!pick) { L.innerHTML = `<p class='sub'>${$t("이 영상에는 자막이 없어요")}</p>`; }
     else {
       try {
         const txt = await (await fetch(pick.url, { credentials: "same-origin" })).text();
@@ -427,7 +428,7 @@ async function openPanel(kind) {
           items.forEach((x) => x.classList.toggle("cur", x === cur));
           if (cur && !L.matches(":hover")) L.scrollTop = cur.offsetTop - L.offsetTop - L.clientHeight / 3;
         }, 500);
-      } catch { L.innerHTML = "<p class='sub'>스크립트를 불러오지 못했어요</p>"; }
+      } catch { L.innerHTML = `<p class='sub'>${$t("스크립트를 불러오지 못했어요")}</p>`; }
     }
   }
   box.querySelector(".x").onclick = () => { box.dataset.kind = ""; box.innerHTML = ""; };
@@ -438,17 +439,17 @@ async function openPanel(kind) {
 // ---------------------------------------------------------------- comments
 async function renderComments(page, info, sortBy = "top", target) {
   const box = target || $(".w-comments", page);
-  if (info.liveNow) { box.innerHTML = `<div class="cm-h"><b>실시간 채팅은 지원하지 않아요</b></div>`; return; }
+  if (info.liveNow) { box.innerHTML = `<div class="cm-h"><b>${$t("실시간 채팅은 지원하지 않아요")}</b></div>`; return; }
   if (!target && innerWidth < 1000) {
     box.classList.add("teaser");
     box.addEventListener("click", () => box.classList.remove("teaser"), { once: true });
   }
-  box.innerHTML = `<div class="cm-h"><h3 class="cm-count">댓글</h3><button class="pill ghost sortb">${icon("sort")} 정렬 기준</button></div><div class="cm-list"><div class="spinner"></div></div>`;
+  box.innerHTML = `<div class="cm-h"><h3 class="cm-count">${$t("댓글")}</h3><button class="pill ghost sortb">${$t("{0} 정렬 기준", icon("sort"))}</button></div><div class="cm-list"><div class="spinner"></div></div>`;
   const list = $(".cm-list", box);
   let cont = "";
   const load = async () => {
     const r = await api(`/api/v1/comments/${info.videoId}?sort_by=${sortBy}${cont ? "&continuation=" + encodeURIComponent(cont) : ""}`);
-    if (!cont) { list.innerHTML = ""; if (r.commentCount != null) $(".cm-count", box).textContent = `댓글 ${(+r.commentCount).toLocaleString("ko-KR")}개`; }
+    if (!cont) { list.innerHTML = ""; if (r.commentCount != null) $(".cm-count", box).textContent = `${$t("댓글 {0}개", (+r.commentCount).toLocaleString(LOCALE))}`; }
     list.insertAdjacentHTML("beforeend", (r.comments || []).map(commentHtml).join(""));
     cont = r.continuation;
     return !!cont;
@@ -467,8 +468,8 @@ async function renderComments(page, info, sortBy = "top", target) {
       io.observe(sent);
       pageCleanup.push(() => io.disconnect());
     }
-  } catch (e) { list.innerHTML = `<p class="sub">${e.status === 404 || e.status === 403 ? "댓글이 사용 중지되었습니다." : "댓글을 불러오지 못했어요"}</p>`; }
-  $(".sortb", box).onclick = (e) => popup(e.currentTarget, mi("top", "trending", "인기 댓글순") + mi("new", "history", "최신순"), (a) => renderComments(page, info, a, box), { align: "left" });
+  } catch (e) { list.innerHTML = `<p class="sub">${e.status === 404 || e.status === 403 ? $t("댓글이 사용 중지되었습니다.") : $t("댓글을 불러오지 못했어요")}</p>`; }
+  $(".sortb", box).onclick = (e) => popup(e.currentTarget, mi("top", "trending", $t("인기 댓글순")) + mi("new", "history", $t("최신순")), (a) => renderComments(page, info, a, box), { align: "left" });
   box.onclick = async (e) => {
     const s = e.target.closest("a[href*='&t='], a[href*='?t=']");
     if (s) {
@@ -495,10 +496,10 @@ async function renderComments(page, info, sortBy = "top", target) {
       }
     }
     const rd = e.target.closest(".cm-more");
-    if (rd) { rd.previousElementSibling.classList.toggle("clamp"); rd.textContent = rd.previousElementSibling.classList.contains("clamp") ? "자세히 보기" : "간략히"; }
+    if (rd) { rd.previousElementSibling.classList.toggle("clamp"); rd.textContent = rd.previousElementSibling.classList.contains("clamp") ? $t("자세히 보기") : $t("간략히"); }
   };
   // fold long comments
-  requestAnimationFrame(() => $$(".cm-text", box).forEach((t) => { if (t.scrollHeight > t.clientHeight + 4) t.insertAdjacentHTML("afterend", `<button class="cm-more">자세히 보기</button>`); }));
+  requestAnimationFrame(() => $$(".cm-text", box).forEach((t) => { if (t.scrollHeight > t.clientHeight + 4) t.insertAdjacentHTML("afterend", `<button class="cm-more">${$t("자세히 보기")}</button>`); }));
 }
 function commentHtml(c, reply = false) {
   const av = pickThumb(c.authorThumbnails, 48);
@@ -506,11 +507,11 @@ function commentHtml(c, reply = false) {
   return `<div class="cm ${reply ? "reply" : ""}">
     <a href="/channel/${esc(c.authorId)}" data-nav>${avatar(av, reply ? "xs" : "sm")}</a>
     <div class="cm-b">
-      ${c.isPinned ? `<div class="pinned">${icon("pin")} ${esc(W.info?.author || "")}님이 고정함</div>` : ""}
-      <div class="cm-a"><a href="/channel/${esc(c.authorId)}" data-nav class="${owner ? "owner" : ""}">${esc(c.author)}</a> <span>${esc(c.published ? ago(c.published) : c.publishedText || "")}${c.isEdited ? " (수정됨)" : ""}</span></div>
+      ${c.isPinned ? `<div class="pinned">${$t("{0} {1}님이 고정함", icon("pin"), esc(W.info?.author || ""))}</div>` : ""}
+      <div class="cm-a"><a href="/channel/${esc(c.authorId)}" data-nav class="${owner ? "owner" : ""}">${esc(c.author)}</a> <span>${esc(c.published ? ago(c.published) : c.publishedText || "")}${c.isEdited ? $t(" (수정됨)") : ""}</span></div>
       <div class="cm-text clamp">${safeHtml(c.contentHtml || esc(c.content || ""))}</div>
-      <div class="cm-act"><span>${icon("like")} ${c.likeCount ? fmtCount(c.likeCount) : ""}</span><span>${icon("dislike")}</span>${c.creatorHeart ? `<span class="heart" title="${esc(W.info?.author || "")}님이 좋아함">${avatar(pickThumb(c.creatorHeart.creatorThumbnail ? [{ url: c.creatorHeart.creatorThumbnail, width: 48 }] : [], 48), "xxs")}${icon("heart")}</span>` : ""}</div>
-      ${c.replies?.replyCount ? `<button class="rep-btn" data-cont="${esc(c.replies.continuation)}">${icon("expand")} 답글 ${c.replies.replyCount}개</button><div class="replies" hidden></div>` : ""}
+      <div class="cm-act"><span>${icon("like")} ${c.likeCount ? fmtCount(c.likeCount) : ""}</span><span>${icon("dislike")}</span>${c.creatorHeart ? `<span class="heart" title="${$t("{0}님이 좋아함", esc(W.info?.author || ""))}">${avatar(pickThumb(c.creatorHeart.creatorThumbnail ? [{ url: c.creatorHeart.creatorThumbnail, width: 48 }] : [], 48), "xxs")}${icon("heart")}</span>` : ""}</div>
+      ${c.replies?.replyCount ? `<button class="rep-btn" data-cont="${esc(c.replies.continuation)}">${$t("{0} 답글 {1}개", icon("expand"), c.replies.replyCount)}</button><div class="replies" hidden></div>` : ""}
     </div></div>`;
 }
 
@@ -532,10 +533,10 @@ export async function shorts(page, m, alive) {
     const s = el(`<section class="short-slide" data-id="${esc(id)}"><div class="ss-media" style="background-image:url('${thumb(id)}')"></div>
       <div class="ss-meta"><div class="ss-ch"></div><div class="ss-t"></div></div>
       <div class="ss-act">
-        <button class="sa like">${icon("like")}<span>좋아요</span></button>
-        <button class="sa dis">${icon("dislike")}<span>싫어요</span></button>
-        <button class="sa cmt">${icon("chat")}<span>댓글</span></button>
-        <button class="sa shr">${icon("share")}<span>공유</span></button>
+        <button class="sa like">${icon("like")}<span>${$t("좋아요")}</span></button>
+        <button class="sa dis">${icon("dislike")}<span>${$t("싫어요")}</span></button>
+        <button class="sa cmt">${icon("chat")}<span>${$t("댓글")}</span></button>
+        <button class="sa shr">${icon("share")}<span>${$t("공유")}</span></button>
         <button class="sa more">${icon("moreh")}</button>
       </div></section>`);
     slides.set(id, s);
@@ -548,7 +549,7 @@ export async function shorts(page, m, alive) {
     loadingMore = true;
     try {
       const pg = 1 + Math.floor(slides.size / 15);
-      const r = norm(await api(`/api/v1/search?q=%23shorts&type=video&duration=short&region=KR&sort=views&date=week&page=${pg}`, { ttl: 600000 }));
+      const r = norm(await api(`/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week&page=${pg}`, { ttl: 600000 }));
       r.forEach((v) => addSlide(v.id));
     } catch { }
     loadingMore = false;
@@ -582,15 +583,15 @@ export async function shorts(page, m, alive) {
     const av = pickThumb(info.authorThumbnails, 88);
     s.querySelector(".ss-ch").innerHTML = `<a href="/channel/${esc(info.authorId)}" data-nav>${avatar(av, "sm")}<b>${esc(info.author)}</b></a>${subBtn(info.authorId, info.author, av)}`;
     s.querySelector(".ss-t").textContent = info.title;
-    s.querySelector(".like span").textContent = info.likeCount ? fmtCount(info.likeCount) : "좋아요";
+    s.querySelector(".like span").textContent = info.likeCount ? fmtCount(info.likeCount) : $t("좋아요");
     s.querySelector(".like").classList.toggle("on", inList("likes", id));
-    s.querySelector(".cmt span").textContent = "댓글";
+    s.querySelector(".cmt span").textContent = $t("댓글");
     s.querySelector(".like").onclick = (e) => { const on = !e.currentTarget.classList.contains("on"); e.currentTarget.classList.toggle("on", on); setList("likes", W.v, on); };
     s.querySelector(".dis").onclick = (e) => { const on = !e.currentTarget.classList.contains("on"); e.currentTarget.classList.toggle("on", on); setList("dislikes", W.v, on, true); };
     s.querySelector(".shr").onclick = () => shareDialog(W.v);
     s.querySelector(".more").onclick = (e) => videoMenu(e.currentTarget, W.v);
     s.querySelector(".cmt").onclick = () => {
-      const sheet = el(`<div class="sheet"><div class="sheet-in"><div class="sheet-h"><b>댓글</b><button>${icon("close")}</button></div><div class="sheet-body"></div></div></div>`);
+      const sheet = el(`<div class="sheet"><div class="sheet-in"><div class="sheet-h"><b>${$t("댓글")}</b><button>${icon("close")}</button></div><div class="sheet-body"></div></div></div>`);
       document.body.append(sheet);
       sheet.querySelector("button").onclick = () => sheet.remove();
       sheet.onclick = (ev) => { if (ev.target === sheet) sheet.remove(); };

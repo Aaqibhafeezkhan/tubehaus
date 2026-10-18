@@ -1,5 +1,6 @@
 // "Send to TV": the receiving screen (a TV) waits on the server, the sender (a phone) posts commands.
 // No Chromecast needed - only our own server.
+import { $t } from "./i18n.js";
 import { lib, settings, local, toast, esc } from "./util.js";
 import { player, navigate, popup, mi } from "./core.js";
 
@@ -12,9 +13,9 @@ export const deviceId = local.get("devId", null) || (() => {
 export function deviceName() {
   if (settings.deviceName && settings.deviceName.trim()) return settings.deviceName.trim().slice(0, 40);
   if (document.documentElement.classList.contains("tv")) return "TV";
-  if (/iPad/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1)) return "아이패드";
-  if (/iPhone|Android.*Mobile/.test(UA)) return "폰";
-  return "컴퓨터";
+  if (/iPad/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1)) return $t("아이패드");
+  if (/iPhone|Android.*Mobile/.test(UA)) return $t("폰");
+  return $t("컴퓨터");
 }
 const isTVPage = () => document.documentElement.classList.contains("tv");
 export const receiving = () => isTVPage() || !!settings.castReceive;
@@ -46,7 +47,7 @@ function run(cmd, from) {
     const url = `/watch?v=${cmd.id}${cmd.t ? `&t=${cmd.t}` : ""}${cmd.list ? `&list=${encodeURIComponent(cmd.list)}` : ""}`;
     if (sameVideo) { player.seek(cmd.t || 0); player.play(); }
     else navigate(url);
-    toast(`📱 ${from || "다른 기기"}에서 보낸 영상을 재생해요`);
+    toast(`${$t("📱 {0}에서 보낸 영상을 재생해요", from || $t("다른 기기"))}`);
     // if autoplay with sound was blocked after the page change, leave it (one OK on the remote starts it)
     setTimeout(() => player.play(), 1500);
   } else if (cmd.type === "toggle") player.toggle();
@@ -59,7 +60,7 @@ export async function castTo(v, anchor) {
   let list = [];
   try { list = (await lib("cast/devices", { quiet: true })).devices.filter((d) => d.id !== deviceId); } catch { }
   if (!list.length) {
-    toast("받을 수 있는 TV가 없어요 · TV에서 홈튜브를 켜 두세요", null, null, 6000);
+    toast($t("받을 수 있는 TV가 없어요 · TV에서 홈튜브를 켜 두세요"), null, null, 6000);
     return;
   }
   list.sort((a, b) => b.tv - a.tv);
@@ -73,11 +74,11 @@ export async function castTo(v, anchor) {
     remote(dev);
   };
   if (list.length === 1 || !anchor) return go(list[0]);
-  popup(anchor, `<div class="mi" style="pointer-events:none;color:var(--fg2)">어디로 보낼까요?</div>` +
-    list.map((d, i) => mi("d" + i, "tv", esc(d.name) + (d.tv ? "" : " (화면)"))).join(""), (a) => go(list[+a.slice(1)]));
+  popup(anchor, `<div class="mi" style="pointer-events:none;color:var(--fg2)">${$t("어디로 보낼까요?")}</div>` +
+    list.map((d, i) => mi("d" + i, "tv", esc(d.name) + (d.tv ? "" : $t(" (화면)")))).join(""), (a) => go(list[+a.slice(1)]));
 }
 // after sending: a toast that can pause / resume the TV
 function remote(dev) {
   const send = (cmd) => lib("cast/send", { method: "POST", body: { to: dev.id, from: deviceName(), cmd } }).catch((e) => toast(e.message));
-  toast(`📺 ${dev.name}에서 재생해요`, "정지 / 재생", () => { send({ type: "toggle" }); setTimeout(() => remote(dev), 300); }, 12000);
+  toast(`${$t("📺 {0}에서 재생해요", dev.name)}`, $t("정지 / 재생"), () => { send({ type: "toggle" }); setTimeout(() => remote(dev), 300); }, 12000);
 }

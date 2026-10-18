@@ -9,7 +9,9 @@ same layout, same keyboard shortcuts), backed by a small Python server that runs
 [Invidious](https://github.com/iv-org/invidious). It is built for one household: no ads, no
 tracking, your subscriptions and history stay on your server.
 
-> The interface text is Korean (it was built for a Korean household). Translations are welcome.
+**11 languages:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia —
+chosen on the first visit (the browser's language is preselected) and changeable any time under **Language** in the
+account menu or Settings. View counts and dates follow each language's own style.
 
 ## Features
 
@@ -23,7 +25,7 @@ tracking, your subscriptions and history stay on your server.
 **What Invidious doesn't have**
 - **Live streams** — HLS through the server, with segments pulled ahead of the player over kept-alive connections, a rebuilt longer playlist window, and exact segment durations/discontinuities so the timeline never jumps
 - **Live captions** — YouTube provides none for live streams; HomeTube transcribes them on the fly with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), a few seconds ahead of playback (one CPU core is enough)
-- **Translated subtitles** for videos that have none in your language
+- **Translated subtitles** for videos that have none in your language (in your interface language)
 - **One library for every device** — subscriptions (with an RSS-based feed), watch history, resume positions, Watch Later, likes, playlists
 - **Send to TV** — pick a video on your phone, it starts on the TV (no Chromecast; open screens long-poll the server)
 - **High-quality offline save** — 1080p/4K come as separate video and audio; the server fetches both and merges them with ffmpeg
@@ -143,8 +145,13 @@ All settings are environment variables — see [`.env.example`](.env.example).
 | `HT_WARP_ROTATE` | `1` | reconnect WARP when YouTube blocks |
 | `HT_YTDLP` | `yt-dlp` | for live streams |
 | `HT_WHISPER_BIN`, `HT_WHISPER_MODEL`, `HT_WHISPER_LANG` | empty, empty, `auto` | live captions |
-| `HT_SUB_LANG`, `HT_LIBRETRANSLATE` | `ko`, empty | translated subtitles |
+| `HT_SUB_LANG`, `HT_LIBRETRANSLATE` | `en`, empty | default subtitle translation target (the app asks for its own language), optional fallback |
 | `HT_DOWNLOAD_DIR` | `/var/tmp/hometube-dl` | offline save workspace |
+
+## Translations
+
+Interface text lives in `web/y/lang/<code>.js` (the key is the original Korean text). To add a language, copy
+`en.js`, translate the values, and add the code to `LANGS` in `web/y/i18n.js`. Corrections are very welcome.
 
 ## Credits
 

@@ -850,3 +850,9 @@ html.tv .b-fs { display: none !important; }
 html.tv .ytp.ctl .ytp-tvhint { display: block; position: absolute; top: 18px; right: 24px; z-index: 11; font-size: 15px; color: #ddd;
   background: rgba(0,0,0,.55); padding: 6px 12px; border-radius: 16px; pointer-events: none; }
 html.tv .ytp-menu.show ~ .ytp-tvhint { display: none; }
+
+/* language picker */
+.langs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 16px 24px 24px; }
+.langs .lang { height: 44px; border: 1px solid var(--line); background: var(--bg2); color: var(--fg); border-radius: 10px; font: inherit; font-size: 15px; cursor: pointer; }
+.langs .lang:hover, .langs .lang:focus { background: var(--hover); outline: 0; }
+.langs .lang.on { border-color: var(--blue); color: var(--blue); font-weight: 600; }

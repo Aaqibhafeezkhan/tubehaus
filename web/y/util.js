@@ -1,4 +1,5 @@
-// Shared helpers: DOM, number/time formats (YouTube's Korean style), server API, settings, icons
+// Shared helpers: DOM, number/time formats (local style), server API, settings, icons
+import { $t, $tMsg, fmtShort, fmtAgo, LANG } from "./i18n.js";
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -19,28 +20,15 @@ export function fmtTime(s) {
   return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0");
 }
 
-function short(n) {
-  // YouTube's Korean style: 999 -> 999, 1,234 -> 1.2천, 12,345 -> 1.2만, 123,456,789 -> 1.2억
-  if (n < 1000) return String(n);
-  if (n < 10000) return trim(n / 1000) + "천";
-  if (n < 1e8) return trim(n / 1e4, n < 1e5) + "만";
-  return trim(n / 1e8, n < 1e9) + "억";
-}
-function trim(x, oneDecimal = true) {
-  const v = oneDecimal ? Math.floor(x * 10) / 10 : Math.floor(x);
-  return String(v).replace(/\.0$/, "");
-}
-export const fmtViews = (n) => (n == null ? "" : "조회수 " + short(+n) + "회");
-export const fmtSubs = (n) => (n == null || n === "" ? "" : "구독자 " + (typeof n === "number" ? short(n) + "명" : String(n).replace(/subscribers?/i, "").trim()));
-export const fmtCount = (n) => (n == null ? "" : short(+n));
+// 1,234 -> 1.2K / 1.2천, 12,345 -> 12K / 1.2만 ... in the interface language
+export const fmtViews = (n) => (n == null ? "" : $t("조회수 {0}회", fmtShort(+n)));
+export const fmtSubs = (n) => (n == null || n === "" ? "" : $t("구독자 {0}명", typeof n === "number" ? fmtShort(n) : String(n).replace(/subscribers?/i, "").trim()));
+export const fmtCount = (n) => (n == null ? "" : fmtShort(+n));
 
 export function ago(ts) {
   if (!ts) return "";
   const d = Date.now() / 1000 - ts;
-  if (d < 60) return "방금 전";
-  const u = [[31536000, "년"], [2592000, "개월"], [604800, "주"], [86400, "일"], [3600, "시간"], [60, "분"]];
-  for (const [s, w] of u) if (d >= s) return Math.floor(d / s) + w + " 전";
-  return "방금 전";
+  return d < 60 ? $t("방금 전") : fmtAgo(d);
 }
 
 export function parseT(t) {
@@ -55,15 +43,16 @@ export function parseT(t) {
 
 // ---------------------------------------------------------------- settings (per device)
 const DEFAULTS = {
+  lang: "auto",           // interface language: auto = the browser's
   theme: "light",         // light | dark | system (default: light, like classic YouTube)
   autoplay: true,         // autoplay the next video
   quality: "auto",        // auto | 2160 | 1440 | 1080 | 720 | 480 | 360
   dataSaver: false,
   captions: false,        // captions always on
-  capLang: "ko",
+  capLang: LANG,
   capSize: 100,           // %
   capBg: 75,              // background opacity %
-  autoTranslate: true,    // translated captions when a video has none in Korean
+  autoTranslate: true,    // translated captions when a video has none in your language
   speed: 1,
   volume: 1,
   muted: false,
@@ -117,10 +106,10 @@ export async function api(path, { method = "GET", body, ttl = 0, signal, quiet =
       headers: body ? { "Content-Type": "application/json" } : undefined,
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (r.status === 401 && !quiet) { toGate(); throw new HttpError(401, "로그인이 필요해요"); }
+    if (r.status === 401 && !quiet) { toGate(); throw new HttpError(401, $t("로그인이 필요해요")); }
     let d = null;
     try { d = await r.json(); } catch { }
-    if (!r.ok) throw new HttpError(r.status, (d && d.error) || "서버 오류 " + r.status);
+    if (!r.ok) throw new HttpError(r.status, d && d.error ? $tMsg(d.error) : $t("서버 오류 ") + r.status);
     if (method === "GET" && ttl) cache.set(key, { t: Date.now(), v: d });
     return d;
   })();
@@ -195,7 +184,7 @@ export async function copy(text) {
     const ta = el("<textarea style='position:fixed;opacity:0'></textarea>");
     ta.value = text; document.body.append(ta); ta.select(); document.execCommand("copy"); ta.remove();
   }
-  toast("클립보드에 복사됨");
+  toast($t("클립보드에 복사됨"));
 }
 
 // keep only allowed tags of the HTML Invidious returns (descriptions, comments)
@@ -307,6 +296,7 @@ const P = {
   skip: "M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z",
   sleep: "M9.27 4.49c-1.63 7.54 3.75 12.41 7.66 13.8C15.54 19.38 13.81 20 12 20c-4.41 0-8-3.59-8-8 0-3.45 2.2-6.4 5.27-7.51m2.72-2.48C6.4 2.01 2 6.54 2 12c0 5.52 4.48 10 10 10 3.08 0 5.82-1.4 7.65-3.59-6.38 0-11.74-5.55-7.66-16.4z",
   upload: "M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z",
+  globe: "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 0 1 5.08 16zm2.95-8H5.08a7.987 7.987 0 0 1 4.33-3.56A15.65 15.65 0 0 0 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z",
   tv: "M21 3H3c-1.11 0-2 .89-2 2v12c0 1.1.89 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.11-.9-2-2-2zm0 14H3V5h18v12z",
 };
 export const icon = (n, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[n] || ""}"/></svg>`;

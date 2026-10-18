@@ -1,10 +1,18 @@
 // Entry point: header (search, notifications, account), side menu, routes, global shortcuts
 import { $, $$, esc, icon, api, lib, settings, local, toast, thumb, normVideo, ago } from "./util.js";
+import { dialog } from "./core.js";
 import { player, routes, state, loadLib, navigate, render, renderGuideSubs, popup, mi, keysDialog, initCardHover, markRestore, saveScroll, known, videoMenu, pageCleanup } from "./core.js";
 import * as P from "./pages.js";
 import { watch, shorts, initMini, dockMini, stopPlayer } from "./watch.js";
 import { initTV } from "./tv.js";
 import { startReceiver, deviceName } from "./cast.js";
+import { $t, LANG, LANGS, LOCALE, REGION, FIRST_VISIT, translateDom, langLabel } from "./i18n.js";
+
+// static text of index.html in the interface language
+translateDom(document.body);
+const regionBadge = document.getElementById("region");
+if (regionBadge) regionBadge.textContent = REGION;
+document.title = $t("홈튜브");
 
 // ---------------------------------------------------------------- routes (same URLs as YouTube)
 routes.push(
@@ -20,13 +28,13 @@ routes.push(
       if (s.length) { sessionStorage.setItem("yt.shortsCtx", JSON.stringify(s)); id = s[0]; }
     } catch { }
     if (!id) {
-      const r = await api("/api/v1/search?q=%23shorts&type=video&duration=short&region=KR&sort=views&date=week", { ttl: 600000 });
+      const r = await api("/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week", { ttl: 600000 });
       const s = r.filter((x) => x.videoId).map((x) => x.videoId);
       sessionStorage.setItem("yt.shortsCtx", JSON.stringify(s));
       id = s[0];
     }
     if (id) navigate(`/shorts/${id}`, { replace: true });
-    else page.innerHTML = `<div class="empty"><p>Shorts 를 찾지 못했어요</p></div>`;
+    else page.innerHTML = `<div class="empty"><p>${$t("Shorts 를 찾지 못했어요")}</p></div>`;
   }, { name: "shorts" }],
   [/^\/results$/, P.search, { name: "search" }],
   [/^\/(channel\/UC[\w-]{22}|@[^/]+|c\/[^/]+|user\/[^/]+)(\/(videos|shorts|streams|playlists|community|search|featured))?\/?$/, P.channel, { name: "channel" }],
@@ -68,7 +76,7 @@ document.addEventListener("click", (e) => {
     import("./core.js").then(({ setSub, isSub }) => {
       const cid = sb.dataset.subbtn;
       if (isSub(cid)) {
-        popup(sb, mi("unsub", "close", "구독 취소"), (a) => { if (a === "unsub") setSub(cid, sb.dataset.name, sb.dataset.thumb, false); }, { align: "left" });
+        popup(sb, mi("unsub", "close", $t("구독 취소")), (a) => { if (a === "unsub") setSub(cid, sb.dataset.name, sb.dataset.thumb, false); }, { align: "left" });
       } else setSub(cid, sb.dataset.name, sb.dataset.thumb, true);
     });
     return;
@@ -103,7 +111,7 @@ function showSugg(items, hist = false) {
   sItems = items;
   sIdx = -1;
   if (!items.length) { sugg.hidden = true; return; }
-  sugg.innerHTML = items.map((s, i) => `<div class="sg" data-i="${i}">${icon(hist ? "history" : "search")}<span>${esc(s)}</span>${hist ? `<button class="sg-x" data-x="${esc(s)}">삭제</button>` : ""}</div>`).join("");
+  sugg.innerHTML = items.map((s, i) => `<div class="sg" data-i="${i}">${icon(hist ? "history" : "search")}<span>${esc(s)}</span>${hist ? `<button class="sg-x" data-x="${esc(s)}">${$t("삭제")}</button>` : ""}</div>`).join("");
   sugg.hidden = false;
 }
 q.addEventListener("input", () => {
@@ -160,15 +168,15 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (!SR) $("#voice").hidden = true;
 $("#voice").onclick = () => {
   const r = new SR();
-  r.lang = "ko-KR";
+  r.lang = LOCALE;
   r.interimResults = true;
-  const { box, close } = (() => { const m = $("#modal"); m.innerHTML = `<div class="dlg voice"><div class="v-text">듣고 있어요...</div><div class="v-mic">${icon("mic")}</div></div>`; m.className = "show"; m.onclick = () => { r.abort(); m.className = ""; }; return { box: m.firstElementChild, close: () => (m.className = "") }; })();
+  const { box, close } = (() => { const m = $("#modal"); m.innerHTML = `<div class="dlg voice"><div class="v-text">${$t("듣고 있어요...")}</div><div class="v-mic">${icon("mic")}</div></div>`; m.className = "show"; m.onclick = () => { r.abort(); m.className = ""; }; return { box: m.firstElementChild, close: () => (m.className = "") }; })();
   r.onresult = (e) => {
     const t = [...e.results].map((x) => x[0].transcript).join("");
     box.querySelector(".v-text").textContent = t;
     if (e.results[e.results.length - 1].isFinal) { close(); q.value = t; doSearch(); }
   };
-  r.onerror = () => { box.querySelector(".v-text").textContent = "다시 말씀해 주세요"; setTimeout(close, 1200); };
+  r.onerror = () => { box.querySelector(".v-text").textContent = $t("다시 말씀해 주세요"); setTimeout(close, 1200); };
   r.onend = () => setTimeout(close, 800);
   r.start();
 };
@@ -198,34 +206,49 @@ $("#bell").onclick = async (e) => {
   const seen = local.get("bellSeen", 0);
   local.set("bellSeen", Math.floor(Date.now() / 1000));
   $("#bell .badge").hidden = true;
-  popup(anchor, `<div class="notif"><div class="nt-h"><b>알림</b><a href="/settings" data-nav>${icon("gear")}</a></div>` +
+  popup(anchor, `<div class="notif"><div class="nt-h"><b>${$t("알림")}</b><a href="/settings" data-nav>${icon("gear")}</a></div>` +
     (items.length ? items.map((x) => `<a class="nt ${x.published > seen ? "new" : ""}" href="/watch?v=${esc(x.id)}" data-nav>
       <span class="nt-av"><img src="${esc(state.lib.subs[x.authorId]?.thumb || "")}" alt=""></span>
-      <span class="nt-tx"><span>${esc(x.author)}에서 업로드한 동영상: ${esc(x.title)}</span><em>${ago(x.published)}</em></span>
-      <img class="nt-th" src="${thumb(x.id, "mqdefault")}" alt=""></a>`).join("") : `<div class="sub" style="padding:24px">새 소식이 없어요</div>`) + "</div>",
+      <span class="nt-tx"><span>${$t("{0}에서 업로드한 동영상: {1}", esc(x.author), esc(x.title))}</span><em>${ago(x.published)}</em></span>
+      <img class="nt-th" src="${thumb(x.id, "mqdefault")}" alt=""></a>`).join("") : `<div class="sub" style="padding:24px">${$t("새 소식이 없어요")}</div>`) + "</div>",
     () => { });
 };
 setInterval(bell, 10 * 60000);
 
 // ---------------------------------------------------------------- account menu
 $("#acct").onclick = (e) => {
-  const th = { system: "기기 테마 사용", dark: "어두운 테마", light: "밝은 테마" };
-  popup(e.currentTarget, `<div class="acct-h">${icon("account")}<div><b>HomeTube</b><span>내 라이브러리</span></div></div><hr>` +
-    mi("you", "libr", "내 페이지") + mi("history", "history", "시청 기록") + mi("subs", "subs", "구독 관리") + "<hr>" +
-    mi("theme", "dark", "디자인: " + th[settings.theme]) + mi("settings", "gear", "설정") + mi("keys", "keyboard", "단축키"),
+  const th = { system: $t("기기 테마 사용"), dark: $t("어두운 테마"), light: $t("밝은 테마") };
+  popup(e.currentTarget, `<div class="acct-h">${icon("account")}<div><b>HomeTube</b><span>${$t("내 라이브러리")}</span></div></div><hr>` +
+    mi("you", "libr", $t("내 페이지")) + mi("history", "history", $t("시청 기록")) + mi("subs", "subs", $t("구독 관리")) + "<hr>" +
+    mi("theme", "dark", $t("디자인: ") + th[settings.theme]) + mi("lang", "globe", langLabel() + ": " + LANGS.find(([c]) => c === LANG)[1]) +
+    mi("settings", "gear", $t("설정")) + mi("keys", "keyboard", $t("단축키")),
     (a) => {
       if (a === "you") navigate("/feed/you");
       if (a === "history") navigate("/feed/history");
       if (a === "subs") navigate("/feed/channels");
       if (a === "settings") navigate("/settings");
       if (a === "keys") keysDialog();
+      if (a === "lang") langPicker(false);
       if (a === "theme") {
         const order = ["system", "dark", "light"];
         settings.theme = order[(order.indexOf(settings.theme) + 1) % 3];
-        toast("디자인: " + th[settings.theme]);
+        toast($t("디자인: ") + th[settings.theme]);
       }
     });
 };
+
+// ---------------------------------------------------------------- language
+// asked once on the first visit (the browser's language is preselected), and from the account menu
+function langPicker(first) {
+  const { box, close } = dialog(`<div class="dh"><b>${icon("globe")} ${langLabel()}</b>${first ? "" : `<button data-close>${icon("close")}</button>`}</div>
+    <div class="langs">${LANGS.map(([c, n]) => `<button class="lang ${c === LANG ? "on" : ""}" data-l="${c}">${n}</button>`).join("")}</div>`, { cls: "narrow" });
+  box.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => {
+    settings.lang = b.dataset.l;
+    if (b.dataset.l === LANG) close(); else location.reload();
+  }));
+  setTimeout(() => box.querySelector(".lang.on")?.focus(), 50);
+}
+if (FIRST_VISIT) setTimeout(() => langPicker(true), 300);
 
 // ---------------------------------------------------------------- global shortcuts
 addEventListener("keydown", (e) => {

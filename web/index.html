@@ -24,7 +24,7 @@
   <div class="m-start">
     <button id="guideBtn" class="ib" aria-label="메뉴"><svg class="ic" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
     <a href="/" data-nav class="logo" aria-label="홈튜브 홈">
-      <svg viewBox="0 0 30 20" class="logo-ic"><rect width="30" height="20" rx="5.5" fill="#ff0033"/><path d="M12 6l8 4-8 4z" fill="#fff"/></svg><span>홈튜브</span><sup>KR</sup>
+      <svg viewBox="0 0 30 20" class="logo-ic"><rect width="30" height="20" rx="5.5" fill="#ff0033"/><path d="M12 6l8 4-8 4z" fill="#fff"/></svg><span>홈튜브</span><sup id="region">KR</sup>
     </a>
   </div>
   <div class="m-center">
@@ -54,7 +54,7 @@
   <div class="g-sec">
     <a href="/" data-nav class="gi" data-r="home"><svg class="ic" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>홈</span></a>
     <a href="/shorts" data-nav class="gi" data-r="shorts"><svg class="ic" viewBox="0 0 24 24"><path d="M17.77 10.32l-1.2-.5L18 9.06a3.74 3.74 0 0 0-3.5-6.62L6 6.94a3.74 3.74 0 0 0 .23 6.74l1.2.49L6 14.93a3.75 3.75 0 0 0 3.5 6.63l8.5-4.5a3.74 3.74 0 0 0-.23-6.74zM10 14.65V9.35L15 12l-5 2.65z"/></svg><span>Shorts</span></a>
-    <a href="/feed/subscriptions" data-nav class="gi" data-r="subs"><svg class="ic" viewBox="0 0 24 24"><path d="M20 8H4V6h16v2zm-2-6H6v2h12V2zm4 10v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2zm-6 4l-6-3.27v6.53L16 16z"/></svg><span>구독</span></a>
+    <a href="/feed/subscriptions" data-nav class="gi" data-r="subs"><svg class="ic" viewBox="0 0 24 24"><path d="M20 8H4V6h16v2zm-2-6H6v2h12V2zm4 10v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2zm-6 4l-6-3.27v6.53L16 16z"/></svg><span data-i18n="구독 (메뉴)">구독</span></a>
   </div>
   <div class="g-sec">
     <a href="/feed/you" data-nav class="gi g-title" data-r="you"><span>나</span><svg class="ic sm" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></a>
@@ -63,7 +63,7 @@
     <a href="/playlist?list=WL" data-nav class="gi"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/></svg><span>나중에 볼 동영상</span></a>
     <a href="/playlist?list=LL" data-nav class="gi"><svg class="ic" viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg><span>좋아요 표시한 동영상</span></a>
   </div>
-  <div class="g-sec"><a href="/feed/channels" data-nav class="gi g-title" data-r="channels"><span>구독</span><svg class="ic sm" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></a><div class="g-subs"></div></div>
+  <div class="g-sec"><a href="/feed/channels" data-nav class="gi g-title" data-r="channels"><span data-i18n="구독 (메뉴)">구독</span><svg class="ic sm" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></a><div class="g-subs"></div></div>
   <div class="g-sec"><div class="g-label">탐색</div>
     <a href="/feed/trending" data-nav class="gi" data-r="trending"><svg class="ic" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg><span>인기 급상승</span></a>
     <a href="/?chip=music" data-nav class="gi"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><span>음악</span></a>
@@ -80,7 +80,7 @@
 <nav id="mguide" aria-label="짧은 메뉴">
   <a href="/" data-nav data-r="home"><svg class="ic" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>홈</span></a>
   <a href="/shorts" data-nav data-r="shorts"><svg class="ic" viewBox="0 0 24 24"><path d="M17.77 10.32l-1.2-.5L18 9.06a3.74 3.74 0 0 0-3.5-6.62L6 6.94a3.74 3.74 0 0 0 .23 6.74l1.2.49L6 14.93a3.75 3.75 0 0 0 3.5 6.63l8.5-4.5a3.74 3.74 0 0 0-.23-6.74zM10 14.65V9.35L15 12l-5 2.65z"/></svg><span>Shorts</span></a>
-  <a href="/feed/subscriptions" data-nav data-r="subs"><svg class="ic" viewBox="0 0 24 24"><path d="M20 8H4V6h16v2zm-2-6H6v2h12V2zm4 10v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2zm-6 4l-6-3.27v6.53L16 16z"/></svg><span>구독</span></a>
+  <a href="/feed/subscriptions" data-nav data-r="subs"><svg class="ic" viewBox="0 0 24 24"><path d="M20 8H4V6h16v2zm-2-6H6v2h12V2zm4 10v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2zm-6 4l-6-3.27v6.53L16 16z"/></svg><span data-i18n="구독 (메뉴)">구독</span></a>
   <a href="/feed/you" data-nav data-r="you"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg><span>나</span></a>
 </nav>
 
@@ -100,7 +100,7 @@
 <nav id="bnav" aria-label="아래 메뉴">
   <a href="/" data-nav data-r="home"><svg class="ic" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>홈</span></a>
   <a href="/shorts" data-nav data-r="shorts"><svg class="ic" viewBox="0 0 24 24"><path d="M17.77 10.32l-1.2-.5L18 9.06a3.74 3.74 0 0 0-3.5-6.62L6 6.94a3.74 3.74 0 0 0 .23 6.74l1.2.49L6 14.93a3.75 3.75 0 0 0 3.5 6.63l8.5-4.5a3.74 3.74 0 0 0-.23-6.74zM10 14.65V9.35L15 12l-5 2.65z"/></svg><span>Shorts</span></a>
-  <a href="/feed/subscriptions" data-nav data-r="subs"><svg class="ic" viewBox="0 0 24 24"><path d="M20 8H4V6h16v2zm-2-6H6v2h12V2zm4 10v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2zm-6 4l-6-3.27v6.53L16 16z"/></svg><span>구독</span></a>
+  <a href="/feed/subscriptions" data-nav data-r="subs"><svg class="ic" viewBox="0 0 24 24"><path d="M20 8H4V6h16v2zm-2-6H6v2h12V2zm4 10v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2zm-6 4l-6-3.27v6.53L16 16z"/></svg><span data-i18n="구독 (메뉴)">구독</span></a>
   <a href="/feed/you" data-nav data-r="you"><svg class="ic" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg><span>나</span></a>
 </nav>
 

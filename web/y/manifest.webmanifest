@@ -1,8 +1,7 @@
 {
-  "name": "홈튜브",
-  "short_name": "홈튜브",
-  "lang": "ko",
-  "start_url": "/",
+  "name": "HomeTube",
+  "short_name": "HomeTube",
+    "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f9f9f9",
@@ -13,8 +12,8 @@
     { "src": "/y/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ],
   "shortcuts": [
-    { "name": "구독", "url": "/feed/subscriptions" },
-    { "name": "시청 기록", "url": "/feed/history" },
+    { "name": "Subscriptions", "url": "/feed/subscriptions" },
+    { "name": "History", "url": "/feed/history" },
     { "name": "나중에 볼 동영상", "url": "/playlist?list=WL" }
   ]
 }

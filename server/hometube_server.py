@@ -36,7 +36,7 @@ YT_PROXY = env("HT_YT_PROXY", "127.0.0.1:40000")        # "" = connect to YouTub
 WARP_ROTATE = env("HT_WARP_ROTATE", "1") == "1"         # get a new WARP address when YouTube blocks us
 YTDLP = env("HT_YTDLP", "yt-dlp")
 LT = env("HT_LIBRETRANSLATE", "")                        # optional LibreTranslate URL (translation fallback)
-SUB_LANG = env("HT_SUB_LANG", "ko")                      # target language of translated subtitles
+SUB_LANG = env("HT_SUB_LANG", "en")                      # default target of translated subtitles (the app asks for its own language)
 WHISPER_BIN = env("HT_WHISPER_BIN", "")                  # whisper.cpp "whisper-cli"; empty = no live captions
 WHISPER_MODEL = env("HT_WHISPER_MODEL", "")              # e.g. ggml-base-q5_1.bin
 WHISPER_LANG = env("HT_WHISPER_LANG", "auto")
@@ -99,14 +99,6 @@ def vid_fetch(key):
     except Exception:
         d = None
     if isinstance(d, dict) and d.get("videoId"):
-        # offer a Korean track on videos that have captions but none in Korean;
-        # it has to happen before the answer is cached, or a cache hit would
-        # serve a version without it
-        caps = d.get("captions")
-        if caps and not any((c.get("language_code") or "").startswith(SUB_LANG) for c in caps):
-            caps.append({"label": SUB_LABEL, "language_code": SUB_LANG,
-                         "url": "/api/p/sub/%s.vtt" % d["videoId"]})
-            body = json.dumps(d, ensure_ascii=False).encode()
         if d.get("liveNow") and not d.get("hlsUrl"):
             d["hlsUrl"] = "%s/api/p/live/%s.m3u8" % (LIVE_ORIGIN, d["videoId"])
             body = json.dumps(d, ensure_ascii=False).encode()
@@ -173,7 +165,6 @@ def log(tag, msg, t0=None, every=LOG_EVERY):
 # ---------- machine-translated subtitles ----------
 SUBS = f"{STATE}/subs"
 SUB_MAX = 1200                        # cues; longer videos get truncated, not dropped
-SUB_LABEL = {"ko": "한국어 (자동번역)"}.get(SUB_LANG, SUB_LANG + " (auto-translated)")
 
 
 def _inv(path, timeout=60):
@@ -195,7 +186,7 @@ def _vtt_cues(text):
     return out
 
 
-def _translate(lines):
+def _translate(lines, tl=SUB_LANG):
     """Google first - a small local model turns "All right" into nonsense - and fall
     back to LibreTranslate (if configured) when Google refuses. Google's dict-chrome endpoint
     takes repeated q= parameters and answers one string per line, in order.
@@ -203,7 +194,7 @@ def _translate(lines):
     one does not.)"""
     UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                         "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
-    GOOGLE = "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=" + SUB_LANG
+    GOOGLE = "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=" + tl
 
     def google(chunk):
         url = GOOGLE + "".join("&q=" + urllib.parse.quote(x) for x in chunk)
@@ -219,7 +210,7 @@ def _translate(lines):
     def libre(chunk):
         if not LT:
             return chunk
-        body = json.dumps({"q": chunk, "source": "en", "target": SUB_LANG,
+        body = json.dumps({"q": chunk, "source": "en", "target": tl,
                            "format": "text"}).encode()
         req = urllib.request.Request(LT + "/translate", data=body,
                                      headers={"Content-Type": "application/json"})
@@ -244,10 +235,10 @@ def _translate(lines):
     return done
 
 
-def sub_vtt(vid):
+def sub_vtt(vid, tl=SUB_LANG):
     """Translated VTT for one video id, cached on disk."""
     os.makedirs(SUBS, exist_ok=True)
-    cache = "%s/%s.%s.vtt" % (SUBS, vid, SUB_LANG)
+    cache = "%s/%s.%s.vtt" % (SUBS, vid, tl)
     if os.path.exists(cache):
         return open(cache, "rb").read()
     t0 = time.time()
@@ -257,18 +248,18 @@ def sub_vtt(vid):
     pick = next((c for c in tracks if (c.get("languageCode") or "").startswith("en")), None) \
         or (tracks[0] if tracks else None)
     if not pick:
-        raise ValueError("이 영상에는 번역할 자막이 없습니다")
+        raise ValueError("This video has no captions to translate")
     raw = _inv(pick["url"]).decode("utf-8", "replace")
     cues = _vtt_cues(raw)[:SUB_MAX]
     if not cues:
-        raise ValueError("자막을 해석하지 못했습니다")
+        raise ValueError("Couldn't read the captions")
     flat, idx = [], []
     for ci, (_, lines) in enumerate(cues):
         for li, ln in enumerate(lines):
             if ln.strip():
                 idx.append((ci, li))
                 flat.append(re.sub(r"<[^>]+>", "", ln).strip())
-    ko = _translate(flat)
+    ko = _translate(flat, tl)
     for (ci, li), text in zip(idx, ko):
         cues[ci][1][li] = text
     out = ["WEBVTT", ""]
@@ -278,7 +269,7 @@ def sub_vtt(vid):
     tmp = cache + ".part"
     open(tmp, "wb").write(data)
     os.replace(tmp, cache)
-    log("sub", "%s %s->%s %d cues" % (vid, pick.get("languageCode", "?"), SUB_LANG, len(cues)), t0, every=0)
+    log("sub", "%s %s->%s %d cues" % (vid, pick.get("languageCode", "?"), tl, len(cues)), t0, every=0)
     return data
 
 
@@ -313,7 +304,7 @@ def resolve_master(vid):
     except Exception:
         err = (out.stderr.strip().splitlines() or ["?"])[-1][:200]
         log("live", f"resolve {vid} FAIL yt-dlp {err[:120]}", t0, every=0)
-        raise RuntimeError("라이브 주소를 못 찾았어요: " + err)   # shown in the player
+        raise RuntimeError("Couldn't get the live stream: " + err)
     variants = {}
     for f in info.get("formats", []):
         if "m3u8" not in (f.get("protocol") or "") or f.get("vcodec") in (None, "none") or not f.get("height"):
@@ -324,7 +315,7 @@ def resolve_master(vid):
         variants[str(f["format_id"])] = (inf, f["url"])
     if not variants:
         log("live", f"resolve {vid} FAIL no-hls-variants", t0, every=0)
-        raise RuntimeError("라이브 방송이 아니거나 끝난 방송이에요")
+        raise RuntimeError("Not a live stream, or the stream has ended")
     log("live", f"resolve {vid} ok variants={len(variants)}", t0, every=0)
     return {"at": time.time(), "variants": variants, "used": time.time()}
 
@@ -868,11 +859,11 @@ def ytlib_post(path, b):
                 pl["updated"] = now
                 res["playlist"] = _pl_summary(pl)
             else:
-                return 404, {"error": "재생목록이 없어요"}
+                return 404, {"error": "Playlist not found"}
         elif path.endswith("/yt/pl/new"):
             title = str(b.get("title") or "").strip()[:150]
             if not title:
-                return 400, {"error": "이름을 넣어 주세요"}
+                return 400, {"error": "Please enter a name"}
             pid = "HP" + secrets.token_hex(8)
             meta = _yt_meta(b.get("video")) if b.get("video") else None
             d["playlists"][pid] = {"title": title, "items": [meta] if meta else [], "updated": now}
@@ -882,7 +873,7 @@ def ytlib_post(path, b):
         elif path.endswith("/yt/pl/rename"):
             pl = d["playlists"].get(str(b.get("id")))
             if not pl:
-                return 404, {"error": "재생목록이 없어요"}
+                return 404, {"error": "Playlist not found"}
             pl["title"] = str(b.get("title") or pl["title"]).strip()[:150]
             pl["updated"] = now
             res["playlist"] = _pl_summary(pl)
@@ -911,7 +902,7 @@ def ytlib_query(path, qs):
         return {"items": h[o:o + n], "total": len(h)}
     if path.endswith("/yt/pl"):
         pl = d["playlists"].get(qs.get("id", ""))
-        return pl or {"error": "재생목록이 없어요"}
+        return pl or {"error": "Playlist not found"}
     if path.endswith("/yt/feed"):
         subs = d["subs"]
         if time.time() - yt_feed["updated"] > 900 and not yt_feed["running"]:
@@ -1011,7 +1002,7 @@ def _ytdl_part(vid, itag, path, prog):
     r.close()
     m = re.search(r"clen=(\d+)", url)
     if not m:
-        raise IOError(f"itag {itag}: 크기를 알 수 없어요")
+        raise IOError(f"itag {itag}: size unknown")
     size = int(m.group(1))
     prog[itag] = [0, size]
     with open(path, "wb") as f:
@@ -1058,7 +1049,7 @@ def _ytdl_run(jid, vid, vitag, aitag, ext, name):
             cmd += ["-movflags", "+faststart"]
         r = subprocess.run(cmd + [out], capture_output=True, text=True, timeout=3600)
         if r.returncode != 0:
-            raise IOError("합치기 실패: " + r.stderr.strip()[-200:])
+            raise IOError("Merging failed: " + r.stderr.strip()[-200:])
         for x in (vp, ap):
             os.remove(x)
         j.update(status="done", path=out, size=os.path.getsize(out), done_at=time.time())
@@ -1073,7 +1064,7 @@ def ytdl_start(b):
     vid, vitag, aitag = str(b.get("id", "")), str(b.get("v", "")), str(b.get("a", ""))
     ext = "webm" if b.get("ext") == "webm" else "mp4"
     if not re.fullmatch(r"[\w-]{11}", vid) or not vitag.isdigit() or not aitag.isdigit():
-        return 400, {"error": "잘못된 요청"}
+        return 400, {"error": "Bad request"}
     name = re.sub(r'[\\/:*?"<>|\r\n]+', " ", str(b.get("name") or vid)).strip()[:120] or vid
     ytdl_gc()
     with ytdl_lock:
@@ -1082,11 +1073,11 @@ def ytdl_start(b):
         if same:
             return 200, {"job": same}
         if len(busy) >= 2:
-            return 429, {"error": "다른 저장 2개가 진행 중이에요. 끝나면 다시 눌러 주세요"}
+            return 429, {"error": "Two other saves are in progress. Try again when they finish"}
         os.makedirs(YTDL_DIR, exist_ok=True)
         st = os.statvfs(YTDL_DIR)
         if st.f_bavail * st.f_frsize < 10e9:
-            return 507, {"error": "서버 디스크 공간이 부족해요"}
+            return 507, {"error": "Not enough disk space on the server"}
         jid = secrets.token_hex(8)
         ytdl_jobs[jid] = {"key": (vid, vitag, aitag), "status": "download", "prog": {}, "name": f"{name}.{ext}", "t": time.time()}
     threading.Thread(target=_ytdl_run, args=(jid, vid, vitag, aitag, ext, name), name="ytdl-" + jid, daemon=True).start()
@@ -1096,7 +1087,7 @@ def ytdl_start(b):
 def ytdl_status(jid):
     j = ytdl_jobs.get(jid)
     if not j:
-        return {"status": "error", "err": "작업이 없어요 (서버가 다시 시작됐을 수 있어요)"}
+        return {"status": "error", "err": "No such job (the server may have restarted)"}
     got = sum(x[0] for x in j["prog"].values())
     tot = sum(x[1] for x in j["prog"].values()) or 1
     pct = 100 if j["status"] == "done" else round(got / tot * 95, 1) if j["status"] == "download" else 97
@@ -1159,11 +1150,11 @@ def cast_send(b):
     cmd = b.get("cmd") if isinstance(b.get("cmd"), dict) else {}
     typ = cmd.get("type")
     if not to or typ not in CAST_TYPES:
-        return 400, {"error": "잘못된 요청"}
+        return 400, {"error": "Bad request"}
     clean = {"type": typ}
     if typ == "play":
         if not re.fullmatch(r"[\w-]{11}", str(cmd.get("id", ""))):
-            return 400, {"error": "영상 id 가 이상해요"}
+            return 400, {"error": "Invalid video ID"}
         clean["id"] = cmd["id"]
         clean["t"] = max(0, int(cmd.get("t") or 0))
         if cmd.get("list") and re.fullmatch(r"[\w-]{2,64}", str(cmd["list"])):
@@ -1172,7 +1163,7 @@ def cast_send(b):
         clean["d"] = max(-3600, min(3600, int(cmd.get("d") or 0)))
     with cast_cond:
         if to not in cast_devs or time.time() - cast_devs[to]["seen"] > 75:
-            return 404, {"error": "그 기기가 꺼져 있어요"}
+            return 404, {"error": "That device is off"}
         cast_state["seq"] += 1
         cast_q.append({"seq": cast_state["seq"], "to": to, "cmd": clean,
                        "from": str(b.get("from") or "")[:40], "at": time.time()})
@@ -1187,7 +1178,7 @@ def cast_wait(qs):
     did = _cast_id(qs.get("id"))
     if not did:
         return {"error": "bad id"}
-    name = str(qs.get("name") or "기기")[:40]
+    name = str(qs.get("name") or "Device")[:40]
     tv = qs.get("tv") == "1"
     try:
         since = int(qs.get("since", "-1"))
@@ -1389,7 +1380,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, ytdl_status(jid))
             j = ytdl_jobs.get(jid)
             if not j or j["status"] != "done":
-                return self.send(404, {"error": "아직 준비되지 않았어요"})
+                return self.send(404, {"error": "Not ready yet"})
             self.send_response(200)
             self.send_header("Content-Type", "video/webm" if j["path"].endswith(".webm") else "video/mp4")
             self.send_header("Content-Length", str(j["size"]))
@@ -1415,9 +1406,12 @@ class H(BaseHTTPRequestHandler):
         if "/sub/" in p:
             vid = p.rsplit("/", 1)[-1].replace(".vtt", "")
             if not re.fullmatch(r"[\w-]{11}", vid):
-                return self.send(400, {"error": "영상 주소가 이상합니다"})
+                return self.send(400, {"error": "Invalid video ID"})
             try:
-                data = sub_vtt(vid)
+                tl = self.qs().get("tl") or SUB_LANG     # the viewer's interface language
+                if not re.fullmatch(r"[a-z]{2}(-[A-Za-z]{2,4})?", tl):
+                    return self.send(400, {"error": "bad language"})
+                data = sub_vtt(vid, tl)
             except Exception as ex:
                 log("sub", "%s FAIL %s" % (vid, repr(ex)[:100]))
                 return self.send(502, {"error": str(ex)})
@@ -1648,7 +1642,7 @@ class H(BaseHTTPRequestHandler):
             size = int(m.group(1)) if m else None
         except Exception as ex:
             log("download", f"latest_version {vid}/{itag} FAIL 502 {repr(ex)[:120]}", t0, every=0)
-            return self.send(502, {"error": f"영상 주소를 못 가져왔어요: {ex}"})
+            return self.send(502, {"error": f"Couldn't get the video URL: {ex}"})
         log("download", f"latest_version {vid}/{itag} ok clen={size}", t0, every=0)
         name = qs.get("title") or f"{vid}.{itag}"
         if size is None:
@@ -1657,7 +1651,7 @@ class H(BaseHTTPRequestHandler):
                 up = urllib.request.urlopen(url, timeout=60)
             except Exception as ex:
                 log("download", f"open {vid}/{itag} FAIL 502 {repr(ex)[:120]}", t0, every=0)
-                return self.send(502, {"error": f"다운로드 실패: {ex}"})
+                return self.send(502, {"error": f"Download failed: {ex}"})
             self.send_response(200)
             self.send_header("Content-Type", "application/octet-stream")
             if up.headers.get("Content-Length"):

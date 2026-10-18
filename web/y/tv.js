@@ -1,6 +1,7 @@
 // TV mode: use it with nothing but an Android TV remote (arrows, OK, back)
 // Arrows = move to the nearest item (spatial navigation), OK = click, Back = previous screen.
 // On the watch page the player fills the screen: left/right = 10 s, OK = play/pause, down = into the control bar.
+import { $t } from "./i18n.js";
 import { $, $$, settings, toast, icon } from "./util.js";
 import { player, state, prefetch, closePopup } from "./core.js";
 
@@ -142,7 +143,7 @@ export function initTV() {
   document.documentElement.classList.toggle("tv", on);
   if (!on) return;
   player.root.setAttribute("tabindex", "0");
-  player.root.insertAdjacentHTML("beforeend", `<div class="ytp-tvhint">↑ 설정 · ↓ 버튼 · ←/→ 10초 · 확인 재생/정지</div>`);
+  player.root.insertAdjacentHTML("beforeend", `<div class="ytp-tvhint">${$t("↑ 설정 · ↓ 버튼 · ←/→ 10초 · 확인 재생/정지")}</div>`);
   // make the items of the player's settings menu reachable by remote whenever it opens or changes
   new MutationObserver(tvifyMenu).observe(player.root.querySelector(".ytp-menu"), { childList: true, attributes: true, attributeFilter: ["class"] });
   // TVs default to the dark theme (once; after that the setting wins)
@@ -231,5 +232,5 @@ export function initTV() {
       if (first && (!document.activeElement || document.activeElement === document.body)) focusEl(first);
     }, 350);
   });
-  toast("TV 모드: 방향키로 이동 · 확인으로 선택 · 뒤로로 돌아가기", null, null, 5000);
+  toast($t("TV 모드: 방향키로 이동 · 확인으로 선택 · 뒤로로 돌아가기"), null, null, 5000);
 }

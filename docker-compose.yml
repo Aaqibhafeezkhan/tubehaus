@@ -28,7 +28,7 @@ services:
       HT_INVIDIOUS: http://invidious:3000
       HT_COMPANION: http://companion:8282
       HT_PUBLIC_URL: ${HOMETUBE_URL}
-      HT_SUB_LANG: ${HOMETUBE_SUB_LANG:-ko}
+      HT_SUB_LANG: ${HOMETUBE_SUB_LANG:-en}
       HT_WHISPER_LANG: ${HOMETUBE_CAPTION_LANG:-auto}
     volumes:
       - hometube-data:/data

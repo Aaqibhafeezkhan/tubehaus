@@ -1,6 +1,7 @@
 // App skeleton: router, shared state (my library), cards, popup menus, dialogs
 import { $, $$, el, esc, icon, api, lib, settings, local, toast, copy, fmtTime, fmtViews, ago, thumb, normVideo, metaOf, pickThumb, dropCache } from "./util.js";
 import { Player } from "./player.js";
+import { $t, $tMsg, fmtShort, LANG, LOCALE } from "./i18n.js";
 
 export const player = new Player();
 export const routes = [];        // [regex, handler]
@@ -26,17 +27,17 @@ export async function setSub(cid, name, thumbUrl, on) {
     else delete state.lib.subs[cid];
     dropCache("/yt/feed");
     renderGuideSubs();
-    toast(on ? "구독했어요" : "구독을 취소했어요");
+    toast(on ? $t("구독했어요") : $t("구독을 취소했어요"));
     $$(`[data-subbtn="${cid}"]`).forEach((b) => subBtnPaint(b, on));
   } catch (e) { toast(e.message); }
 }
 export function subBtn(cid, name, thumbUrl, big = false) {
   const on = isSub(cid);
-  return `<button class="subbtn ${on ? "on" : ""} ${big ? "big" : ""}" data-subbtn="${esc(cid)}" data-name="${esc(name)}" data-thumb="${esc(thumbUrl || "")}">${on ? icon("bell") + "구독중" : "구독"}</button>`;
+  return `<button class="subbtn ${on ? "on" : ""} ${big ? "big" : ""}" data-subbtn="${esc(cid)}" data-name="${esc(name)}" data-thumb="${esc(thumbUrl || "")}">${on ? icon("bell") + $t("구독중") : $t("구독")}</button>`;
 }
 function subBtnPaint(b, on) {
   b.classList.toggle("on", on);
-  b.innerHTML = on ? icon("bell") + "구독중" : "구독";
+  b.innerHTML = on ? icon("bell") + $t("구독중") : $t("구독");
 }
 
 export async function setList(list, v, on, quiet) {
@@ -50,8 +51,8 @@ export async function setList(list, v, on, quiet) {
       if (on) state.lib.dislikes.push(v.id);
     } else if (r && r.playlist) state.lib.playlists[list] = r.playlist;
     if (!quiet) {
-      const name = list === "wl" ? "나중에 볼 동영상" : list === "likes" ? "좋아요 표시한 동영상" : state.lib.playlists[list]?.title;
-      if (list !== "dislikes") toast(on ? `${name}에 저장됨` : `${name}에서 삭제됨`);
+      const name = list === "wl" ? $t("나중에 볼 동영상") : list === "likes" ? $t("좋아요 표시한 동영상") : state.lib.playlists[list]?.title;
+      if (list !== "dislikes") toast(on ? `${$t("{0}에 저장됨", name)}` : `${$t("{0}에서 삭제됨", name)}`);
     }
   } catch (e) { toast(e.message); }
 }
@@ -60,7 +61,7 @@ export async function setList(list, v, on, quiet) {
 export const queue = {
   get() { try { return JSON.parse(sessionStorage.getItem("yt.queue") || "[]"); } catch { return []; } },
   set(a) { sessionStorage.setItem("yt.queue", JSON.stringify(a)); },
-  add(v) { const q = this.get().filter((x) => x.id !== v.id); q.push(metaOf(v)); this.set(q); toast("현재 재생목록에 추가됨"); },
+  add(v) { const q = this.get().filter((x) => x.id !== v.id); q.push(metaOf(v)); this.set(q); toast($t("현재 재생목록에 추가됨")); },
 };
 
 // ---------------------------------------------------------------- resume positions
@@ -88,15 +89,15 @@ export function getPos(id) { return posCache.get(id); }
 
 // ---------------------------------------------------------------- cards
 function badge(v) {
-  if (v.live) return `<span class="dur live">${icon("live")}실시간</span>`;
-  if (v.upcoming) return `<span class="dur up">예정</span>`;
+  if (v.live) return `<span class="dur live">${$t("{0}실시간", icon("live"))}</span>`;
+  if (v.upcoming) return `<span class="dur up">${$t("예정")}</span>`;
   if (v.short) return `<span class="dur">${icon("shorts")}</span>`;
   return v.len ? `<span class="dur">${fmtTime(v.len)}</span>` : "";
 }
 export function metaLine(v) {
   const parts = [];
-  if (v.live) parts.push(v.views != null ? `${fmtViewsLive(v.views)}` : "실시간");
-  else if (v.upcoming) parts.push(v.premiere ? `${new Date(v.premiere * 1000).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" })} 공개 예정` : "공개 예정");
+  if (v.live) parts.push(v.views != null ? `${fmtViewsLive(v.views)}` : $t("실시간"));
+  else if (v.upcoming) parts.push(v.premiere ? `${$t("{0} 공개 예정", new Date(v.premiere * 1000).toLocaleString(LOCALE, { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }))}` : $t("공개 예정"));
   else {
     if (v.views != null && v.views !== "") parts.push(fmtViews(v.views));
     else if (v.viewsText) parts.push(v.viewsText);
@@ -105,7 +106,7 @@ export function metaLine(v) {
   }
   return parts.map(esc).join(" • ");
 }
-const fmtViewsLive = (n) => fmtViews(n).replace("조회수", "").replace("회", "명 시청 중").trim();
+const fmtViewsLive = (n) => $t("{0}명 시청 중", fmtShort(+n));
 
 export function avatar(src, cls = "") {
   return src ? `<img class="av ${cls}" loading="lazy" src="${esc(src)}" alt="">` : `<span class="av ph ${cls}">${icon("account")}</span>`;
@@ -120,7 +121,7 @@ export function card(v, kind = "grid", extra = "") {
   if (!v || !v.id || state.hidden.has(v.id)) return "";
   const href = v.short ? `/shorts/${v.id}` : `/watch?v=${v.id}${extra}`;
   const by = v.authorId ? `<a href="/channel/${esc(v.authorId)}" data-nav class="by">${esc(v.author)}${v.verified ? icon("verified", "vf") : ""}</a>` : `<span class="by">${esc(v.author)}</span>`;
-  const more = `<button class="dots" data-menu="${esc(v.id)}" aria-label="작업 메뉴">${icon("more")}</button>`;
+  const more = `<button class="dots" data-menu="${esc(v.id)}" aria-label="${$t("작업 메뉴")}">${icon("more")}</button>`;
   const th = `<a href="${href}" data-nav class="th"><img loading="lazy" src="${thumb(v.id)}" alt="">${badge(v)}</a>`;
   if (kind === "short") {
     return `<div class="card short" data-vid="${esc(v.id)}"><a href="/shorts/${esc(v.id)}" data-nav class="th"><img loading="lazy" src="${thumb(v.id, "oar2")}" onerror="this.onerror=null;this.src='${thumb(v.id)}'" alt=""></a>
@@ -138,7 +139,7 @@ export function card(v, kind = "grid", extra = "") {
       <div class="tx"><a href="${href}" data-nav class="t" title="${esc(v.title)}">${esc(v.title)}</a><div class="s">${metaLine(v)}</div>
       <div class="chl">${v.authorId ? `<a href="/channel/${esc(v.authorId)}" data-nav>${avatar(av, "sm")}</a>` : ""}${by}</div>
       ${v.desc ? `<div class="d">${esc(v.desc.slice(0, 160))}</div>` : ""}
-      <div class="bd">${v.isNew ? "<i>새 동영상</i>" : ""}${v.is4k ? "<i>4K</i>" : ""}${v.cc ? "<i>자막</i>" : ""}</div></div>${more}</div>`;
+      <div class="bd">${v.isNew ? `<i>${$t("새 동영상")}</i>` : ""}${v.is4k ? "<i>4K</i>" : ""}${v.cc ? `<i>${$t("자막")}</i>` : ""}</div></div>${more}</div>`;
   }
   // compact
   return `<div class="card compact" data-vid="${esc(v.id)}">${th}<div class="tx"><a href="${href}" data-nav class="t" title="${esc(v.title)}">${esc(v.title)}</a>${by}<div class="s">${metaLine(v)}</div></div>${more}</div>`;
@@ -147,17 +148,16 @@ export function channelCard(c) {
   const th = pickThumb(c.authorThumbnails, 176);
   return `<div class="card chan"><a href="/channel/${esc(c.authorId)}" data-nav class="cth">${avatar(th, "xl")}</a>
     <div class="tx"><a href="/channel/${esc(c.authorId)}" data-nav class="t">${esc(c.author)}${c.authorVerified ? icon("verified", "vf") : ""}</a>
-    <div class="s">${esc(c.channelHandle || "")}${c.subCount != null ? " • 구독자 " + esc(fmtSubN(c.subCount)) : ""}</div>
+    <div class="s">${esc(c.channelHandle || "")}${c.subCount != null ? " • " + esc($t("구독자 {0}명", fmtShort(+c.subCount))) : ""}</div>
     <div class="d">${esc((c.description || "").slice(0, 140))}</div></div>
     ${subBtn(c.authorId, c.author, th)}</div>`;
 }
-const fmtSubN = (n) => (n >= 1e8 ? (n / 1e8).toFixed(1).replace(/\.0$/, "") + "억" : n >= 1e4 ? (n / 1e4).toFixed(n < 1e5 ? 1 : 0).replace(/\.0$/, "") + "만" : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, "") + "천" : n) + "명";
 export function playlistCard(p) {
   const first = p.videos?.[0]?.videoId || p.first;
   const img = p.playlistThumbnail ? p.playlistThumbnail.replace(/^https?:\/\/[^/]+(?=\/vi\/)/, "") : first ? thumb(first) : "";
   const href = `/playlist?list=${esc(p.playlistId || p.id)}`;
-  return `<div class="card grid pl"><a href="${href}" data-nav class="th stack">${img ? `<img loading="lazy" src="${esc(img)}" alt="">` : ""}<span class="dur">${icon("playlists")}동영상 ${p.videoCount ?? p.count ?? 0}개</span></a>
-    <div class="meta"><div class="tx"><a href="${href}" data-nav class="t">${esc(p.title)}</a><span class="by">${esc(p.author || "")}</span><a href="${href}" data-nav class="s">전체 재생목록 보기</a></div></div></div>`;
+  return `<div class="card grid pl"><a href="${href}" data-nav class="th stack">${img ? `<img loading="lazy" src="${esc(img)}" alt="">` : ""}<span class="dur">${$t("{0}동영상 {1}개", icon("playlists"), p.videoCount ?? p.count ?? 0)}</span></a>
+    <div class="meta"><div class="tx"><a href="${href}" data-nav class="t">${esc(p.title)}</a><span class="by">${esc(p.author || "")}</span><a href="${href}" data-nav class="s">${$t("전체 재생목록 보기")}</a></div></div></div>`;
 }
 
 // keep video objects where the card menu can find them
@@ -222,17 +222,17 @@ export const mi = (a, ic, label) => `<div class="mi" data-a="${a}">${icon(ic)}<s
 
 export function videoMenu(anchor, v, ctx = {}) {
   const items = [
-    mi("queue", "playlists", "현재 재생목록에 추가"),
-    mi("wl", "later", inList("wl", v.id) ? "나중에 볼 동영상에서 삭제" : "나중에 볼 동영상에 저장"),
-    mi("save", "save", "재생목록에 저장"),
-    v.live ? "" : mi("dl", "download", "오프라인 저장 (다운로드)"),
-    mi("share", "share", "공유"),
-    mi("cast", "tv", "TV로 보내기"),
+    mi("queue", "playlists", $t("현재 재생목록에 추가")),
+    mi("wl", "later", inList("wl", v.id) ? $t("나중에 볼 동영상에서 삭제") : $t("나중에 볼 동영상에 저장")),
+    mi("save", "save", $t("재생목록에 저장")),
+    v.live ? "" : mi("dl", "download", $t("오프라인 저장 (다운로드)")),
+    mi("share", "share", $t("공유")),
+    mi("cast", "tv", $t("TV로 보내기")),
     "<hr>",
-    ctx.hist ? mi("unhist", "trash", "시청 기록에서 삭제") : "",
-    ctx.pl ? mi("unpl", "trash", "재생목록에서 삭제") : "",
-    ctx.home ? mi("hide", "close", "관심 없음") : "",
-    v.authorId ? mi("chan", "account", "채널로 이동") : "",
+    ctx.hist ? mi("unhist", "trash", $t("시청 기록에서 삭제")) : "",
+    ctx.pl ? mi("unpl", "trash", $t("재생목록에서 삭제")) : "",
+    ctx.home ? mi("hide", "close", $t("관심 없음")) : "",
+    v.authorId ? mi("chan", "account", $t("채널로 이동")) : "",
   ].join("");
   popup(anchor, items, async (a) => {
     if (a === "queue") queue.add(v);
@@ -246,12 +246,12 @@ export function videoMenu(anchor, v, ctx = {}) {
       state.hidden.add(v.id);
       local.set("hidden", [...state.hidden].slice(-2000));
       anchor.closest(".card")?.remove();
-      toast("동영상이 삭제됨", "실행취소", () => { state.hidden.delete(v.id); local.set("hidden", [...state.hidden]); render(); });
+      toast($t("동영상이 삭제됨"), $t("실행취소"), () => { state.hidden.delete(v.id); local.set("hidden", [...state.hidden]); render(); });
     }
     if (a === "unhist") {
       await lib("hist/del", { method: "POST", body: { id: v.id } }).catch(() => { });
       anchor.closest(".card")?.remove();
-      toast("시청 기록에서 삭제됨");
+      toast($t("시청 기록에서 삭제됨"));
     }
     if (a === "unpl") {
       await setList(ctx.pl, v, false);
@@ -276,13 +276,13 @@ export function shareDialog(v) {
   const t = player.info?.videoId === v.id ? Math.floor(player.video.currentTime) : 0;
   const base = `${location.origin}/watch?v=${v.id}`;
   const { box, close } = dialog(`
-    <div class="dh"><b>공유</b><button data-close>${icon("close")}</button></div>
+    <div class="dh"><b>${$t("공유")}</b><button data-close>${icon("close")}</button></div>
     <div class="share-row">
-      ${navigator.share ? `<button class="sh-btn" data-s="sys">${icon("share")}<span>기기 공유</span></button>` : ""}
-      <button class="sh-btn" data-s="yt">${icon("open")}<span>YouTube 링크</span></button>
+      ${navigator.share ? `<button class="sh-btn" data-s="sys">${icon("share")}<span>${$t("기기 공유")}</span></button>` : ""}
+      <button class="sh-btn" data-s="yt">${icon("open")}<span>${$t("YouTube 링크")}</span></button>
     </div>
-    <div class="share-link"><input readonly value="${esc(base)}"><button class="pill blue" data-s="copy">복사</button></div>
-    ${t ? `<label class="chk"><input type="checkbox" class="st"> 시작 시간 ${fmtTime(t)}</label>` : ""}`);
+    <div class="share-link"><input readonly value="${esc(base)}"><button class="pill blue" data-s="copy">${$t("복사")}</button></div>
+    ${t ? `<label class="chk"><input type="checkbox" class="st"> ${$t("시작 시간 {0}", fmtTime(t))}</label>` : ""}`);
   const inp = box.querySelector(".share-link input");
   const st = box.querySelector(".st");
   const url = () => (st && st.checked ? `${base}&t=${t}` : base);
@@ -300,10 +300,10 @@ export async function saveDialog(v) {
   const pls = Object.entries(state.lib.playlists).sort((a, b) => (b[1].updated || 0) - (a[1].updated || 0));
   const row = (list, label, on) => `<label class="chk"><input type="checkbox" data-l="${esc(list)}" ${on ? "checked" : ""}> ${esc(label)}</label>`;
   const { box, close } = dialog(`
-    <div class="dh"><b>동영상 저장...</b><button data-close>${icon("close")}</button></div>
-    <div class="savelist">${row("wl", "나중에 볼 동영상", inList("wl", v.id))}${pls.map(([id, p]) => row(id, p.title, (p.ids || []).includes(v.id))).join("")}</div>
-    <div class="newpl"><button class="ghost add">${icon("add")} 새 재생목록 만들기</button>
-      <div class="newform" hidden><input maxlength="150" placeholder="이름 입력..."><button class="pill blue mk">만들기</button></div></div>`, { cls: "narrow" });
+    <div class="dh"><b>${$t("동영상 저장...")}</b><button data-close>${icon("close")}</button></div>
+    <div class="savelist">${row("wl", $t("나중에 볼 동영상"), inList("wl", v.id))}${pls.map(([id, p]) => row(id, p.title, (p.ids || []).includes(v.id))).join("")}</div>
+    <div class="newpl"><button class="ghost add">${$t("{0} 새 재생목록 만들기", icon("add"))}</button>
+      <div class="newform" hidden><input maxlength="150" placeholder="${$t("이름 입력...")}"><button class="pill blue mk">${$t("만들기")}</button></div></div>`, { cls: "narrow" });
   box.querySelectorAll("input[data-l]").forEach((c) => (c.onchange = () => setList(c.dataset.l, v, c.checked)));
   box.querySelector(".add").onclick = () => { box.querySelector(".newform").hidden = false; box.querySelector(".add").hidden = true; box.querySelector(".newform input").focus(); };
   const mk = async () => {
@@ -312,7 +312,7 @@ export async function saveDialog(v) {
     try {
       const r = await lib("pl/new", { method: "POST", body: { title, video: metaOf(v) } });
       state.lib.playlists[r.id] = r.playlist;
-      toast(`${title}에 저장됨`);
+      toast(`${$t("{0}에 저장됨", title)}`);
       close();
     } catch (e) { toast(e.message); }
   };
@@ -321,7 +321,7 @@ export async function saveDialog(v) {
 }
 
 export async function downloadDialog(v) {
-  const { box, close } = dialog(`<div class="dh"><b>오프라인 저장</b><button data-close>${icon("close")}</button></div><div class="dlbody"><div class="spinner"></div></div>`, { cls: "narrow dl" });
+  const { box, close } = dialog(`<div class="dh"><b>${$t("오프라인 저장")}</b><button data-close>${icon("close")}</button></div><div class="dlbody"><div class="spinner"></div></div>`, { cls: "narrow dl" });
   let info;
   try { info = await api(`/api/v1/videos/${v.id}`, { ttl: 600000 }); } catch (e) { box.querySelector(".dlbody").textContent = e.message; return; }
   const name = (info.title || v.id).replace(/[\/:*?"<>|]+/g, " ").slice(0, 120);
@@ -344,21 +344,21 @@ export async function downloadDialog(v) {
     const webm = /webm/.test(f.type);
     const a = webm ? opus : m4a;
     if (!a) continue;
-    const codec = /avc1/.test(f.type) ? "H.264 · 어디서나 재생" : /av01/.test(f.type) ? "AV1 · 최신 기기" : "VP9 · 컴퓨터/안드로이드";
+    const codec = /avc1/.test(f.type) ? $t("H.264 · 어디서나 재생") : /av01/.test(f.type) ? $t("AV1 · 최신 기기") : $t("VP9 · 컴퓨터/안드로이드");
     hd.push({ v: f.itag, a: a.itag, ext: webm ? "webm" : "mp4", label: `${f.qualityLabel || h + "p"}`, sub: codec, size: (+f.clen || 0) + (+a.clen || 0), h });
   }
   const mb = (n) => (n >= 1073741824 ? (n / 1073741824).toFixed(2) + " GB" : (n / 1048576).toFixed(0) + " MB");
   const direct = [];
-  if (m4a) direct.push({ itag: m4a.itag, label: `음악만 · M4A ${Math.round(m4a.bitrate / 1000)}kbps`, ext: "m4a", size: m4a.clen });
-  if (opus) direct.push({ itag: opus.itag, label: `음악만 · Opus ${Math.round(opus.bitrate / 1000)}kbps`, ext: "webm", size: opus.clen });
+  if (m4a) direct.push({ itag: m4a.itag, label: `${$t("음악만 · M4A {0}kbps", Math.round(m4a.bitrate / 1000))}`, ext: "m4a", size: m4a.clen });
+  if (opus) direct.push({ itag: opus.itag, label: `${$t("음악만 · Opus {0}kbps", Math.round(opus.bitrate / 1000))}`, ext: "webm", size: opus.clen });
   box.querySelector(".dlbody").innerHTML =
-    (hd.length ? `<div class="dlsec">동영상 (소리 포함)</div>` + hd.map((o, i) =>
+    (hd.length ? `<div class="dlsec">${$t("동영상 (소리 포함)")}</div>` + hd.map((o, i) =>
       `<button class="dlopt" data-i="${i}">${icon("download")}<span><b>${esc(o.label)}</b> <small>${esc(o.sub)}</small></span><em>${mb(o.size)}</em></button>`).join("") : "") +
-    (direct.length ? `<div class="dlsec">음악</div>` + direct.map((o) =>
+    (direct.length ? `<div class="dlsec">${$t("음악")}</div>` + direct.map((o) =>
       `<a class="dlopt" href="/latest_version?id=${esc(v.id)}&itag=${o.itag}&local=true&title=${encodeURIComponent(name + "." + o.ext)}" download="${esc(name + "." + o.ext)}">${icon("audio")}<span>${esc(o.label)}</span>${o.size ? `<em>${mb(+o.size)}</em>` : ""}</a>`).join("") : "") +
     `<div class="dlprog" hidden><div class="dlbar"><i></i></div><div class="dltxt"></div></div>` +
-    `<p class="hint">영상과 소리를 서버가 받아서 한 파일로 합친 다음 내려줘요. 창을 닫아도 서버에서 계속 준비하고, 다 되면 알려줘요.</p>`;
-  box.querySelectorAll("a.dlopt").forEach((a) => (a.onclick = () => { toast("다운로드를 시작했어요"); setTimeout(close, 300); }));
+    `<p class="hint">${$t("영상과 소리를 서버가 받아서 한 파일로 합친 다음 내려줘요. 창을 닫아도 서버에서 계속 준비하고, 다 되면 알려줘요.")}</p>`;
+  box.querySelectorAll("a.dlopt").forEach((a) => (a.onclick = () => { toast($t("다운로드를 시작했어요")); setTimeout(close, 300); }));
   box.querySelectorAll("button.dlopt").forEach((b) => (b.onclick = async () => {
     const o = hd[+b.dataset.i];
     box.querySelectorAll("button.dlopt").forEach((x) => (x.disabled = true));
@@ -377,15 +377,15 @@ function watchDl(job, box) {
     try { s = await api(`/api/p/yt/dl?job=${job}`, { quiet: true }); } catch { return setTimeout(tick, 3000); }
     if (box.isConnected) {
       box.querySelector(".dlbar i").style.width = s.pct + "%";
-      box.querySelector(".dltxt").textContent = s.status === "merge" ? "영상과 소리를 합치는 중..." : s.status === "done" ? "완료! 저장을 시작해요" : s.status === "error" ? s.err : `서버가 받는 중 ${Math.floor(s.pct)}%`;
+      box.querySelector(".dltxt").textContent = s.status === "merge" ? $t("영상과 소리를 합치는 중...") : s.status === "done" ? $t("완료! 저장을 시작해요") : s.status === "error" ? $tMsg(s.err) : `${$t("서버가 받는 중 {0}%", Math.floor(s.pct))}`;
     }
-    if (s.status === "error") { toast("저장 실패: " + (s.err || "")); return; }
+    if (s.status === "error") { toast($t("저장 실패: ") + $tMsg(s.err || "")); return; }
     if (s.status !== "done") return setTimeout(tick, 1500);
     const a = el(`<a href="/api/p/yt/dl/file?job=${job}" download="${esc(s.name)}" hidden></a>`);
     document.body.append(a);
     a.click();
     a.remove();
-    toast(`${s.name} 저장 시작`, "다시 받기", () => { location.href = `/api/p/yt/dl/file?job=${job}`; }, 10000);
+    toast(`${$t("{0} 저장 시작", s.name)}`, $t("다시 받기"), () => { location.href = `/api/p/yt/dl/file?job=${job}`; }, 10000);
     if (box.isConnected) setTimeout(() => $("#modal").className === "show" && box.isConnected && ($("#modal").className = ""), 800);
   };
   tick();
@@ -393,24 +393,24 @@ function watchDl(job, box) {
 
 export function keysDialog() {
   const k = [
-    ["k / 스페이스", "재생 / 일시중지"], ["j / l", "10초 뒤로 / 앞으로"], ["← / →", "5초 뒤로 / 앞으로"],
-    ["↑ / ↓", "볼륨 5% 올리기 / 내리기"], ["m", "음소거"], ["f", "전체 화면"], ["t", "영화관 모드"], ["i", "미니 플레이어"],
-    ["c", "자막 켜기 / 끄기"], ["0 … 9", "영상의 0% … 90% 지점으로"], [", / .", "(일시중지 중) 한 프레임 뒤 / 앞"],
-    ["< / >", "재생 속도 느리게 / 빠르게"], ["Shift + N / P", "다음 / 이전 동영상"], ["Home / End", "처음 / 끝으로"], ["/", "검색창으로"], ["?", "이 단축키 목록"],
+    [$t("k / 스페이스"), $t("재생 / 일시중지")], ["j / l", $t("10초 뒤로 / 앞으로")], ["← / →", $t("5초 뒤로 / 앞으로")],
+    ["↑ / ↓", $t("볼륨 5% 올리기 / 내리기")], ["m", $t("음소거")], ["f", $t("전체 화면")], ["t", $t("영화관 모드")], ["i", $t("미니 플레이어")],
+    ["c", $t("자막 켜기 / 끄기")], ["0 … 9", $t("영상의 0% … 90% 지점으로")], [", / .", $t("(일시중지 중) 한 프레임 뒤 / 앞")],
+    ["< / >", $t("재생 속도 느리게 / 빠르게")], ["Shift + N / P", $t("다음 / 이전 동영상")], ["Home / End", $t("처음 / 끝으로")], ["/", $t("검색창으로")], ["?", $t("이 단축키 목록")],
   ];
-  dialog(`<div class="dh"><b>단축키</b><button data-close>${icon("close")}</button></div><table class="keys">${k.map(([a, b]) => `<tr><td><kbd>${esc(a)}</kbd></td><td>${esc(b)}</td></tr>`).join("")}</table>`);
+  dialog(`<div class="dh"><b>${$t("단축키")}</b><button data-close>${icon("close")}</button></div><table class="keys">${k.map(([a, b]) => `<tr><td><kbd>${esc(a)}</kbd></td><td>${esc(b)}</td></tr>`).join("")}</table>`);
 }
 
 // ---------------------------------------------------------------- side menu
 export function renderGuideSubs() {
   const box = $("#guide .g-subs");
   if (!box) return;
-  const subs = Object.entries(state.lib.subs).sort((a, b) => a[1].name.localeCompare(b[1].name, "ko"));
+  const subs = Object.entries(state.lib.subs).sort((a, b) => a[1].name.localeCompare(b[1].name, LANG));
   const show = box.dataset.all ? subs : subs.slice(0, 7);
   box.innerHTML = subs.length
     ? show.map(([id, s]) => `<a href="/channel/${esc(id)}" data-nav class="gi">${avatar(s.thumb, "xs")}<span>${esc(s.name)}</span></a>`).join("") +
-    (subs.length > 7 ? `<button class="gi more">${icon(box.dataset.all ? "expand" : "expand")}<span>${box.dataset.all ? "간략히 보기" : `${subs.length - 7}개 더보기`}</span></button>` : "")
-    : `<div class="g-empty">구독한 채널이 여기에 나와요</div>`;
+    (subs.length > 7 ? `<button class="gi more">${icon(box.dataset.all ? "expand" : "expand")}<span>${box.dataset.all ? $t("간략히 보기") : `${$t("{0}개 더보기", subs.length - 7)}`}</span></button>` : "")
+    : `<div class="g-empty">${$t("구독한 채널이 여기에 나와요")}</div>`;
   const m = box.querySelector(".more");
   if (m) m.onclick = () => { if (box.dataset.all) delete box.dataset.all; else box.dataset.all = "1"; renderGuideSubs(); };
 }
@@ -455,13 +455,13 @@ export async function render() {
     try { await fn(page, m, () => seq === renderSeq); }
     catch (e) {
       console.error(e);
-      if (seq === renderSeq) page.innerHTML = `<div class="empty">${icon("info")}<p>${esc(e.message || "문제가 생겼어요")}</p><button class="pill" onclick="location.reload()">다시 시도</button></div>`;
+      if (seq === renderSeq) page.innerHTML = `<div class="empty">${icon("info")}<p>${esc(e.message || $t("문제가 생겼어요"))}</p><button class="pill" onclick="location.reload()">${$t("다시 시도")}</button></div>`;
     }
     if (restoring && seq === renderSeq) restoreScroll();
     if (seq === renderSeq) dispatchEvent(new CustomEvent("routed"));
     return;
   }
-  page.innerHTML = `<div class="empty">${icon("info")}<p>페이지를 찾을 수 없어요</p><a class="pill" href="/" data-nav>홈으로</a></div>`;
+  page.innerHTML = `<div class="empty">${icon("info")}<p>${$t("페이지를 찾을 수 없어요")}</p><a class="pill" href="/" data-nav>${$t("홈으로")}</a></div>`;
 }
 // restore the old scroll position only when going back
 let _restore = false;

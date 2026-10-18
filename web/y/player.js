@@ -1,13 +1,14 @@
 // YouTube-style player: controls, captions, storyboards, chapters and SponsorBlock drawn on top of Shaka (DASH/HLS).
 // Built once and reused (moving between pages continues seamlessly in the mini player).
 import { $, $$, el, esc, icon, fmtTime, settings, toast, copy, localUrl, parseT, toGate } from "./util.js";
+import { $t, LANG, LANGS } from "./i18n.js";
 
 const isTouch = matchMedia("(pointer: coarse)").matches;
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const SB_CATS = {
-  sponsor: ["스폰서", "#00d400"], selfpromo: ["자체 홍보", "#ffff00"], interaction: ["구독·좋아요 요청", "#cc00ff"],
-  intro: ["인트로", "#00ffff"], outro: ["엔딩", "#0202ed"], preview: ["미리보기·요약", "#008fd6"],
-  music_offtopic: ["음악 아닌 부분", "#ff9900"], filler: ["잡담", "#7300ff"],
+  sponsor: [$t("스폰서"), "#00d400"], selfpromo: [$t("자체 홍보"), "#ffff00"], interaction: [$t("구독·좋아요 요청"), "#cc00ff"],
+  intro: [$t("인트로"), "#00ffff"], outro: [$t("엔딩"), "#0202ed"], preview: [$t("미리보기·요약"), "#008fd6"],
+  music_offtopic: [$t("음악 아닌 부분"), "#ff9900"], filler: [$t("잡담"), "#7300ff"],
 };
 export { SB_CATS };
 
@@ -83,7 +84,7 @@ function loadShaka() {
     s.src = "/y/lib/shaka-player.compiled.js";
     s.async = true;
     s.onload = () => ok();
-    s.onerror = () => { shakaP = null; fail(new Error("재생 엔진을 불러오지 못했어요")); };
+    s.onerror = () => { shakaP = null; fail(new Error($t("재생 엔진을 불러오지 못했어요"))); };
     document.head.append(s);
   }));
 }
@@ -127,7 +128,7 @@ export class Player {
   <div class="ytp-seekfx l"><b></b><span></span></div><div class="ytp-seekfx r"><b></b><span></span></div>
   <div class="ytp-flash"></div>
   <button class="ytp-skipbtn"></button>
-  <button class="ytp-unmute">${icon("mute")}<span>소리 켜기</span></button>
+  <button class="ytp-unmute">${icon("mute")}<span>${$t("소리 켜기")}</span></button>
   <div class="ytp-top"><div class="ytp-title"></div></div>
   <div class="ytp-center">
     <button class="c-prev">${icon("prev")}</button><button class="c-play">${icon("play")}</button><button class="c-next">${icon("next")}</button>
@@ -142,22 +143,22 @@ export class Player {
     </div>
     <div class="ytp-bar">
       <div class="ytp-l">
-        <button class="b-prev" title="이전 (Shift+P)">${icon("prev")}</button>
-        <button class="b-play" title="재생 (k)">${icon("play")}</button>
-        <button class="b-next" title="다음 (Shift+N)">${icon("next")}</button>
-        <div class="ytp-vol"><button class="b-mute" title="음소거 (m)">${icon("vol")}</button><div class="ytp-volbar"><input type="range" min="0" max="1" step="0.01"></div></div>
+        <button class="b-prev" title="${$t("이전 (Shift+P)")}">${icon("prev")}</button>
+        <button class="b-play" title="${$t("재생 (k)")}">${icon("play")}</button>
+        <button class="b-next" title="${$t("다음 (Shift+N)")}">${icon("next")}</button>
+        <div class="ytp-vol"><button class="b-mute" title="${$t("음소거 (m)")}">${icon("vol")}</button><div class="ytp-volbar"><input type="range" min="0" max="1" step="0.01"></div></div>
         <div class="ytp-time"><span class="t-cur">0:00</span><span class="t-sep"> / </span><span class="t-dur">0:00</span></div>
-        <button class="ytp-livebadge" title="실시간으로 이동"><i></i>실시간</button>
+        <button class="ytp-livebadge" title="${$t("실시간으로 이동")}"><i></i>${$t("실시간")}</button>
         <button class="ytp-chap"></button>
       </div>
       <div class="ytp-r">
-        <button class="b-auto" title="자동재생"><span class="sw"><i></i></span></button>
-        <button class="b-cc" title="자막 (c)">${icon("cc")}</button>
-        <button class="b-set" title="설정">${icon("gear")}</button>
+        <button class="b-auto" title="${$t("자동재생")}"><span class="sw"><i></i></span></button>
+        <button class="b-cc" title="${$t("자막 (c)")}">${icon("cc")}</button>
+        <button class="b-set" title="${$t("설정")}">${icon("gear")}</button>
         <button class="b-pip" title="PIP">${icon("pip")}</button>
-        <button class="b-mini" title="미니 플레이어 (i)">${icon("mini")}</button>
-        <button class="b-theater" title="영화관 모드 (t)">${icon("theater")}</button>
-        <button class="b-fs" title="전체 화면 (f)">${icon("fs")}</button>
+        <button class="b-mini" title="${$t("미니 플레이어 (i)")}">${icon("mini")}</button>
+        <button class="b-theater" title="${$t("영화관 모드 (t)")}">${icon("theater")}</button>
+        <button class="b-fs" title="${$t("전체 화면 (f)")}">${icon("fs")}</button>
       </div>
     </div>
   </div>
@@ -393,7 +394,7 @@ export class Player {
           if (alt) {
             this.badCodec.add(cur.videoCodec);
             this.sp.selectVariantTrack(alt, true, 2);
-            toast(`프레임이 빠져서 더 부드러운 코덱(${alt.videoCodec.split(".")[0]})으로 바꿨어요`);
+            toast(`${$t("프레임이 빠져서 더 부드러운 코덱({0})으로 바꿨어요", alt.videoCodec.split(".")[0])}`);
           }
           // never lower the resolution automatically - only switch to another codec at the same resolution
         }
@@ -425,10 +426,11 @@ export class Player {
   // ------------------------------------------------------------ captions
   captionList() {
     // YouTube gives no captions for live streams -> our server transcribes the audio (whisper)
-    if (this.live && this.info) return [{ label: "한국어 (자동 받아쓰기)", lang: "ko", url: `live:${this.info.videoId}`, liveCc: true }];
+    if (this.live && this.info) return [{ label: $t("자동 받아쓰기 (실시간)"), lang: "auto", url: `live:${this.info.videoId}`, liveCc: true }];
     const list = (this.info?.captions || []).map((c) => ({ label: c.label, lang: c.language_code, url: c.url.replace(/^https?:\/\/[^/]+/, "") }));
-    if (this.info && !this.live && !list.some((c) => c.lang.startsWith("ko") && !/auto/i.test(c.label)) && list.length) {
-      list.push({ label: "한국어 (자동 번역)", lang: "ko", url: `/api/p/sub/${this.info.videoId}.vtt`, tr: true });
+    if (this.info && !this.live && !list.some((c) => c.lang.startsWith(LANG) && !/auto/i.test(c.label)) && list.length) {
+      const name = (LANGS.find(([c]) => c === LANG) || [, LANG])[1];
+      list.push({ label: $t("{0} (자동 번역)", name), lang: LANG, url: `/api/p/sub/${this.info.videoId}.vtt?tl=${LANG}`, tr: true });
     }
     return list;
   }
@@ -439,7 +441,7 @@ export class Player {
     const want = settings.capLang;
     const pick = list.find((c) => c.lang.startsWith(want) && !/auto/i.test(c.label)) ||
       list.find((c) => c.lang.startsWith(want) && !c.tr) ||
-      (settings.autoTranslate && want === "ko" && list.find((c) => c.tr)) ||
+      (settings.autoTranslate && want === LANG && list.find((c) => c.tr)) ||
       null;
     this.setCaption(pick);
   }
@@ -465,7 +467,7 @@ export class Player {
       const cues = parseVtt(await r.text());
       if (this.info === info && this.capTrack === c) { this.cues = cues; this.renderCaption(true); }
     } catch {
-      if (this.capTrack === c) toast("자막을 불러오지 못했어요");
+      if (this.capTrack === c) toast($t("자막을 불러오지 못했어요"));
     }
   }
   // segments of the current manifest: playback time <-> YouTube segment number (sq). The segment URL contains /sq/<number>/.
@@ -517,7 +519,7 @@ export class Player {
     } catch { } finally { this.liveCcBusy = false; }
   }
   toggleCaptions() {
-    if (this.capTrack) { this.setCaption(null); settings.captions = false; this.flash("자막 꺼짐"); }
+    if (this.capTrack) { this.setCaption(null); settings.captions = false; this.flash($t("자막 꺼짐")); }
     else {
       settings.captions = true;
       this.setupCaptions();
@@ -677,7 +679,7 @@ export class Player {
       r.classList.add("ended");
       this.setIcons();
       this.on.progress?.(true);
-      if (this.sleepAt === -1) { this.sleepAt = 0; toast("수면 타이머: 재생을 멈췄어요"); return; }
+      if (this.sleepAt === -1) { this.sleepAt = 0; toast($t("수면 타이머: 재생을 멈췄어요")); return; }
       this.on.ended?.();
     });
     v.addEventListener("enterpictureinpicture", () => r.classList.add("pip"));
@@ -694,13 +696,13 @@ export class Player {
     const playIc = this.ended ? "replay" : v.paused ? "play" : "pause";
     this.q(".b-play").innerHTML = icon(playIc);
     this.q(".c-play").innerHTML = icon(playIc);
-    this.q(".b-play").title = this.ended ? "다시 보기" : v.paused ? "재생 (k)" : "일시중지 (k)";
+    this.q(".b-play").title = this.ended ? $t("다시 보기") : v.paused ? $t("재생 (k)") : $t("일시중지 (k)");
     this.q(".b-mute").innerHTML = icon(v.muted || v.volume === 0 ? "mute" : v.volume < 0.5 ? "vollow" : "vol");
     const sl = this.q(".ytp-volbar input");
     sl.value = v.muted ? 0 : v.volume;
     sl.style.setProperty("--p", (v.muted ? 0 : v.volume) * 100 + "%");
     this.q(".b-auto").classList.toggle("on", settings.autoplay);
-    this.q(".b-auto").title = settings.autoplay ? "자동재생 사용" : "자동재생 사용 안함";
+    this.q(".b-auto").title = settings.autoplay ? $t("자동재생 사용") : $t("자동재생 사용 안함");
     const fs = !!(document.fullscreenElement || document.webkitFullscreenElement) || document.body.classList.contains("tvfull");
     this.q(".b-fs").innerHTML = icon(fs ? "fsx" : "fs");
     this.q(".b-theater").innerHTML = icon(this.mode === "theater" ? "theaterx" : "theater");
@@ -723,7 +725,7 @@ export class Player {
     on(".b-prev", () => this.on.prev?.());
     on(".c-prev", () => this.on.prev?.());
     on(".b-mute", () => { v.muted = !v.muted; if (!v.muted && v.volume === 0) v.volume = 0.5; });
-    on(".b-auto", () => { settings.autoplay = !settings.autoplay; this.setIcons(); this.flash(settings.autoplay ? "자동재생 사용" : "자동재생 사용 안함"); });
+    on(".b-auto", () => { settings.autoplay = !settings.autoplay; this.setIcons(); this.flash(settings.autoplay ? $t("자동재생 사용") : $t("자동재생 사용 안함")); });
     on(".b-cc", () => this.toggleCaptions());
     on(".b-set", () => (this.menuOpen ? this.closeMenu() : this.openMenu("main")));
     on(".b-mini", () => this.on.mini?.());
@@ -808,7 +810,7 @@ export class Player {
   }
   seekFx(side, n) {
     const f = this.q(side < 0 ? ".ytp-seekfx.l" : ".ytp-seekfx.r");
-    f.querySelector("span").textContent = n + "초";
+    f.querySelector("span").textContent = $t("{0}초", n);
     f.classList.remove("go");
     void f.offsetWidth;
     f.classList.add("go");
@@ -841,7 +843,7 @@ export class Player {
     try {
       if (document.pictureInPictureElement) await document.exitPictureInPicture();
       else await this.video.requestPictureInPicture();
-    } catch { toast("PIP 를 열 수 없어요"); }
+    } catch { toast($t("PIP 를 열 수 없어요")); }
   }
 
   // ------------------------------------------------------------ settings menu
@@ -875,46 +877,46 @@ export class Player {
       const t = this.curTrack();
       const caps = this.captionList();
       const auds = this.audioLangs();
-      const sleepTxt = this.sleepAt === -1 ? "동영상 끝날 때" : this.sleepAt ? Math.ceil((this.sleepAt - Date.now()) / 60000) + "분" : "사용 안함";
+      const sleepTxt = this.sleepAt === -1 ? $t("동영상 끝날 때") : this.sleepAt ? $t("{0}분", Math.ceil((this.sleepAt - Date.now()) / 60000)) : $t("사용 안함");
       return [
-        tog("ambient", "ambient", "앰비언트 모드", settings.ambient),
-        caps.length ? row("go:cc", "cc", `자막 (${caps.length})`, this.capTrack ? esc(this.capTrack.label) : "사용 안함") : "",
-        row("go:speed", "speed", "재생 속도", v.playbackRate === 1 ? "표준" : v.playbackRate + ""),
-        this.live && !this.tracks().length ? "" : row("go:quality", "tune", "화질", this.qLabel(t)),
-        auds.length > 1 ? row("go:audio", "audio", "오디오 트랙", esc(this.curAudio() || "")) : "",
-        row("go:sleep", "timer", "수면 타이머", sleepTxt),
-        tog("loop", "loop", "반복 재생", v.loop),
-        tog("stats", "info", "전문가용 통계", this.statsOn),
+        tog("ambient", "ambient", $t("앰비언트 모드"), settings.ambient),
+        caps.length ? row("go:cc", "cc", `${$t("자막 ({0})", caps.length)}`, this.capTrack ? esc(this.capTrack.label) : $t("사용 안함")) : "",
+        row("go:speed", "speed", $t("재생 속도"), v.playbackRate === 1 ? $t("표준") : v.playbackRate + ""),
+        this.live && !this.tracks().length ? "" : row("go:quality", "tune", $t("화질"), this.qLabel(t)),
+        auds.length > 1 ? row("go:audio", "audio", $t("오디오 트랙"), esc(this.curAudio() || "")) : "",
+        row("go:sleep", "timer", $t("수면 타이머"), sleepTxt),
+        tog("loop", "loop", $t("반복 재생"), v.loop),
+        tog("stats", "info", $t("전문가용 통계"), this.statsOn),
       ].join("");
     }
     if (page === "speed") {
-      return head("재생 속도") +
+      return head($t("재생 속도")) +
         `<div class="spd"><span class="spdv">${v.playbackRate.toFixed(2)}x</span><input type="range" min="0.25" max="4" step="0.05" value="${v.playbackRate}"></div>` +
-        SPEEDS.map((s) => opt("speed", s, s === 1 ? "표준" : s, Math.abs(v.playbackRate - s) < 0.001)).join("");
+        SPEEDS.map((s) => opt("speed", s, s === 1 ? $t("표준") : s, Math.abs(v.playbackRate - s) < 0.001)).join("");
     }
     if (page === "quality") {
       const t = this.curTrack();
-      return head("화질") + this.heights().map((x) =>
+      return head($t("화질")) + this.heights().map((x) =>
         opt("quality", x.height, this.qLabel(x), this.lockH === x.height, x.height >= 4320 ? "8K" : x.height >= 2160 ? "4K" : x.height >= 720 ? "HD" : "")).join("");
     }
     if (page === "cc") {
-      return head("자막") + opt("cc", "", "사용 안함", !this.capTrack) +
+      return head($t("자막")) + opt("cc", "", $t("사용 안함"), !this.capTrack) +
         this.captionList().map((c, i) => opt("cc", i, esc(c.label), this.capTrack && this.capTrack.url === c.url)).join("") +
-        `<div class="mo" data-a="go:capstyle"><i class=sp></i><span>옵션 (크기·배경)</span></div>`;
+        `<div class="mo" data-a="go:capstyle"><i class=sp></i><span>${$t("옵션 (크기·배경)")}</span></div>`;
     }
     if (page === "capstyle") {
-      return `<div class="mh" data-a="go:cc">${icon("left")}<span>자막 옵션</span></div>` +
-        [50, 75, 100, 150, 200].map((s) => opt("capsize", s, `글자 크기 ${s}%`, settings.capSize === s)).join("") +
-        [0, 50, 75, 100].map((s) => opt("capbg", s, `배경 불투명도 ${s}%`, settings.capBg === s)).join("");
+      return `<div class="mh" data-a="go:cc">${icon("left")}<span>${$t("자막 옵션")}</span></div>` +
+        [50, 75, 100, 150, 200].map((s) => opt("capsize", s, `${$t("글자 크기 {0}%", s)}`, settings.capSize === s)).join("") +
+        [0, 50, 75, 100].map((s) => opt("capbg", s, `${$t("배경 불투명도 {0}%", s)}`, settings.capBg === s)).join("");
     }
     if (page === "audio") {
       const cur = this.curAudio();
-      return head("오디오 트랙") + this.audioLangs().map((l) => opt("audio", l, esc(l), l === cur)).join("");
+      return head($t("오디오 트랙")) + this.audioLangs().map((l) => opt("audio", l, esc(l), l === cur)).join("");
     }
     if (page === "sleep") {
-      return head("수면 타이머") + opt("sleep", 0, "사용 안함", !this.sleepAt) +
-        [10, 15, 20, 30, 45, 60].map((m) => opt("sleep", m, m + "분", false)).join("") +
-        (this.live ? "" : opt("sleep", -1, "동영상 끝날 때", this.sleepAt === -1));
+      return head($t("수면 타이머")) + opt("sleep", 0, $t("사용 안함"), !this.sleepAt) +
+        [10, 15, 20, 30, 45, 60].map((m) => opt("sleep", m, $t("{0}분", m), false)).join("") +
+        (this.live ? "" : opt("sleep", -1, $t("동영상 끝날 때"), this.sleepAt === -1));
     }
     return "";
   }
@@ -922,7 +924,7 @@ export class Player {
     const v = this.video;
     if (a.startsWith("go:")) return this.openMenu(a.slice(3));
     if (a === "ambient") { settings.ambient = !settings.ambient; this.on.ambient?.(); return this.openMenu("main"); }
-    if (a === "loop") { v.loop = !v.loop; this.flash(v.loop ? "반복 재생 켜짐" : "반복 재생 꺼짐"); return this.openMenu("main"); }
+    if (a === "loop") { v.loop = !v.loop; this.flash(v.loop ? $t("반복 재생 켜짐") : $t("반복 재생 꺼짐")); return this.openMenu("main"); }
     if (a === "stats") { this.statsOn = !this.statsOn; this.q(".ytp-stats").classList.toggle("show", this.statsOn); return this.closeMenu(); }
     if (a === "speed") { v.playbackRate = +val; this.flash(val + "x"); return this.closeMenu(); }
     if (a === "quality") { this.setQuality(+val); return this.closeMenu(); }
@@ -939,7 +941,7 @@ export class Player {
     if (a === "sleep") {
       const m = +val;
       this.sleepAt = m === -1 ? -1 : m ? Date.now() + m * 60000 : 0;
-      toast(m === -1 ? "이 동영상이 끝나면 멈춰요" : m ? `${m}분 뒤에 멈춰요` : "수면 타이머 꺼짐");
+      toast(m === -1 ? $t("이 동영상이 끝나면 멈춰요") : m ? `${$t("{0}분 뒤에 멈춰요", m)}` : $t("수면 타이머 꺼짐"));
       return this.closeMenu();
     }
   }
@@ -954,13 +956,13 @@ export class Player {
     const c = this.q(".ytp-ctx");
     const v = this.video;
     const items = [
-      ["loop", "loop", "반복 재생", v.loop],
-      ["url", "link", "동영상 URL 복사"],
-      ["urlt", "link", "현재 시간에 동영상 URL 복사"],
-      ["yt", "open", "YouTube 에서 열기"],
-      ["pip", "pip", "PIP 모드"],
-      ["stats", "info", "전문가용 통계"],
-      ["keys", "keyboard", "단축키"],
+      ["loop", "loop", $t("반복 재생"), v.loop],
+      ["url", "link", $t("동영상 URL 복사")],
+      ["urlt", "link", $t("현재 시간에 동영상 URL 복사")],
+      ["yt", "open", $t("YouTube 에서 열기")],
+      ["pip", "pip", $t("PIP 모드")],
+      ["stats", "info", $t("전문가용 통계")],
+      ["keys", "keyboard", $t("단축키")],
     ];
     c.innerHTML = items.map(([a, ic, l, on]) => `<div class="mi" data-a="${a}">${icon(ic)}<span class="lb">${l}</span>${on ? icon("check") : ""}</div>`).join("");
     const b = this.root.getBoundingClientRect();
@@ -973,7 +975,7 @@ export class Player {
       const a = ev.target.closest("[data-a]")?.dataset.a;
       this.closeCtx();
       const id = this.info?.videoId;
-      if (a === "loop") { v.loop = !v.loop; this.flash(v.loop ? "반복 재생 켜짐" : "반복 재생 꺼짐"); }
+      if (a === "loop") { v.loop = !v.loop; this.flash(v.loop ? $t("반복 재생 켜짐") : $t("반복 재생 꺼짐")); }
       if (a === "url") copy(`${location.origin}/watch?v=${id}`);
       if (a === "urlt") copy(`${location.origin}/watch?v=${id}&t=${Math.floor(v.currentTime)}`);
       if (a === "yt") window.open(`https://www.youtube.com/watch?v=${id}&t=${Math.floor(v.currentTime)}`, "_blank", "noopener");
@@ -990,9 +992,9 @@ export class Player {
     if (!next) { e.innerHTML = ""; return; }
     e.innerHTML = `
       <div class="nx">
-        <div class="nx-h">다음 동영상 <b class="cnt">${seconds}</b></div>
+        <div class="nx-h">${$t("다음 동영상")} <b class="cnt">${seconds}</b></div>
         <div class="nx-card"><img src="/vi/${esc(next.id)}/mqdefault.jpg" alt=""><div><div class="nx-t">${esc(next.title)}</div><div class="nx-a">${esc(next.author)}</div></div></div>
-        <div class="nx-b"><button class="cancel">취소</button><button class="go">지금 재생</button></div>
+        <div class="nx-b"><button class="cancel">${$t("취소")}</button><button class="go">${$t("지금 재생")}</button></div>
       </div>`;
     e.classList.add("show");
     this.showCtl(true);
@@ -1014,7 +1016,7 @@ export class Player {
     console.warn("player error", d);
     const status = d.data && d.data[1];
     if (d.code === 1001 && status === 401) {
-      return this.showErr("로그인이 끝났어요", "다시 로그인", () => {
+      return this.showErr($t("로그인이 끝났어요"), $t("다시 로그인"), () => {
         toGate(`${location.origin}/watch?v=${this.info?.videoId}&t=${Math.floor(this.video.currentTime)}`);
       });
     }
@@ -1026,7 +1028,7 @@ export class Player {
       return;
     }
     if (d.severity === 1) return;   // recoverable errors are handled by Shaka itself
-    this.showErr(`재생 중 문제가 생겼어요 (오류 ${d.code || "?"})`, "다시 시도", () => this.on.reload?.(this.info?.videoId, this.video.currentTime));
+    this.showErr(`${$t("재생 중 문제가 생겼어요 (오류 {0})", d.code || "?")}`, $t("다시 시도"), () => this.on.reload?.(this.info?.videoId, this.video.currentTime));
   }
   showErr(msg, btn, fn) {
     const e = this.q(".ytp-err");
@@ -1066,7 +1068,7 @@ export class Player {
       const txt = ch ? `• ${ch.title}` : "";
       if (cb.dataset.t !== txt) { cb.dataset.t = txt; cb.innerHTML = txt ? `${esc(txt)} ${icon("right")}` : ""; }
       this.sponsorCheck();
-      if (this.sleepAt > 0 && Date.now() > this.sleepAt) { this.sleepAt = 0; v.pause(); toast("수면 타이머: 재생을 멈췄어요"); }
+      if (this.sleepAt > 0 && Date.now() > this.sleepAt) { this.sleepAt = 0; v.pause(); toast($t("수면 타이머: 재생을 멈췄어요")); }
       this.on.tick?.(v.currentTime);
       if ("mediaSession" in navigator && navigator.mediaSession.setPositionState && !this.live && isFinite(v.duration)) {
         try { navigator.mediaSession.setPositionState({ duration: v.duration, playbackRate: v.playbackRate, position: Math.min(v.currentTime, v.duration) }); } catch { }
@@ -1086,12 +1088,12 @@ export class Player {
     if (auto && !this.skipped.has(s) && !v.paused) {
       this.skipped.add(s);
       v.currentTime = s.end;
-      toast(`${SB_CATS[s.cat]?.[0] || "구간"} 건너뜀`, "실행취소", () => { v.currentTime = s.start; });
+      toast(`${$t("{0} 건너뜀", SB_CATS[s.cat]?.[0] || $t("구간"))}`, $t("실행취소"), () => { v.currentTime = s.start; });
       btn.classList.remove("show");
       return;
     }
     if (!auto) {
-      btn.innerHTML = `${esc(SB_CATS[s.cat]?.[0] || "구간")} 건너뛰기 ${icon("skip")}`;
+      btn.innerHTML = `${$t("{0} 건너뛰기 {1}", esc(SB_CATS[s.cat]?.[0] || $t("구간")), icon("skip"))}`;
       btn.classList.add("show");
     }
   }
@@ -1103,18 +1105,18 @@ export class Player {
     for (let i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= v.currentTime && v.buffered.end(i) >= v.currentTime) buf = v.buffered.end(i) - v.currentTime;
     const q = v.getVideoPlaybackQuality?.() || {};
     const rows = [
-      ["동영상 ID", this.info?.videoId],
-      ["화면 / 프레임", `${this.root.clientWidth}x${this.root.clientHeight}*${devicePixelRatio} / 손실 ${q.droppedVideoFrames ?? s.droppedFrames ?? 0} / ${q.totalVideoFrames ?? s.decodedFrames ?? 0}`],
-      ["현재 / 최적 해상도", `${v.videoWidth}x${v.videoHeight}@${Math.round(t.frameRate || 0)}fps / ${t.width || "?"}x${t.height || "?"}`],
-      ["60프레임 버전", this.tracks().some((x) => (x.frameRate || 0) > 48) ? "있음 (사용 중: " + (t.frameRate > 48 ? "예" : "아니오") + ")" : "없음 (올린 영상이 30프레임)"],
-      ["코덱", `${t.videoCodec || "?"} (${t.originalVideoId || t.id || ""}) / ${t.audioCodec || "?"}`],
-      ["볼륨", `${Math.round(v.volume * 100)}%${v.muted ? " (음소거)" : ""}`],
-      ["연결 속도", `${Math.round((s.estimatedBandwidth || 0) / 1000).toLocaleString()} Kbps`],
-      ["트랙 비트레이트", `${Math.round((t.bandwidth || 0) / 1000).toLocaleString()} Kbps`],
-      ["버퍼 상태", `${buf.toFixed(2)} s`],
-      this.live ? ["실시간 지연", `${(this.range()[1] - v.currentTime).toFixed(1)} s`] : null,
-      ["재생 속도", v.playbackRate + "x"],
-      ["모드", this.live ? "HLS 실시간" : "DASH"],
+      [$t("동영상 ID"), this.info?.videoId],
+      [$t("화면 / 프레임"), `${$t("{0}x{1}*{2} / 손실 {3} / {4}", this.root.clientWidth, this.root.clientHeight, devicePixelRatio, q.droppedVideoFrames ?? s.droppedFrames ?? 0, q.totalVideoFrames ?? s.decodedFrames ?? 0)}`],
+      [$t("현재 / 최적 해상도"), `${v.videoWidth}x${v.videoHeight}@${Math.round(t.frameRate || 0)}fps / ${t.width || "?"}x${t.height || "?"}`],
+      [$t("60프레임 버전"), this.tracks().some((x) => (x.frameRate || 0) > 48) ? $t("있음 (사용 중: ") + (t.frameRate > 48 ? $t("예") : $t("아니오")) + ")" : $t("없음 (올린 영상이 30프레임)")],
+      [$t("코덱"), `${t.videoCodec || "?"} (${t.originalVideoId || t.id || ""}) / ${t.audioCodec || "?"}`],
+      [$t("볼륨"), `${Math.round(v.volume * 100)}%${v.muted ? $t(" (음소거)") : ""}`],
+      [$t("연결 속도"), `${Math.round((s.estimatedBandwidth || 0) / 1000).toLocaleString()} Kbps`],
+      [$t("트랙 비트레이트"), `${Math.round((t.bandwidth || 0) / 1000).toLocaleString()} Kbps`],
+      [$t("버퍼 상태"), `${buf.toFixed(2)} s`],
+      this.live ? [$t("실시간 지연"), `${(this.range()[1] - v.currentTime).toFixed(1)} s`] : null,
+      [$t("재생 속도"), v.playbackRate + "x"],
+      [$t("모드"), this.live ? $t("HLS 실시간") : "DASH"],
     ].filter(Boolean);
     this.q(".ytp-stats").innerHTML = `<button class="x">${icon("close")}</button>` + rows.map(([k, x]) => `<div><b>${k}</b><span>${esc(x)}</span></div>`).join("");
     this.q(".ytp-stats .x").onclick = (e) => { e.stopPropagation(); this.statsOn = false; this.q(".ytp-stats").classList.remove("show"); };
@@ -1151,7 +1153,7 @@ export class Player {
         { src: `${location.origin}/vi/${i.videoId}/mqdefault.jpg`, sizes: "320x180", type: "image/jpeg" },
         { src: `${location.origin}/vi/${i.videoId}/maxres.jpg`, sizes: "1280x720", type: "image/jpeg" },
       ],
-      album: i.liveNow ? "실시간" : "홈튜브",
+      album: i.liveNow ? $t("실시간") : $t("홈튜브"),
     });
     const ms = navigator.mediaSession;
     const set = (a, f) => { try { ms.setActionHandler(a, f); } catch { } };
