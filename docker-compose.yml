@@ -1,0 +1,109 @@
+# Everything in one go:  cp .env.example .env  (edit the top part)  &&  docker compose up -d
+#   caddy      - serves the app and routes everything (ports 80/443)
+#   hometube   - HomeTube server + Cloudflare WARP
+#   bgutil     - PO tokens for yt-dlp (live streams), shares hometube's network
+#   invidious, companion, invidious-db - official Invidious images
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      HOMETUBE_SITE: ${HOMETUBE_SITE}
+    volumes:
+      - ./deploy/Caddyfile.docker:/etc/caddy/Caddyfile:ro
+      - ./web:/srv/web:ro
+      - caddy-data:/data
+    depends_on:
+      - hometube
+      - invidious
+
+  hometube:
+    build: .
+    restart: unless-stopped
+    environment:
+      HT_INVIDIOUS: http://invidious:3000
+      HT_COMPANION: http://companion:8282
+      HT_PUBLIC_URL: ${HOMETUBE_URL}
+      HT_SUB_LANG: ${HOMETUBE_SUB_LANG:-ko}
+      HT_WHISPER_LANG: ${HOMETUBE_CAPTION_LANG:-auto}
+    volumes:
+      - hometube-data:/data
+      - warp-data:/var/lib/cloudflare-warp
+
+  bgutil:
+    image: brainicism/bgutil-ytdlp-pot-provider
+    restart: unless-stopped
+    network_mode: "service:hometube"     # yt-dlp finds it on 127.0.0.1:4416
+
+  invidious:
+    image: quay.io/invidious/invidious:latest
+    restart: unless-stopped
+    environment:
+      INVIDIOUS_CONFIG: |
+        db:
+          dbname: invidious
+          user: kemal
+          password: ${POSTGRES_PASSWORD}
+          host: invidious-db
+          port: 5432
+        check_tables: true
+        domain: ${HOMETUBE_DOMAIN}
+        https_only: ${HOMETUBE_HTTPS:-true}
+        external_port: ${HOMETUBE_EXTERNAL_PORT:-443}
+        use_innertube_for_captions: true
+        invidious_companion:
+        - private_url: "http://hometube:3010/companion"
+          public_url: "${HOMETUBE_URL}/companion"
+        invidious_companion_key: ${COMPANION_KEY}
+        hmac_key: ${INVIDIOUS_HMAC_KEY}
+    healthcheck:
+      test: wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/stats || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
+    depends_on:
+      - invidious-db
+
+  companion:
+    image: quay.io/invidious/invidious-companion:latest
+    restart: unless-stopped
+    environment:
+      - SERVER_SECRET_KEY=${COMPANION_KEY}
+      - PROXY=socks5://hometube:1080          # YouTube through WARP
+      - NETWORKING_FETCH_TIMEOUT_MS=15000
+      - NETWORKING_FETCH_RETRY_ENABLED=true
+      - NETWORKING_FETCH_RETRY_TIMES=3
+      # refresh the PO token hourly instead of every few minutes (each refresh starts a browser)
+      - "JOBS_YOUTUBE_SESSION_FREQUENCY=0 * * * *"
+    shm_size: 256mb
+    user: "10001:10001"
+    cap_drop:
+      - ALL
+    read_only: true
+    volumes:
+      - companion-cache:/var/tmp/youtubei.js:rw
+    security_opt:
+      - no-new-privileges:true
+
+  invidious-db:
+    image: docker.io/library/postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: invidious
+      POSTGRES_USER: kemal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+
+volumes:
+  caddy-data:
+  hometube-data:
+  warp-data:
+  companion-cache:
+  postgres-data:

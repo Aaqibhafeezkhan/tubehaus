@@ -1,0 +1,55 @@
+# Used by docker-compose.yml. The site address comes from HOMETUBE_SITE in .env
+# (a domain gets HTTPS automatically; ":8080" serves plain HTTP on a LAN).
+#
+# HomeTube has no accounts - add your own login here before exposing it, e.g.
+#   basic_auth { me <hash from: docker compose exec caddy caddy hash-password> }
+
+{$HOMETUBE_SITE} {
+	encode zstd gzip
+
+	handle /y/* {
+		root * /srv/web
+		header Cache-Control "no-cache"
+		file_server
+	}
+
+	@page {
+		method GET HEAD
+		path / /watch /results /shorts /shorts/* /channel/* /c/* /user/* /@* /playlist /feed/* /settings /hashtag/*
+		header Accept *text/html*
+		not path /feed/channel/* /feed/playlist/* /feed/private* /feed/webhook/*
+		not query classic=*
+	}
+	handle @page {
+		root * /srv/web
+		header Cache-Control "no-cache"
+		rewrite * /index.html
+		file_server
+	}
+
+	handle /api/p/* {
+		reverse_proxy hometube:3010 {
+			flush_interval -1
+		}
+	}
+	handle /api/v1/videos/* {
+		reverse_proxy hometube:3010
+	}
+	@dl {
+		path /latest_version /companion/latest_version
+		query title=*
+	}
+	handle @dl {
+		reverse_proxy hometube:3010 {
+			flush_interval -1
+		}
+	}
+	handle /companion/* {
+		reverse_proxy companion:8282 {
+			flush_interval -1
+		}
+	}
+	handle {
+		reverse_proxy invidious:3000
+	}
+}

@@ -1,0 +1,70 @@
+# HomeTube behind Caddy. Replace tube.example.com and the paths/ports.
+#   web app     /srv/hometube/web   (the "web" folder of this repo)
+#   HomeTube    127.0.0.1:3010      (server/hometube_server.py)
+#   Invidious   127.0.0.1:3000
+#   companion   127.0.0.1:8282
+#
+# HomeTube has no accounts. Put your own login in front of everything
+# (forward_auth to Authelia/Authentik/..., or basic_auth) before exposing it.
+
+tube.example.com {
+	encode zstd gzip
+
+	# --- your login goes here, e.g.
+	# basic_auth {
+	# 	me $2a$14$...   # caddy hash-password
+	# }
+
+	# the app's own files
+	handle /y/* {
+		root * /srv/hometube/web
+		header Cache-Control "no-cache"
+		file_server
+	}
+
+	# page navigations open the app; everything else (API, thumbnails, /login,
+	# ?classic=1) still reaches Invidious
+	@page {
+		method GET HEAD
+		path / /watch /results /shorts /shorts/* /channel/* /c/* /user/* /@* /playlist /feed/* /settings /hashtag/*
+		header Accept *text/html*
+		not path /feed/channel/* /feed/playlist/* /feed/private* /feed/webhook/*
+		not query classic=*
+	}
+	handle @page {
+		root * /srv/hometube/web
+		header Cache-Control "no-cache"
+		rewrite * /index.html
+		file_server
+	}
+
+	# HomeTube API: library, live streams, live captions, subtitles, send-to-TV, downloads
+	handle /api/p/* {
+		reverse_proxy 127.0.0.1:3010 {
+			flush_interval -1
+		}
+	}
+	# video info goes through HomeTube's cache (and gets live hlsUrl / subtitle tracks added)
+	handle /api/v1/videos/* {
+		reverse_proxy 127.0.0.1:3010
+	}
+	# downloads started from the player are fetched in ranges by HomeTube (not one throttled stream)
+	@dl {
+		path /latest_version /companion/latest_version
+		query title=*
+	}
+	handle @dl {
+		reverse_proxy 127.0.0.1:3010 {
+			flush_interval -1
+		}
+	}
+
+	handle /companion/* {
+		reverse_proxy 127.0.0.1:8282 {
+			flush_interval -1
+		}
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3000
+	}
+}

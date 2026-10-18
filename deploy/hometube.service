@@ -1,0 +1,18 @@
+[Unit]
+Description=HomeTube server
+After=network-online.target warp-svc.service
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/opt/hometube/.env
+WorkingDirectory=/opt/hometube
+ExecStart=/usr/bin/python3 /opt/hometube/server/hometube_server.py
+Restart=always
+RestartSec=3
+# warp-cli (for HT_WARP_ROTATE) needs no root; the server never does either
+DynamicUser=yes
+StateDirectory=hometube
+Environment=HT_STATE=/var/lib/hometube
+
+[Install]
+WantedBy=multi-user.target

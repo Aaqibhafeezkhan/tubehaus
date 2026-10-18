@@ -1,0 +1,6 @@
+.env
+state/
+__pycache__/
+*.pyc
+# private working copy, never published
+_원본사본(올리지않음)/
