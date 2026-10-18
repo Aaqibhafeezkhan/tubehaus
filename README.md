@@ -4,6 +4,8 @@
 live streams, live captions, one library shared across all your devices, and a server
 that keeps working from a cloud VPS thanks to Cloudflare WARP.**
 
+![HomeTube home screen](docs/screenshot-home.jpg)
+
 HomeTube is a single-page web app that looks and behaves like classic YouTube (same URLs,
 same layout, same keyboard shortcuts), backed by a small Python server that runs next to
 [Invidious](https://github.com/iv-org/invidious). It is built for one household: no ads, no
