@@ -1240,6 +1240,7 @@ class LiveCaptioner:
         # would always be one step late. Start 3 segments (~15 s) ahead of the viewer
         # and jump ahead again whenever it falls behind.
         itag, nxt = None, None
+        fail_at, fails = None, 0
         while time.time() - self.used < 120:
             try:
                 if itag is None:
@@ -1265,7 +1266,16 @@ class LiveCaptioner:
                 if len(chunk) < 2 and nxt + 1 >= last - 3:
                     time.sleep(1)                           # next segment still coming: wait to make 10 s
                     continue
-                self.transcribe(chunk, [data[k] for k in chunk], [meta.get(k) or 5.0 for k in chunk])
+                try:
+                    self.transcribe(chunk, [data[k] for k in chunk], [meta.get(k) or 5.0 for k in chunk])
+                    fails = 0
+                except Exception as ex:
+                    fails = fails + 1 if fail_at == nxt else 1
+                    fail_at = nxt
+                    if fails < 3:
+                        raise                               # retried below, same chunk
+                    log("livecc", f"{self.vid} sq {chunk[0]}-{chunk[-1]} skipped after {fails} failures: {repr(ex)[:120]}", every=0)
+                    fails = 0
                 nxt = chunk[-1] + 1
                 self.lag = last - chunk[-1]
                 self.status = "ok"
@@ -1293,6 +1303,8 @@ class LiveCaptioner:
         # on a 10 s chunk, never more than one core, and no 100 % CPU bursts
         r = subprocess.run(["nice", "-n", "10", WHISPER_BIN, "-m", WHISPER_MODEL, "-f", wav, "-l", WHISPER_LANG,
                             "-t", "1", "-ac", "768", "-np", "-sns"], capture_output=True, timeout=60)
+        if r.returncode != 0:     # e.g. a bad model path or a crash: no text is not "silence"
+            raise RuntimeError("whisper exit %d: %s" % (r.returncode, r.stderr.decode("utf-8", "replace").strip()[-160:]))
         starts, acc = [], 0.0
         for dd in durs:
             starts.append(acc)
