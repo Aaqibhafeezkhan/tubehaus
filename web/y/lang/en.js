@@ -400,5 +400,7 @@ export default {
  "잘못된 요청": "Bad request",
  "재생목록을 찾을 수 없어요": "Playlist not found",
  "합치기 실패": "Merging failed",
- "구독 (메뉴)": "Subscriptions"
+ "구독 (메뉴)": "Subscriptions",
+ "예정된 라이브 방송이에요. {0} 시작해요": "This is an upcoming live stream. It starts {0}",
+ "곧 시작하는 라이브 방송이에요": "This live stream is about to start"
 };

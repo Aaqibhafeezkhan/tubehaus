@@ -400,5 +400,7 @@ export default {
  "잘못된 요청": "Permintaan tidak valid",
  "재생목록을 찾을 수 없어요": "Playlist tidak ditemukan",
  "합치기 실패": "Penggabungan gagal",
- "구독 (메뉴)": "Langganan"
+ "구독 (메뉴)": "Langganan",
+ "예정된 라이브 방송이에요. {0} 시작해요": "Ini siaran langsung terjadwal. Dimulai {0}",
+ "곧 시작하는 라이브 방송이에요": "Siaran langsung akan segera dimulai"
 };

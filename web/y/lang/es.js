@@ -400,5 +400,7 @@ export default {
  "잘못된 요청": "Solicitud no válida",
  "재생목록을 찾을 수 없어요": "No se encontró la lista",
  "합치기 실패": "Error al unir",
- "구독 (메뉴)": "Suscripciones"
+ "구독 (메뉴)": "Suscripciones",
+ "예정된 라이브 방송이에요. {0} 시작해요": "Es una emisión en directo programada. Empieza {0}",
+ "곧 시작하는 라이브 방송이에요": "La emisión en directo está a punto de empezar"
 };

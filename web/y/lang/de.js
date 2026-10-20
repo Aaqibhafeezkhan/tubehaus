@@ -400,5 +400,7 @@ export default {
  "잘못된 요청": "Ungültige Anfrage",
  "재생목록을 찾을 수 없어요": "Playlist nicht gefunden",
  "합치기 실패": "Zusammenführen fehlgeschlagen",
- "구독 (메뉴)": "Abos"
+ "구독 (메뉴)": "Abos",
+ "예정된 라이브 방송이에요. {0} 시작해요": "Das ist ein geplanter Livestream. Er beginnt {0}",
+ "곧 시작하는 라이브 방송이에요": "Der Livestream beginnt gleich"
 };

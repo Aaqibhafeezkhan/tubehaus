@@ -400,5 +400,7 @@ export default {
  "잘못된 요청": "Requête incorrecte",
  "재생목록을 찾을 수 없어요": "Playlist introuvable",
  "합치기 실패": "Échec de l'assemblage",
- "구독 (메뉴)": "Abonnements"
+ "구독 (메뉴)": "Abonnements",
+ "예정된 라이브 방송이에요. {0} 시작해요": "C'est un direct programmé. Il commence {0}",
+ "곧 시작하는 라이브 방송이에요": "Le direct va bientôt commencer"
 };

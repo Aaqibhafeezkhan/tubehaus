@@ -202,7 +202,13 @@ export async function watch(page, m, alive) {
       if (!alive()) return;
       W.id = null;
       player.stop();
-      player.showErr(e.status === 500 || e.status === 502 ? $t("영상을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.") : e.message, $t("다시 시도"), () => navigate(location.pathname + location.search, { replace: true }));
+      // not started yet (upcoming live / premiere): Invidious says "This live event will begin in 7 hours."
+      const up = /(?:begin|premieres?) in (\d+) (minute|hour|day)/i.exec(e.message || "");
+      const soon = /begin in a few moments/i.test(e.message || "");
+      const msg = up ? $t("예정된 라이브 방송이에요. {0} 시작해요", new Intl.RelativeTimeFormat(LOCALE).format(+up[1], up[2].toLowerCase()))
+        : soon ? $t("곧 시작하는 라이브 방송이에요")
+        : e.status === 500 || e.status === 502 ? $t("영상을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.") : e.message;
+      player.showErr(msg, $t("다시 시도"), () => navigate(location.pathname + location.search, { replace: true }));
       $(".w-info", page).innerHTML = "";
       return;
     }

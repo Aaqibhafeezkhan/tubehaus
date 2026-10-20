@@ -400,5 +400,7 @@ export default {
  "잘못된 요청": "Solicitação inválida",
  "재생목록을 찾을 수 없어요": "Playlist não encontrada",
  "합치기 실패": "Falha ao juntar",
- "구독 (메뉴)": "Inscrições"
+ "구독 (메뉴)": "Inscrições",
+ "예정된 라이브 방송이에요. {0} 시작해요": "É uma transmissão ao vivo agendada. Começa {0}",
+ "곧 시작하는 라이브 방송이에요": "A transmissão ao vivo vai começar em instantes"
 };
