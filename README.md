@@ -1,48 +1,49 @@
 # TubeHaus
 
-*(formerly HomeTube, renamed to avoid a clash with an unrelated project of the same name)*
+**Your own YouTube, on your own server: fast, private, and it doesn't get blocked.**
 
-**A YouTube-identical front end for your own Invidious — plus the things Invidious can't do:
-live streams, live captions, one library shared across all your devices, and a server
-that keeps working from a cloud VPS thanks to Cloudflare WARP.**
+It looks and works exactly like YouTube (same layout, same URLs, same keyboard shortcuts),
+with no ads and no tracking. It also plays live streams with real-time captions, keeps one
+library for all your devices, and keeps working even from a cheap cloud VPS.
 
 ![TubeHaus home screen](docs/screenshot-home.jpg)
 
-TubeHaus is a single-page web app that looks and behaves like classic YouTube (same URLs,
-same layout, same keyboard shortcuts), backed by a small Python server that runs next to
-[Invidious](https://github.com/iv-org/invidious). It is built for one household: no ads, no
-tracking, your subscriptions and history stay on your server.
+## Why TubeHaus
 
-**11 languages:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia —
+**⚡ Fast**
+- **Instant clicks.** Video pages come from a local cache that refreshes in the background, and the videos you are most likely to open next are fetched before you click (measured: about 1-2 s cold, a few milliseconds warm)
+- **Live streams that don't stall.** The server pulls segments ahead of the player over kept-alive connections and serves a longer, gap-free playlist with exact segment timing, so the timeline never jumps
+- **Always the best quality.** It never lowers resolution on its own. It prefers 60 fps and the codec your device decodes in hardware (checked with MediaCapabilities), switches codec instead of resolution when frames drop, and sizes the buffer from the bitrate so even 8K fits the browser's media buffer
+
+**🔒 Private**
+- **Your devices never talk to Google.** Video, thumbnails and pages are streamed through your own server; no Google account, cookies or YouTube scripts in your browser
+- **YouTube never sees your home IP.** Everything your server asks YouTube goes out through Cloudflare WARP
+- **No accounts, no telemetry.** Subscriptions, history, resume positions and playlists are files on your server, shared by your household and nobody else
+
+**🛡️ Doesn't get blocked**
+- YouTube refuses most VPS and cloud addresses ("Sign in to confirm you're not a bot"). TubeHaus routes YouTube traffic through **Cloudflare WARP in proxy mode**, and when YouTube flags the address anyway it **reconnects WARP for a fresh one and replays the request automatically** (rate-limited). Playback, live streams and downloads keep working on a cheap cloud VM
+
+**🎙️ Live captions**
+- YouTube gives no captions for live streams. TubeHaus transcribes them on the fly with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), a few seconds ahead of playback, on a single CPU core
+
+**🌍 11 languages:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia —
 chosen on the first visit (the browser's language is preselected) and changeable any time under **Language** in the
 account menu or Settings. View counts and dates follow each language's own style.
 
-## Features
+## Everything else
 
-**Watching**
 - YouTube-identical UI: home, search, channels, playlists, subscriptions, history, library, trending
 - Custom player on [Shaka Player](https://github.com/shaka-project/shaka-player) (DASH/HLS): chapters, storyboard seek previews, SponsorBlock, speed, sleep timer, stats, mini player, theater mode, ambient mode, Media Session (lock screen / Bluetooth keys)
-- Always the best quality — it never lowers resolution on its own. Prefers 60 fps and the codec your device decodes in hardware (checked with MediaCapabilities); switches codec, not resolution, when frames drop
-- Buffer sized from the track bitrate, so 8K does not overflow the browser's ~150 MB media buffer
+- **One library for every device**: subscriptions (with an RSS-based feed), watch history, resume positions, Watch Later, likes, playlists
+- **Send to TV**: pick a video on your phone and it starts on the TV (no Chromecast; open screens long-poll the server)
+- **High-quality offline save**: 1080p/4K come as separate video and audio; the server fetches both and merges them with ffmpeg
+- **Translated subtitles** for videos that have none in your language
+- **TV mode**: full remote-control navigation (arrows / OK / Back) for TV browsers
 - Dislike counts (Return YouTube Dislike), comments, transcripts
 
-**What Invidious doesn't have**
-- **Live streams** — HLS through the server, with segments pulled ahead of the player over kept-alive connections, a rebuilt longer playlist window, and exact segment durations/discontinuities so the timeline never jumps
-- **Live captions** — YouTube provides none for live streams; TubeHaus transcribes them on the fly with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), a few seconds ahead of playback (one CPU core is enough)
-- **Translated subtitles** for videos that have none in your language (in your interface language)
-- **One library for every device** — subscriptions (with an RSS-based feed), watch history, resume positions, Watch Later, likes, playlists
-- **Send to TV** — pick a video on your phone, it starts on the TV (no Chromecast; open screens long-poll the server)
-- **High-quality offline save** — 1080p/4K come as separate video and audio; the server fetches both and merges them with ffmpeg
-- **Instant clicks** — a cache in front of `/api/v1/videos` with background refresh and prefetching of the next likely videos
-- **TV mode** — full remote-control navigation (arrows / OK / Back) for TV browsers
+Optional lookups the browser makes itself: SponsorBlock (by a hash prefix, not the video ID) and Return YouTube Dislike.
 
-**Runs from a cloud server: Cloudflare WARP**
-
-YouTube refuses most VPS and cloud addresses ("Sign in to confirm you're not a bot").
-TubeHaus sends all YouTube traffic through **Cloudflare WARP in proxy mode**, and when YouTube
-flags the WARP address anyway it **reconnects WARP for a fresh address and replays the request
-automatically** (rate-limited). This is what keeps playback, live streams and downloads working
-on a cheap cloud VM.
+*(Formerly HomeTube, renamed to avoid a clash with an unrelated project of the same name.)*
 
 ## How it fits together
 
@@ -57,7 +58,7 @@ browser ──► Caddy ─┬─ /y/*, page navigations ───────�
                                                                         YouTube
 ```
 
-Invidious' companion `private_url` points at the TubeHaus server, which passes everything
+TubeHaus uses [Invidious](https://github.com/iv-org/invidious) as its YouTube backend and adds its own server next to it. Invidious' companion `private_url` points at the TubeHaus server, which passes everything
 through and patches in what is missing (live HLS URLs, an empty `storyboards` key some old
 videos lack, WARP rotation when YouTube blocks).
 
