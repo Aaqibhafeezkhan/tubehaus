@@ -1,4 +1,4 @@
-# HomeTube server + Cloudflare WARP in one container.
+# TubeHaus server + Cloudflare WARP in one container.
 # WARP lives here (not in its own container) so the server can reconnect it for a
 # fresh address whenever YouTube starts answering "confirm you're not a bot".
 

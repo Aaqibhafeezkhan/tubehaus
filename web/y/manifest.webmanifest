@@ -1,6 +1,6 @@
 {
-  "name": "HomeTube",
-  "short_name": "HomeTube",
+  "name": "TubeHaus",
+  "short_name": "TubeHaus",
     "start_url": "/",
   "scope": "/",
   "display": "standalone",

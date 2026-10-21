@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HomeTube server - the API behind the HomeTube web app.
+"""TubeHaus server - the API behind the TubeHaus web app.
 
 It runs next to an Invidious instance and adds what Invidious does not have:
   * one shared library (subscriptions, history, resume points, playlists, likes)
@@ -7,7 +7,7 @@ It runs next to an Invidious instance and adds what Invidious does not have:
   * YouTube live streams as HLS, with segments pulled ahead of the player;
   * live captions transcribed on the fly with whisper.cpp;
   * machine-translated subtitles for videos that have none in your language;
-  * "send to TV": a phone starts playback on another open HomeTube screen;
+  * "send to TV": a phone starts playback on another open TubeHaus screen;
   * high-quality offline save (separate video + audio merged with ffmpeg);
   * a cache in front of Invidious' /api/v1/videos so clicks answer instantly.
 
@@ -28,7 +28,7 @@ BIND = (env("HT_BIND", "127.0.0.1"), int(env("HT_PORT", "3010")))
 STATE = env("HT_STATE", "./state")                       # library, subtitle cache
 INV = env("HT_INVIDIOUS", "http://127.0.0.1:3000").rstrip("/")
 COMPANION = env("HT_COMPANION", "http://127.0.0.1:8282").rstrip("/")
-PUBLIC = env("HT_PUBLIC_URL", "http://localhost:8080").rstrip("/")   # where browsers open HomeTube
+PUBLIC = env("HT_PUBLIC_URL", "http://localhost:8080").rstrip("/")   # where browsers open TubeHaus
 # YouTube refuses most cloud/VPS addresses ("Sign in to confirm you're not a bot").
 # Sending YouTube traffic out through Cloudflare WARP (warp-cli in proxy mode,
 # which listens on 127.0.0.1:40000 and speaks HTTP CONNECT) is what makes this work.
@@ -40,7 +40,7 @@ SUB_LANG = env("HT_SUB_LANG", "en")                      # default target of tra
 WHISPER_BIN = env("HT_WHISPER_BIN", "")                  # whisper.cpp "whisper-cli"; empty = no live captions
 WHISPER_MODEL = env("HT_WHISPER_MODEL", "")              # e.g. ggml-base-q5_1.bin
 WHISPER_LANG = env("HT_WHISPER_LANG", "auto")
-YTDL_DIR = env("HT_DOWNLOAD_DIR", "/var/tmp/hometube-dl")
+YTDL_DIR = env("HT_DOWNLOAD_DIR", "/var/tmp/tubehaus-dl")
 
 lock = threading.Lock()
 LIVE_CACHE = {}
@@ -757,7 +757,7 @@ def warp_rotate(why, started):
 
 
 # ---------- library: subscriptions / history / resume points / playlists ----------
-# Every device shares this one file (put HomeTube behind your own login - it has no
+# Every device shares this one file (put TubeHaus behind your own login - it has no
 # accounts of its own). The subscription feed is gathered from YouTube RSS every 15 min.
 YTLIB = f"{STATE}/ytlib.json"
 yt_lock = threading.Lock()
@@ -1292,7 +1292,7 @@ class LiveCaptioner:
 
     def transcribe(self, sqs, blobs, durs):
         t0 = time.time()
-        d = f"/var/tmp/hometube-cc-{self.vid}"
+        d = f"/var/tmp/tubehaus-cc-{self.vid}"
         os.makedirs(d, exist_ok=True)
         wav = f"{d}/chunk.wav"
         r = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-f", "mpegts", "-i", "pipe:0", "-vn",
@@ -1816,5 +1816,5 @@ if __name__ == "__main__":
     os.makedirs(STATE, exist_ok=True)
     threading.Thread(target=yt_feed_loop, daemon=True).start()
     threading.Thread(target=ytdl_gc_loop, daemon=True).start()
-    log("start", "HomeTube server on %s:%d, Invidious %s" % (BIND[0], BIND[1], INV), every=0)
+    log("start", "TubeHaus server on %s:%d, Invidious %s" % (BIND[0], BIND[1], INV), every=0)
     ThreadingHTTPServer(BIND, H).serve_forever()

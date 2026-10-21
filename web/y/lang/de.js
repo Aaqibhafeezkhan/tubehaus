@@ -1,9 +1,9 @@
-// HomeTube interface text: de. Key = the Korean original.
+// TubeHaus interface text: de. Key = the Korean original.
 export default {
  " (수정됨)": " (bearbeitet)",
  " (음소거)": " (stumm)",
  " (화면)": " (Bildschirm)",
- " - 홈튜브": " - HomeTube",
+ " - 튜브하우스": " - TubeHaus",
  "\"{0}\" 재생목록을 삭제할까요?": "Playlist „{0}“ löschen?",
  "'관심 없음' {0}개 되돌리기": "{0} × „Kein Interesse“ zurücksetzen",
  "(일시중지 중) 한 프레임 뒤 / 앞": "(pausiert) vorheriges / nächstes Bild",
@@ -176,7 +176,7 @@ export default {
  "반복 재생 꺼짐": "Schleife aus",
  "반복 재생 끄기": "Schleife ausschalten",
  "반복 재생 켜짐": "Schleife an",
- "받을 수 있는 TV가 없어요 · TV에서 홈튜브를 켜 두세요": "Kein TV verfügbar · öffne HomeTube auf deinem TV",
+ "받을 수 있는 TV가 없어요 · TV에서 튜브하우스를 켜 두세요": "Kein TV verfügbar · öffne TubeHaus auf deinem TV",
  "밝은 테마": "Helles Design",
  "방금 전": "gerade eben",
  "배경 불투명도 {0}%": "Hintergrunddeckkraft {0} %",
@@ -377,8 +377,8 @@ export default {
  "현재 재생목록에 추가됨": "Zur Warteschlange hinzugefügt",
  "홈": "Startseite",
  "홈으로": "Zur Startseite",
- "홈튜브": "HomeTube",
- "홈튜브 홈": "HomeTube-Startseite",
+ "튜브하우스": "TubeHaus",
+ "튜브하우스 홈": "TubeHaus-Startseite",
  "화면 / 프레임": "Darstellungsbereich / Bilder",
  "화질": "Qualität",
  "화질을 알아서 낮추지 않고 이 화질로 고정해요 (영상에 없으면 그 아래 최고)": "Senkt die Qualität nie selbst; bleibt bei dieser (oder der besten darunter, falls nicht vorhanden)",

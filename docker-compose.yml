@@ -1,7 +1,7 @@
 # Everything in one go:  cp .env.example .env  (edit the top part)  &&  docker compose up -d
 #   caddy      - serves the app and routes everything (ports 80/443)
-#   hometube   - HomeTube server + Cloudflare WARP
-#   bgutil     - PO tokens for yt-dlp (live streams), shares hometube's network
+#   tubehaus   - TubeHaus server + Cloudflare WARP
+#   bgutil     - PO tokens for yt-dlp (live streams), shares tubehaus's network
 #   invidious, companion, invidious-db - official Invidious images
 
 services:
@@ -12,32 +12,32 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      HOMETUBE_SITE: ${HOMETUBE_SITE}
+      TUBEHAUS_SITE: ${TUBEHAUS_SITE}
     volumes:
       - ./deploy/Caddyfile.docker:/etc/caddy/Caddyfile:ro
       - ./web:/srv/web:ro
       - caddy-data:/data
     depends_on:
-      - hometube
+      - tubehaus
       - invidious
 
-  hometube:
+  tubehaus:
     build: .
     restart: unless-stopped
     environment:
       HT_INVIDIOUS: http://invidious:3000
       HT_COMPANION: http://companion:8282
-      HT_PUBLIC_URL: ${HOMETUBE_URL}
-      HT_SUB_LANG: ${HOMETUBE_SUB_LANG:-en}
-      HT_WHISPER_LANG: ${HOMETUBE_CAPTION_LANG:-auto}
+      HT_PUBLIC_URL: ${TUBEHAUS_URL}
+      HT_SUB_LANG: ${TUBEHAUS_SUB_LANG:-en}
+      HT_WHISPER_LANG: ${TUBEHAUS_CAPTION_LANG:-auto}
     volumes:
-      - hometube-data:/data
+      - tubehaus-data:/data
       - warp-data:/var/lib/cloudflare-warp
 
   bgutil:
     image: brainicism/bgutil-ytdlp-pot-provider
     restart: unless-stopped
-    network_mode: "service:hometube"     # yt-dlp finds it on 127.0.0.1:4416
+    network_mode: "service:tubehaus"     # yt-dlp finds it on 127.0.0.1:4416
 
   invidious:
     image: quay.io/invidious/invidious:latest
@@ -51,13 +51,13 @@ services:
           host: invidious-db
           port: 5432
         check_tables: true
-        domain: ${HOMETUBE_DOMAIN}
-        https_only: ${HOMETUBE_HTTPS:-true}
-        external_port: ${HOMETUBE_EXTERNAL_PORT:-443}
+        domain: ${TUBEHAUS_DOMAIN}
+        https_only: ${TUBEHAUS_HTTPS:-true}
+        external_port: ${TUBEHAUS_EXTERNAL_PORT:-443}
         use_innertube_for_captions: true
         invidious_companion:
-        - private_url: "http://hometube:3010/companion"
-          public_url: "${HOMETUBE_URL}/companion"
+        - private_url: "http://tubehaus:3010/companion"
+          public_url: "${TUBEHAUS_URL}/companion"
         invidious_companion_key: ${COMPANION_KEY}
         hmac_key: ${INVIDIOUS_HMAC_KEY}
     healthcheck:
@@ -73,7 +73,7 @@ services:
     restart: unless-stopped
     environment:
       - SERVER_SECRET_KEY=${COMPANION_KEY}
-      - PROXY=socks5://hometube:1080          # YouTube through WARP
+      - PROXY=socks5://tubehaus:1080          # YouTube through WARP
       - NETWORKING_FETCH_TIMEOUT_MS=15000
       - NETWORKING_FETCH_RETRY_ENABLED=true
       - NETWORKING_FETCH_RETRY_TIMES=3
@@ -103,7 +103,7 @@ services:
 
 volumes:
   caddy-data:
-  hometube-data:
+  tubehaus-data:
   warp-data:
   companion-cache:
   postgres-data:

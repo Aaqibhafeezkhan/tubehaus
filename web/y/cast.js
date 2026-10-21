@@ -60,7 +60,7 @@ export async function castTo(v, anchor) {
   let list = [];
   try { list = (await lib("cast/devices", { quiet: true })).devices.filter((d) => d.id !== deviceId); } catch { }
   if (!list.length) {
-    toast($t("받을 수 있는 TV가 없어요 · TV에서 홈튜브를 켜 두세요"), null, null, 6000);
+    toast($t("받을 수 있는 TV가 없어요 · TV에서 튜브하우스를 켜 두세요"), null, null, 6000);
     return;
   }
   list.sort((a, b) => b.tv - a.tv);

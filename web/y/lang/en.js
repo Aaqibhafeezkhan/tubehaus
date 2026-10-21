@@ -1,9 +1,9 @@
-// HomeTube interface text: en. Key = the Korean original.
+// TubeHaus interface text: en. Key = the Korean original.
 export default {
  " (수정됨)": " (edited)",
  " (음소거)": " (muted)",
  " (화면)": " (screen)",
- " - 홈튜브": " - HomeTube",
+ " - 튜브하우스": " - TubeHaus",
  "\"{0}\" 재생목록을 삭제할까요?": "Delete the playlist \"{0}\"?",
  "'관심 없음' {0}개 되돌리기": "Restore {0} 'Not interested'",
  "(일시중지 중) 한 프레임 뒤 / 앞": "(while paused) previous / next frame",
@@ -176,7 +176,7 @@ export default {
  "반복 재생 꺼짐": "Loop off",
  "반복 재생 끄기": "Turn off loop",
  "반복 재생 켜짐": "Loop on",
- "받을 수 있는 TV가 없어요 · TV에서 홈튜브를 켜 두세요": "No TV available · open HomeTube on your TV",
+ "받을 수 있는 TV가 없어요 · TV에서 튜브하우스를 켜 두세요": "No TV available · open TubeHaus on your TV",
  "밝은 테마": "Light theme",
  "방금 전": "just now",
  "배경 불투명도 {0}%": "Background opacity {0}%",
@@ -377,8 +377,8 @@ export default {
  "현재 재생목록에 추가됨": "Added to queue",
  "홈": "Home",
  "홈으로": "Go home",
- "홈튜브": "HomeTube",
- "홈튜브 홈": "HomeTube home",
+ "튜브하우스": "TubeHaus",
+ "튜브하우스 홈": "TubeHaus home",
  "화면 / 프레임": "Viewport / frames",
  "화질": "Quality",
  "화질을 알아서 낮추지 않고 이 화질로 고정해요 (영상에 없으면 그 아래 최고)": "Never lowers quality on its own; stays at this quality (or the best below it if the video lacks it)",

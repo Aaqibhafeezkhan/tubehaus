@@ -1,9 +1,9 @@
-// HomeTube interface text: id. Key = the Korean original.
+// TubeHaus interface text: id. Key = the Korean original.
 export default {
  " (수정됨)": " (diedit)",
  " (음소거)": " (dibisukan)",
  " (화면)": " (layar)",
- " - 홈튜브": " - HomeTube",
+ " - 튜브하우스": " - TubeHaus",
  "\"{0}\" 재생목록을 삭제할까요?": "Hapus playlist \"{0}\"?",
  "'관심 없음' {0}개 되돌리기": "Pulihkan {0} 'Tidak tertarik'",
  "(일시중지 중) 한 프레임 뒤 / 앞": "(saat dijeda) bingkai sebelum / sesudah",
@@ -176,7 +176,7 @@ export default {
  "반복 재생 꺼짐": "Ulangi nonaktif",
  "반복 재생 끄기": "Matikan ulangi",
  "반복 재생 켜짐": "Ulangi aktif",
- "받을 수 있는 TV가 없어요 · TV에서 홈튜브를 켜 두세요": "Tidak ada TV · buka HomeTube di TV Anda",
+ "받을 수 있는 TV가 없어요 · TV에서 튜브하우스를 켜 두세요": "Tidak ada TV · buka TubeHaus di TV Anda",
  "밝은 테마": "Tema terang",
  "방금 전": "baru saja",
  "배경 불투명도 {0}%": "Opasitas latar {0}%",
@@ -377,8 +377,8 @@ export default {
  "현재 재생목록에 추가됨": "Ditambahkan ke antrean",
  "홈": "Beranda",
  "홈으로": "Ke beranda",
- "홈튜브": "HomeTube",
- "홈튜브 홈": "Beranda HomeTube",
+ "튜브하우스": "TubeHaus",
+ "튜브하우스 홈": "Beranda TubeHaus",
  "화면 / 프레임": "Viewport / bingkai",
  "화질": "Kualitas",
  "화질을 알아서 낮추지 않고 이 화질로 고정해요 (영상에 없으면 그 아래 최고)": "Tidak pernah menurunkan kualitas sendiri; tetap di kualitas ini (atau terbaik di bawahnya jika tidak tersedia)",

@@ -84,11 +84,11 @@ export const local = {
 export class HttpError extends Error {
   constructor(status, msg) { super(msg); this.status = status; }
 }
-// HomeTube has no accounts of its own; put it behind your own login (auth proxy).
-// Set window.HOMETUBE_LOGIN_URL (e.g. "/login?r=") to send expired sessions there;
+// TubeHaus has no accounts of its own; put it behind your own login (auth proxy).
+// Set window.TUBEHAUS_LOGIN_URL (e.g. "/login?r=") to send expired sessions there;
 // otherwise the page is simply reloaded so the auth proxy can step in.
 export function toGate(back = location.href) {
-  const login = window.HOMETUBE_LOGIN_URL;
+  const login = window.TUBEHAUS_LOGIN_URL;
   location.href = login ? login + encodeURIComponent(back) : back;
 }
 const inflight = new Map();

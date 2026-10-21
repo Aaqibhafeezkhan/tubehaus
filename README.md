@@ -1,12 +1,14 @@
-# HomeTube
+# TubeHaus
+
+*(formerly HomeTube, renamed to avoid a clash with an unrelated project of the same name)*
 
 **A YouTube-identical front end for your own Invidious — plus the things Invidious can't do:
 live streams, live captions, one library shared across all your devices, and a server
 that keeps working from a cloud VPS thanks to Cloudflare WARP.**
 
-![HomeTube home screen](docs/screenshot-home.jpg)
+![TubeHaus home screen](docs/screenshot-home.jpg)
 
-HomeTube is a single-page web app that looks and behaves like classic YouTube (same URLs,
+TubeHaus is a single-page web app that looks and behaves like classic YouTube (same URLs,
 same layout, same keyboard shortcuts), backed by a small Python server that runs next to
 [Invidious](https://github.com/iv-org/invidious). It is built for one household: no ads, no
 tracking, your subscriptions and history stay on your server.
@@ -26,7 +28,7 @@ account menu or Settings. View counts and dates follow each language's own style
 
 **What Invidious doesn't have**
 - **Live streams** — HLS through the server, with segments pulled ahead of the player over kept-alive connections, a rebuilt longer playlist window, and exact segment durations/discontinuities so the timeline never jumps
-- **Live captions** — YouTube provides none for live streams; HomeTube transcribes them on the fly with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), a few seconds ahead of playback (one CPU core is enough)
+- **Live captions** — YouTube provides none for live streams; TubeHaus transcribes them on the fly with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), a few seconds ahead of playback (one CPU core is enough)
 - **Translated subtitles** for videos that have none in your language (in your interface language)
 - **One library for every device** — subscriptions (with an RSS-based feed), watch history, resume positions, Watch Later, likes, playlists
 - **Send to TV** — pick a video on your phone, it starts on the TV (no Chromecast; open screens long-poll the server)
@@ -37,7 +39,7 @@ account menu or Settings. View counts and dates follow each language's own style
 **Runs from a cloud server: Cloudflare WARP**
 
 YouTube refuses most VPS and cloud addresses ("Sign in to confirm you're not a bot").
-HomeTube sends all YouTube traffic through **Cloudflare WARP in proxy mode**, and when YouTube
+TubeHaus sends all YouTube traffic through **Cloudflare WARP in proxy mode**, and when YouTube
 flags the WARP address anyway it **reconnects WARP for a fresh address and replays the request
 automatically** (rate-limited). This is what keeps playback, live streams and downloads working
 on a cheap cloud VM.
@@ -46,7 +48,7 @@ on a cheap cloud VM.
 
 ```
 browser ──► Caddy ─┬─ /y/*, page navigations ─────────► web/ (the app)
-                   ├─ /api/p/*, /api/v1/videos/* ─────► HomeTube server ──┐
+                   ├─ /api/p/*, /api/v1/videos/* ─────► TubeHaus server ──┐
                    ├─ /companion/* ───────────────────► invidious-companion ─┤
                    └─ everything else ────────────────► Invidious          │
                                                                            ▼
@@ -55,18 +57,18 @@ browser ──► Caddy ─┬─ /y/*, page navigations ───────�
                                                                         YouTube
 ```
 
-Invidious' companion `private_url` points at the HomeTube server, which passes everything
+Invidious' companion `private_url` points at the TubeHaus server, which passes everything
 through and patches in what is missing (live HLS URLs, an empty `storyboards` key some old
 videos lack, WARP rotation when YouTube blocks).
 
 ## Quick start (Docker)
 
-One command brings up everything: Caddy, the HomeTube server with Cloudflare WARP built in,
+One command brings up everything: Caddy, the TubeHaus server with Cloudflare WARP built in,
 the PO-token provider for live streams, whisper.cpp for live captions, and the official
 Invidious + companion + PostgreSQL images. Works on x86-64 and ARM64.
 
 ```sh
-git clone https://github.com/<you>/hometube && cd hometube
+git clone https://github.com/<you>/tubehaus && cd tubehaus
 cp .env.example .env        # set your domain and three secrets
 docker compose up -d        # first build takes a few minutes (whisper.cpp)
 ```
@@ -105,16 +107,16 @@ Follow the [Invidious installation guide](https://docs.invidious.io/installation
 [invidious-companion](https://github.com/iv-org/invidious-companion). Then:
 
 - companion: `PROXY=socks5://172.17.0.1:18080` (WARP) and publish it on `127.0.0.1:8282`
-- Invidious config: point the companion's `private_url` at HomeTube, e.g.
+- Invidious config: point the companion's `private_url` at TubeHaus, e.g.
   `invidious_companion: [{ private_url: "http://172.17.0.1:3010/companion", public_url: "https://tube.example.com/companion" }]`
-  (then bind HomeTube to an address the container can reach, e.g. `HT_BIND=172.17.0.1`)
+  (then bind TubeHaus to an address the container can reach, e.g. `HT_BIND=172.17.0.1`)
 
-### 3. HomeTube server
+### 3. TubeHaus server
 
 ```sh
-git clone https://github.com/<you>/hometube /opt/hometube
-cd /opt/hometube && cp .env.example .env    # edit it
-sudo cp deploy/hometube.service /etc/systemd/system/ && sudo systemctl enable --now hometube
+git clone https://github.com/<you>/tubehaus /opt/tubehaus
+cd /opt/tubehaus && cp .env.example .env    # edit it
+sudo cp deploy/tubehaus.service /etc/systemd/system/ && sudo systemctl enable --now tubehaus
 ```
 
 Optional extras:
@@ -125,11 +127,11 @@ Optional extras:
 
 ### 4. Caddy
 
-Copy `web/` to `/srv/hometube/web` and adapt [`deploy/Caddyfile.example`](deploy/Caddyfile.example).
+Copy `web/` to `/srv/tubehaus/web` and adapt [`deploy/Caddyfile.example`](deploy/Caddyfile.example).
 
-**HomeTube has no accounts.** Anyone who can open it shares the same library. Put your own
+**TubeHaus has no accounts.** Anyone who can open it shares the same library. Put your own
 login in front (Caddy `basic_auth`, or `forward_auth` to Authelia / Authentik / a passkey gate)
-before exposing it. Set `window.HOMETUBE_LOGIN_URL` in `index.html` if expired sessions should
+before exposing it. Set `window.TUBEHAUS_LOGIN_URL` in `index.html` if expired sessions should
 be sent to your login page.
 
 ## Configuration
@@ -148,7 +150,7 @@ All settings are environment variables — see [`.env.example`](.env.example).
 | `HT_YTDLP` | `yt-dlp` | for live streams |
 | `HT_WHISPER_BIN`, `HT_WHISPER_MODEL`, `HT_WHISPER_LANG` | empty, empty, `auto` | live captions |
 | `HT_SUB_LANG`, `HT_LIBRETRANSLATE` | `en`, empty | default subtitle translation target (the app asks for its own language), optional fallback |
-| `HT_DOWNLOAD_DIR` | `/var/tmp/hometube-dl` | offline save workspace |
+| `HT_DOWNLOAD_DIR` | `/var/tmp/tubehaus-dl` | offline save workspace |
 
 ## Translations
 

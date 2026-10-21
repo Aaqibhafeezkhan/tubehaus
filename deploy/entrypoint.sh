@@ -1,5 +1,5 @@
 #!/bin/sh
-# Start WARP in proxy mode, share it with the other containers, then run HomeTube.
+# Start WARP in proxy mode, share it with the other containers, then run TubeHaus.
 set -e
 W="warp-cli --accept-tos"
 
@@ -22,4 +22,4 @@ done
 socat TCP-LISTEN:1080,fork,reuseaddr TCP:127.0.0.1:40000 &
 
 mkdir -p "$HT_STATE"
-exec python3 /app/server/hometube_server.py
+exec python3 /app/server/tubehaus_server.py

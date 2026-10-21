@@ -219,7 +219,7 @@ export async function watch(page, m, alive) {
   W.v = remember([normVideo(info)])[0];
   W.v.authorThumb = pickThumb(info.authorThumbnails, 88);
   W.related = norm(info.recommendedVideos || []);
-  document.title = info.title + $t(" - 홈튜브");
+  document.title = info.title + $t(" - 튜브하우스");
 
   // playlist context
   W.pl = null;
