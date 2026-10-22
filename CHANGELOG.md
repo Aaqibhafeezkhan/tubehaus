@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.0 — 2026-10-22
+
+### Added
+- **Shorts recommendations learned on your own server.** Watch time, loops, likes, dislikes and swipes move a score
+  per channel and per topic; the next Shorts come from subscriptions, liked channels, liked topics and popular Shorts,
+  with every fourth slot for something new and at most two per channel. Stored in `shorts.json` next to the library;
+  reset under History. New endpoints: `GET /api/p/yt/shorts/next`, `POST /api/p/yt/shorts/sig`, `POST /api/p/yt/shorts/reset`
+
+### Fixed
+- Trending (gaming) and the popular Shorts lists sent the literal text `${REGION}` instead of your region
+
 ## v0.2.1 — 2026-10-22
 
 ### Added

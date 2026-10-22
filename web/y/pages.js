@@ -50,7 +50,7 @@ export async function home(page, m, alive) {
     const h = await lib("hist?n=200", { ttl: 30000 });
     pool = remember(h.items.map(normVideo));
   } else if (chip === "game") {
-    pool = norm(await api("/api/v1/trending?region=${REGION}&type=gaming", { ttl: 600000 }));
+    pool = norm(await api(`/api/v1/trending?region=${REGION}&type=gaming`, { ttl: 600000 }));
   } else {
     const p = CHIP_SEARCH[chip];
     let pg = 1;
@@ -78,7 +78,7 @@ async function homeMix() {
   const [feed, hist, trend] = await Promise.allSettled([
     lib("feed", { ttl: 120000 }),
     lib("hist?n=6", { ttl: 30000 }),
-    api("/api/v1/trending?region=${REGION}&type=gaming", { ttl: 600000 }),
+    api(`/api/v1/trending?region=${REGION}&type=gaming`, { ttl: 600000 }),
   ]);
   const watched = new Set();
   const histItems = hist.status === "fulfilled" ? hist.value.items : [];
@@ -113,9 +113,11 @@ async function homeMix() {
 async function shortsShelf(box) {
   try {
     const f = await lib("feed", { ttl: 120000 });
-    let list = feedNorm(f.items.filter((x) => x.short)).slice(0, 12);
+    let list = [];
+    try { list = norm((await lib(`shorts/next?n=12&region=${REGION}`, { quiet: true })).items).map((v) => ({ ...v, short: true })); } catch { }
+    if (list.length < 6) list = [...new Map(list.concat(feedNorm(f.items.filter((x) => x.short))).map((v) => [v.id, v])).values()].slice(0, 12);
     if (list.length < 6) {
-      const s = norm(await api("/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week", { ttl: 600000 }));
+      const s = norm(await api(`/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week`, { ttl: 600000 }));
       list = list.concat(s.map((v) => ({ ...v, short: true }))).slice(0, 12);
       remember(list);
     }
@@ -448,7 +450,8 @@ export async function importInvidious(loud) {
 export async function history(page, m, alive) {
   page.innerHTML = `<div class="histpage"><div class="hist-main" data-ctx="hist"><h2>${$t("시청 기록")}</h2><div class="results"></div></div>
     <aside class="hist-side"><form class="hs">${icon("search")}<input placeholder="${$t("시청 기록 검색")}"></form>
-      <button class="side-btn clear">${$t("{0} 모든 시청 기록 지우기", icon("trash"))}</button></aside></div>`;
+      <button class="side-btn clear">${$t("{0} 모든 시청 기록 지우기", icon("trash"))}</button>
+      <button class="side-btn shreset">${$t("{0} Shorts 추천 초기화", icon("shorts"))}</button></aside></div>`;
   const box = $(".results", page);
   let off = 0, q = "";
   const groupName = (at) => {
@@ -479,6 +482,11 @@ export async function history(page, m, alive) {
     await lib("hist/del", { method: "POST", body: { all: true } });
     toast($t("시청 기록을 지웠어요"));
     restart();
+  };
+  $(".shreset", page).onclick = async () => {
+    if (!confirm($t("Shorts 추천을 처음부터 다시 배울까요?"))) return;
+    await lib("shorts/reset", { method: "POST", body: {} });
+    toast($t("Shorts 추천을 초기화했어요"));
   };
 }
 

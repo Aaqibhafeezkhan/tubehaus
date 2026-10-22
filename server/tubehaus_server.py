@@ -923,6 +923,216 @@ def ytlib_query(path, qs):
     return {"error": "not found"}
 
 
+# ---------- Shorts recommendations, learned on this server only ----------
+# No Google account and no cloud: every Short you watch reports how long you watched it,
+# whether you looped, liked, disliked or swiped away. That moves a score per channel and
+# per keyword (the video's tags, hashtags and genre). The next Shorts are picked from a few
+# candidate pools and ranked by those scores, with some room for new things.
+SHORTS = f"{STATE}/shorts.json"
+sh_lock = threading.Lock()
+sh_cand = {}                 # pool key -> (time, [items])
+SH_DECAY = 0.97              # per day: old tastes fade
+SH_CAP = 10.0                # an affinity never goes beyond +-10
+SH_SEEN_DAYS = 30            # a Short you've seen doesn't come back for this long
+SH_MAX_LEN = 180             # what counts as a Short among search results (seconds)
+
+
+def _sh_load():
+    d = jload(SHORTS, {})
+    for k, v in (("ch", {}), ("kw", {}), ("seen", {}), ("names", {}), ("decayed", time.time())):
+        d.setdefault(k, v)
+    return d
+
+
+def _sh_tokens(title="", keywords=(), genre=""):
+    """Words that describe a Short: its tags, the #hashtags in the title, its genre."""
+    out = []
+    for k in list(keywords or [])[:15] + re.findall(r"#([^\s#]{2,40})", title or ""):
+        k = str(k).strip().lower().lstrip("#")
+        if 2 <= len(k) <= 40 and k not in ("shorts", "short", "youtubeshorts", "viral", "fyp", "trending"):
+            out.append(k)
+    if genre:
+        out.append("genre:" + str(genre).lower())
+    return list(dict.fromkeys(out))[:20]
+
+
+def _sh_engagement(watched, length, liked=False, disliked=False):
+    """How much one viewing says you liked it: swiped away < 0 < watched < looped < liked."""
+    length = max(1.0, float(length or 0))
+    watched = max(0.0, float(watched or 0))
+    ratio = watched / length
+    if watched < 2 or ratio < 0.2:
+        e = -1.0
+    elif ratio < 0.8:
+        e = 0.3
+    else:
+        e = 1.0 + 0.5 * min(3, int(ratio) - 1 if ratio >= 2 else 0)
+    if liked:
+        e += 2.0
+    if disliked:
+        e -= 3.0
+    return e
+
+
+def _sh_decay(d, now):
+    days = (now - d.get("decayed", now)) / 86400
+    if days >= 0.25:
+        f = SH_DECAY ** days
+        for table in ("ch", "kw"):
+            d[table] = {k: round(v * f, 4) for k, v in d[table].items() if abs(v * f) >= 0.05}
+        d["decayed"] = now
+
+
+def shorts_signal(b):
+    vid = str(b.get("id", ""))
+    if not re.fullmatch(r"[\w-]{11}", vid):
+        return 400, {"error": "bad id"}
+    cid = str(b.get("authorId") or "")
+    e = _sh_engagement(b.get("watched"), b.get("len"), bool(b.get("liked")), bool(b.get("disliked")))
+    toks = _sh_tokens(str(b.get("title") or ""), b.get("keywords") if isinstance(b.get("keywords"), list) else [],
+                      str(b.get("genre") or ""))
+    now = time.time()
+    with sh_lock:
+        d = _sh_load()
+        _sh_decay(d, now)
+        if re.fullmatch(r"UC[\w-]{22}", cid):
+            d["ch"][cid] = max(-SH_CAP, min(SH_CAP, d["ch"].get(cid, 0) + e))
+            d["names"][cid] = str(b.get("author") or "")[:100]
+        for t in toks:
+            d["kw"][t] = max(-SH_CAP, min(SH_CAP, d["kw"].get(t, 0) + e * 0.5))
+        d["seen"][vid] = int(now)
+        if len(d["seen"]) > 3000:
+            for k in sorted(d["seen"], key=d["seen"].get)[:len(d["seen"]) - 3000]:
+                del d["seen"][k]
+        for table, keep in (("ch", 300), ("kw", 500)):
+            if len(d[table]) > keep:
+                d[table] = dict(sorted(d[table].items(), key=lambda kv: -abs(kv[1]))[:keep])
+        d["names"] = {k: v for k, v in d["names"].items() if k in d["ch"]}
+        jsave(SHORTS, d)
+    return 200, {"ok": True, "score": e}
+
+
+def shorts_reset():
+    with sh_lock:
+        jsave(SHORTS, {})
+    sh_cand.clear()
+    return 200, {"ok": True}
+
+
+def _sh_item(v, src, tags=()):
+    vid = v.get("videoId") or v.get("id")
+    if not vid or not re.fullmatch(r"[\w-]{11}", vid):
+        return None
+    ln = int(v.get("lengthSeconds") or v.get("len") or 0)
+    if src not in ("sub", "chan") and not (0 < ln <= SH_MAX_LEN):
+        return None
+    return {"id": vid, "title": v.get("title", ""), "author": v.get("author", ""), "authorId": v.get("authorId", ""),
+            "views": v.get("viewCount", v.get("views")), "published": v.get("published") or 0, "len": ln, "src": src,
+            "tags": list(tags)}
+
+
+def _sh_pool(key, ttl, fetch):
+    c = sh_cand.get(key)
+    if c and time.time() - c[0] < ttl:
+        return c[1]
+    try:
+        items = [x for x in fetch() if x]
+    except Exception as ex:
+        log("shorts", f"pool {key[:40]} FAIL {repr(ex)[:80]}")
+        items = c[1] if c else []
+    sh_cand[key] = (time.time(), items)
+    if len(sh_cand) > 200:
+        for k in sorted(sh_cand, key=lambda k: sh_cand[k][0])[:50]:
+            sh_cand.pop(k, None)
+    return items
+
+
+def _sh_search(q, region, src, tag=None):
+    path = "/api/v1/search?" + urllib.parse.urlencode({"q": q, "type": "video", "duration": "short", "region": region})
+    return [_sh_item(v, src, [tag] if tag else ()) for v in json.loads(_inv(path, 30)) if isinstance(v, dict)]
+
+
+def _sh_channel(cid):
+    """A channel's latest Shorts from its public RSS feed (no Invidious round trip)."""
+    yt_feed_one(cid)
+    return [_sh_item(x, "chan") for x in yt_feed["items"].get(cid, []) if x.get("short")]
+
+
+def shorts_candidates(d, region):
+    """Candidate pools: subscriptions, channels you like, words you like, what's popular."""
+    pools = []
+    with yt_lock:
+        subs = list(_yt_load()["subs"])
+    pools.append([_sh_item(x, "sub") for cid in subs for x in yt_feed["items"].get(cid, []) if x.get("short")])
+    liked_ch = [c for c, s in sorted(d["ch"].items(), key=lambda kv: -kv[1]) if s > 0.5 and c not in subs][:6]
+    for cid in liked_ch:
+        pools.append(_sh_pool("ch:" + cid, 3600, lambda cid=cid: _sh_channel(cid)))
+    liked_kw = [k for k, s in sorted(d["kw"].items(), key=lambda kv: -kv[1]) if s > 0.5 and not k.startswith("genre:")][:5]
+    for kw in liked_kw:
+        pools.append(_sh_pool(f"kw:{region}:{kw}", 1800, lambda kw=kw: _sh_search(f"{kw} #shorts", region, "kw", kw)))
+    pools.append(_sh_pool(f"pop:{region}", 1800, lambda: _sh_search("#shorts", region, "pop")))
+    return pools
+
+
+def shorts_rank(d, items, n, skip=(), now=None, rnd=None):
+    """Score, de-duplicate and diversify. Pure function so it can be tested."""
+    import math
+    import random
+    rnd = rnd or random.Random()
+    now = now or time.time()
+    skip = set(skip)
+    seen = {k for k, t in d["seen"].items() if now - t < SH_SEEN_DAYS * 86400}
+    src_bonus = {"sub": 0.6, "chan": 0.4, "kw": 0.2, "pop": 0.0}
+    best = {}
+    for v in items:
+        if not v or v["id"] in skip or v["id"] in seen:
+            continue
+        toks = _sh_tokens(v.get("title", ""), v.get("tags") or ())
+        kw = sum(d["kw"].get(t, 0) for t in toks) / math.sqrt(len(toks)) if toks else 0
+        s = (d["ch"].get(v.get("authorId", ""), 0) + 0.6 * kw + src_bonus.get(v.get("src"), 0)
+             + 0.1 * math.log10(1 + (v.get("views") or 0)) / 7
+             + (0.2 if v.get("published") and now - v["published"] < 3 * 86400 else 0)
+             + rnd.gauss(0, 0.15))
+        if v["id"] not in best or best[v["id"]][0] < s:
+            best[v["id"]] = (s, v)
+    ranked = sorted(best.values(), key=lambda sv: -sv[0])
+    out, per_ch = [], {}
+    explore = [v for s, v in ranked if v.get("src") == "pop"]
+    rnd.shuffle(explore)
+    for s, v in ranked:
+        if len(out) >= n:
+            break
+        if len(out) % 4 == 3 and explore:          # every 4th slot: something new
+            e = explore.pop()
+            if e["id"] not in {x["id"] for x in out} and per_ch.get(e["authorId"], 0) < 2:
+                out.append(dict(e, why="new"))
+                per_ch[e["authorId"]] = per_ch.get(e["authorId"], 0) + 1
+                if len(out) >= n:
+                    break
+        if v["id"] in {x["id"] for x in out} or per_ch.get(v["authorId"], 0) >= 2:
+            continue
+        if d["ch"].get(v["authorId"], 0) <= -3:      # channels you keep swiping away
+            continue
+        out.append(dict(v, why=v.get("src")))
+        per_ch[v["authorId"]] = per_ch.get(v["authorId"], 0) + 1
+    return out
+
+
+def shorts_next(qs):
+    try:
+        n = max(1, min(30, int(qs.get("n") or 10)))
+    except ValueError:
+        n = 10
+    region = qs.get("region", "US")
+    region = region if re.fullmatch(r"[A-Z]{2}", region) else "US"
+    skip = [x for x in qs.get("skip", "").split(",") if re.fullmatch(r"[\w-]{11}", x)][:300]
+    with sh_lock:
+        d = _sh_load()
+    items = [v for pool in shorts_candidates(d, region) for v in pool]
+    return {"items": shorts_rank(d, items, n, skip),
+            "learned": {"channels": len([1 for s in d["ch"].values() if s > 0]), "keywords": len(d["kw"])}}
+
+
 def yt_feed_one(cid):
     ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015",
           "m": "http://search.yahoo.com/mrss/"}
@@ -1502,6 +1712,8 @@ class H(BaseHTTPRequestHandler):
                 self.close_connection = True
             j["done_at"] = time.time()
             return
+        if p.endswith("/yt/shorts/next"):
+            return self.send(200, shorts_next(self.qs()))
         if "/yt/" in p and "/api/p/" in self.path:
             if p.endswith("/yt/lib"):
                 return self.send(200, ytlib_get())
@@ -1564,6 +1776,10 @@ class H(BaseHTTPRequestHandler):
             return self.send(*cast_send(body))
         if p.endswith("/yt/dl"):
             return self.send(*ytdl_start(body))
+        if p.endswith("/yt/shorts/sig"):
+            return self.send(*shorts_signal(body))
+        if p.endswith("/yt/shorts/reset"):
+            return self.send(*shorts_reset())
         if "/yt/" in p and "/api/p/" in self.path:
             return self.send(*ytlib_post(p, body))
         self.send(404, {"error": "not found"})

@@ -402,5 +402,8 @@ export default {
  "합치기 실패": "Merging failed",
  "구독 (메뉴)": "Subscriptions",
  "예정된 라이브 방송이에요. {0} 시작해요": "This is an upcoming live stream. It starts {0}",
- "곧 시작하는 라이브 방송이에요": "This live stream is about to start"
+ "곧 시작하는 라이브 방송이에요": "This live stream is about to start",
+ "{0} Shorts 추천 초기화": "{0} Reset Shorts recommendations",
+ "Shorts 추천을 처음부터 다시 배울까요?": "Start learning your Shorts taste from scratch?",
+ "Shorts 추천을 초기화했어요": "Shorts recommendations reset"
 };

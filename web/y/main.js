@@ -20,15 +20,20 @@ routes.push(
   [/^\/watch$/, watch, { name: "watch" }],
   [/^\/shorts\/([\w-]{11})$/, shorts, { name: "shorts" }],
   [/^\/shorts\/?$/, async (page) => {
-    // Shorts tab: Shorts from the subscription feed -> else popular Shorts
+    // Shorts tab: recommendations learned on this server -> Shorts from the subscription feed -> popular Shorts
     let id = null;
     try {
+      const r = await lib(`shorts/next?n=10&region=${REGION}`, { quiet: true });
+      const s = r.items.map((x) => x.id);
+      if (s.length) { sessionStorage.setItem("yt.shortsCtx", JSON.stringify(s)); id = s[0]; }
+    } catch { }
+    if (!id) try {
       const f = await lib("feed", { ttl: 120000 });
       const s = f.items.filter((x) => x.short).map((x) => x.id);
       if (s.length) { sessionStorage.setItem("yt.shortsCtx", JSON.stringify(s)); id = s[0]; }
     } catch { }
     if (!id) {
-      const r = await api("/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week", { ttl: 600000 });
+      const r = await api(`/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week`, { ttl: 600000 });
       const s = r.filter((x) => x.videoId).map((x) => x.videoId);
       sessionStorage.setItem("yt.shortsCtx", JSON.stringify(s));
       id = s[0];

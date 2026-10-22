@@ -130,6 +130,62 @@ class Library(unittest.TestCase):
         self.assertEqual([x["id"] for x in ts.ytlib_query("/api/p/yt/hist", {})["items"]], ["bbbbbbbbbbb"])
 
 
+class ShortsRecommender(unittest.TestCase):
+    CAT, DOG = "UC" + "c" * 22, "UC" + "d" * 22
+
+    def setUp(self):
+        if os.path.exists(ts.SHORTS):
+            os.remove(ts.SHORTS)
+
+    def watch(self, vid, ch, watched, length=30, **kw):
+        body = {"id": vid, "authorId": ch, "author": ch[-1], "title": kw.pop("title", ""), "watched": watched, "len": length}
+        body.update(kw)
+        return ts.shorts_signal(body)
+
+    def test_engagement_order(self):
+        e = ts._sh_engagement
+        self.assertLess(e(1, 30), 0)                      # swiped away
+        self.assertLess(e(10, 30), e(30, 30))             # partial < full
+        self.assertLess(e(30, 30), e(90, 30))             # watched < looped
+        self.assertLess(e(30, 30), e(30, 30, liked=True))
+        self.assertLess(e(30, 30, disliked=True), e(1, 30))
+
+    def test_tokens(self):
+        t = ts._sh_tokens("Funny cat #CatsOfInstagram #shorts", ["Cat", "kitten", "viral"], "Pets & Animals")
+        self.assertEqual(t, ["cat", "kitten", "catsofinstagram", "genre:pets & animals"])
+
+    def test_signals_build_channel_and_keyword_taste(self):
+        self.watch("aaaaaaaaaaa", self.CAT, 60, keywords=["cat"])
+        self.watch("bbbbbbbbbbb", self.DOG, 1, keywords=["dog"])
+        d = ts._sh_load()
+        self.assertGreater(d["ch"][self.CAT], 0)
+        self.assertLess(d["ch"][self.DOG], 0)
+        self.assertGreater(d["kw"]["cat"], 0)
+        self.assertIn("aaaaaaaaaaa", d["seen"])
+        self.assertEqual(self.watch("../etc/pass", self.CAT, 1)[0], 400)
+
+    def test_ranking_prefers_taste_skips_seen_and_diversifies(self):
+        import random
+        for i, vid in enumerate(("aaaaaaaaaaa", "aaaaaaaaaab")):
+            self.watch(vid, self.CAT, 90, liked=True)
+        for vid in ("ddddddddddd", "dddddddddde", "ddddddddddf"):
+            self.watch(vid, self.DOG, 0.5, disliked=True)
+        d = ts._sh_load()
+        items = [{"id": "c%010d" % i, "title": "", "authorId": self.CAT, "views": 10, "src": "kw"} for i in range(5)]
+        items += [{"id": "d%010d" % i, "title": "", "authorId": self.DOG, "views": 10**7, "src": "kw"} for i in range(5)]
+        items += [{"id": "aaaaaaaaaaa", "title": "", "authorId": self.CAT, "views": 1, "src": "kw"}]
+        out = ts.shorts_rank(d, items, 5, rnd=random.Random(1))
+        ids = [v["id"] for v in out]
+        self.assertNotIn("aaaaaaaaaaa", ids)                               # already seen
+        self.assertTrue(all(v["authorId"] != self.DOG for v in out))       # swiped away + disliked
+        self.assertLessEqual(sum(v["authorId"] == self.CAT for v in out), 2)  # at most 2 per channel
+
+    def test_reset(self):
+        self.watch("aaaaaaaaaaa", self.CAT, 60)
+        ts.shorts_reset()
+        self.assertEqual(ts._sh_load()["ch"], {})
+
+
 class Health(unittest.TestCase):
     def test_health(self):
         h = ts.health()

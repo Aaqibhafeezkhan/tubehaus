@@ -38,6 +38,9 @@ YouTube. TubeHaus adds its own front end and a small server next to them. All cr
 **🎙️ Live captions**
 - YouTube gives no captions for live streams. TubeHaus transcribes them on the fly with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), a few seconds ahead of playback, on a single CPU core
 
+**🧠 Shorts that learn from you, on your server**
+- The Shorts feed learns what you like from how you watch: how long you watched, whether you looped it, liked it or swiped it away. It keeps a score per channel and per topic (tags, hashtags, genre) in a small file on your server, and picks the next Shorts from your subscriptions, channels you like, topics you like and what's popular, with every fourth slot left for something new. No Google account, nothing leaves your server, and you can reset it any time under History
+
 **🌍 12 languages:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia · Türkçe —
 chosen on the first visit (the browser's language is preselected) and changeable any time under **Language** in the
 account menu or Settings. View counts and dates follow each language's own style.
@@ -189,8 +192,9 @@ Everything comes from YouTube. Nothing is stored except your library (subscripti
 short-lived files for offline downloads.
 
 **Is there a recommendation algorithm?**
-Not a personal one: no Google account is involved, so nothing learns from what you watch. You get your
-subscriptions feed, trending and category tabs, and YouTube's per-video related list.
+For Shorts, yes, and it runs entirely on your server (see *Shorts that learn from you* above). For regular videos you
+get your subscriptions feed, trending and category tabs, and YouTube's per-video related list. Nothing is learned by
+Google, since no Google account is involved.
 
 **Age-restricted videos?**
 They usually don't play, since there's no signed-in account to pass the age check. That is the same as Invidious.

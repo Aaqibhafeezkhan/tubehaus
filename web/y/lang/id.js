@@ -402,5 +402,8 @@ export default {
  "합치기 실패": "Penggabungan gagal",
  "구독 (메뉴)": "Langganan",
  "예정된 라이브 방송이에요. {0} 시작해요": "Ini siaran langsung terjadwal. Dimulai {0}",
- "곧 시작하는 라이브 방송이에요": "Siaran langsung akan segera dimulai"
+ "곧 시작하는 라이브 방송이에요": "Siaran langsung akan segera dimulai",
+ "{0} Shorts 추천 초기화": "{0} Atur ulang rekomendasi Shorts",
+ "Shorts 추천을 처음부터 다시 배울까요?": "Pelajari ulang selera Shorts Anda dari awal?",
+ "Shorts 추천을 초기화했어요": "Rekomendasi Shorts diatur ulang"
 };

@@ -402,5 +402,8 @@ export default {
  "합치기 실패": "Birleştirme başarısız",
  "구독 (메뉴)": "Abonelikler",
  "예정된 라이브 방송이에요. {0} 시작해요": "Bu bir planlanmış canlı yayın. {0} başlar",
- "곧 시작하는 라이브 방송이에요": "Bu canlı yayın birazdan başlıyor"
+ "곧 시작하는 라이브 방송이에요": "Bu canlı yayın birazdan başlıyor",
+ "{0} Shorts 추천 초기화": "{0} Shorts önerilerini sıfırla",
+ "Shorts 추천을 처음부터 다시 배울까요?": "Shorts zevkinizi baştan öğrenmek istiyor musunuz?",
+ "Shorts 추천을 초기화했어요": "Shorts önerileri sıfırlandı"
 };

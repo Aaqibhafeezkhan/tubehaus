@@ -402,5 +402,8 @@ export default {
  "합치기 실패": "Zusammenführen fehlgeschlagen",
  "구독 (메뉴)": "Abos",
  "예정된 라이브 방송이에요. {0} 시작해요": "Das ist ein geplanter Livestream. Er beginnt {0}",
- "곧 시작하는 라이브 방송이에요": "Der Livestream beginnt gleich"
+ "곧 시작하는 라이브 방송이에요": "Der Livestream beginnt gleich",
+ "{0} Shorts 추천 초기화": "{0} Shorts-Empfehlungen zurücksetzen",
+ "Shorts 추천을 처음부터 다시 배울까요?": "Deinen Shorts-Geschmack von vorn lernen?",
+ "Shorts 추천을 초기화했어요": "Shorts-Empfehlungen zurückgesetzt"
 };

@@ -534,6 +534,23 @@ export async function shorts(page, m, alive) {
   if (i0 < 0) { ids = [first, ...ids.filter((x) => x !== first)]; i0 = 0; }
   ids = ids.slice(i0);
   const slides = new Map();
+  // what this viewing tells the recommender: seconds watched (loops count), like / dislike
+  let watched = 0, lastT = 0, cur = null;
+  const onTime = () => {
+    const t = player.video.currentTime, dt = t - lastT;
+    if (dt > 0 && dt < 1.5) watched += dt;
+    lastT = t;
+  };
+  player.video.addEventListener("timeupdate", onTime);
+  const report = () => {
+    if (!cur) return;
+    const { id, info } = cur;
+    cur = null;
+    lib("shorts/sig", { method: "POST", quiet: true, body: {
+      id, authorId: info.authorId, author: info.author, title: info.title, keywords: info.keywords || [], genre: info.genre || "",
+      watched: Math.round(watched * 10) / 10, len: info.lengthSeconds || 0, liked: inList("likes", id), disliked: inList("dislikes", id),
+    } }).catch(() => { });
+  };
   const addSlide = (id) => {
     if (slides.has(id)) return;
     const s = el(`<section class="short-slide" data-id="${esc(id)}"><div class="ss-media" style="background-image:url('${thumb(id)}')"></div>
@@ -554,10 +571,17 @@ export async function shorts(page, m, alive) {
     if (loadingMore) return;
     loadingMore = true;
     try {
-      const pg = 1 + Math.floor(slides.size / 15);
-      const r = norm(await api(`/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week&page=${pg}`, { ttl: 600000 }));
-      r.forEach((v) => addSlide(v.id));
-    } catch { }
+      // learned on this server from what you watch; popular Shorts if it has nothing yet
+      const r = await lib(`shorts/next?n=10&region=${REGION}&skip=${[...slides.keys()].slice(-200).join(",")}`, { quiet: true });
+      r.items.forEach((v) => addSlide(v.id));
+      if (!r.items.length) throw 0;
+    } catch {
+      try {
+        const pg = 1 + Math.floor(slides.size / 15);
+        const r = norm(await api(`/api/v1/search?q=%23shorts&type=video&duration=short&region=${REGION}&sort=views&date=week&page=${pg}`, { ttl: 600000 }));
+        r.forEach((v) => addSlide(v.id));
+      } catch { }
+    }
     loadingMore = false;
   };
   const io = new IntersectionObserver((es) => {
@@ -565,6 +589,7 @@ export async function shorts(page, m, alive) {
   }, { root: sc, threshold: [0.6] });
   async function activate(s) {
     if (active === s) return;
+    report();
     active = s;
     const id = s.dataset.id;
     history.replaceState(history.state, "", `/shorts/${id}`);
@@ -586,6 +611,7 @@ export async function shorts(page, m, alive) {
     player.next = null; player.hasPrev = false;
     await player.load(info, { start: 0 });
     player.video.loop = true;
+    watched = 0; lastT = 0; cur = { id, info };
     const av = pickThumb(info.authorThumbnails, 88);
     s.querySelector(".ss-ch").innerHTML = `<a href="/channel/${esc(info.authorId)}" data-nav>${avatar(av, "sm")}<b>${esc(info.author)}</b></a>${subBtn(info.authorId, info.author, av)}`;
     s.querySelector(".ss-t").textContent = info.title;
@@ -616,6 +642,8 @@ export async function shorts(page, m, alive) {
   };
   addEventListener("keydown", onKey, true);
   pageCleanup.push(() => {
+    report();
+    player.video.removeEventListener("timeupdate", onTime);
     removeEventListener("keydown", onKey, true);
     io.disconnect();
     saveProgress(true);

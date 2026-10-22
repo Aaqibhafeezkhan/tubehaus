@@ -402,5 +402,8 @@ export default {
  "합치기 실패": "Error al unir",
  "구독 (메뉴)": "Suscripciones",
  "예정된 라이브 방송이에요. {0} 시작해요": "Es una emisión en directo programada. Empieza {0}",
- "곧 시작하는 라이브 방송이에요": "La emisión en directo está a punto de empezar"
+ "곧 시작하는 라이브 방송이에요": "La emisión en directo está a punto de empezar",
+ "{0} Shorts 추천 초기화": "{0} Restablecer recomendaciones de Shorts",
+ "Shorts 추천을 처음부터 다시 배울까요?": "¿Volver a aprender tus gustos de Shorts desde cero?",
+ "Shorts 추천을 초기화했어요": "Recomendaciones de Shorts restablecidas"
 };

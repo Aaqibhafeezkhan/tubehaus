@@ -402,5 +402,8 @@ export default {
  "합치기 실패": "Falha ao juntar",
  "구독 (메뉴)": "Inscrições",
  "예정된 라이브 방송이에요. {0} 시작해요": "É uma transmissão ao vivo agendada. Começa {0}",
- "곧 시작하는 라이브 방송이에요": "A transmissão ao vivo vai começar em instantes"
+ "곧 시작하는 라이브 방송이에요": "A transmissão ao vivo vai começar em instantes",
+ "{0} Shorts 추천 초기화": "{0} Redefinir recomendações de Shorts",
+ "Shorts 추천을 처음부터 다시 배울까요?": "Reaprender seus gostos de Shorts do zero?",
+ "Shorts 추천을 초기화했어요": "Recomendações de Shorts redefinidas"
 };
