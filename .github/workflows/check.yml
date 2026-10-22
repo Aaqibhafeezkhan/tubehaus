@@ -35,6 +35,16 @@ jobs:
       - name: Server unit tests
         run: python3 -m unittest discover -s tests -v
 
+      - name: Server starts and answers
+        run: |
+          HT_STATE=/tmp/state HT_YT_PROXY= python3 server/tubehaus_server.py > /tmp/server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3010/api/p/health; then echo; exit 0; fi
+            sleep 0.5
+          done
+          cat /tmp/server.log
+          exit 1
+
       - name: docker compose config
         run: cp .env.example .env && docker compose config --quiet
 

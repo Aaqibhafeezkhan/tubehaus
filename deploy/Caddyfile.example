@@ -10,6 +10,22 @@
 tube.example.com {
 	encode zstd gzip
 
+	# privacy and hardening: no referrer to other sites, no FLoC/Topics, no MIME sniffing,
+	# no framing by other sites, and keep search engines out of a private instance
+	header {
+		Referrer-Policy same-origin
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Permissions-Policy "interest-cohort=(), browsing-topics=()"
+		-Server
+	}
+	handle /robots.txt {
+		respond <<TXT
+			User-agent: *
+			Disallow: /
+			TXT 200
+	}
+
 	# --- your login goes here, e.g.
 	# basic_auth {
 	# 	me $2a$14$...   # caddy hash-password

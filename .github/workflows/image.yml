@@ -96,3 +96,13 @@ jobs:
           docker buildx imagetools create ${{ steps.tags.outputs.args }} \
             $(printf "$IMAGE@sha256:%s " *)
           docker buildx imagetools inspect "$IMAGE:latest"
+
+      - name: Smoke test the published image
+        run: |
+          docker run --rm --entrypoint sh "$IMAGE:latest" -c '
+            set -e
+            test -x /opt/whisper/whisper-cli && test -s /opt/whisper/ggml-base-q5_1.bin && echo "whisper ok"
+            /opt/venv/bin/yt-dlp --version
+            ffmpeg -version | head -1
+            warp-cli --version
+            python3 -m py_compile /app/server/tubehaus_server.py && echo "server ok"'

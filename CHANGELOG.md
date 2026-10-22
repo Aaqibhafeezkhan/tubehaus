@@ -4,6 +4,9 @@
 
 ### Added
 - Turkish interface (thanks @SakarPaisen, #8)
+- Privacy headers in the Caddy configs (no referrer to other sites, no FLoC/Topics, no framing) and a robots.txt that keeps search engines out
+- CI starts the server and checks it answers; the image workflow smoke-tests the published image
+- Pull requests are labeled automatically by the files they touch; CodeRabbit review settings
 
 ## v0.2.0 — 2026-10-22
 

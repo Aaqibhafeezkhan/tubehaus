@@ -1,0 +1,18 @@
+translation:
+  - changed-files:
+      - any-glob-to-any-file: "web/y/lang/**"
+server:
+  - changed-files:
+      - any-glob-to-any-file: "server/**"
+web:
+  - changed-files:
+      - any-glob-to-any-file: ["web/**", "!web/y/lang/**"]
+docker:
+  - changed-files:
+      - any-glob-to-any-file: ["Dockerfile", "docker-compose.yml", "deploy/**", ".env.example"]
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.md", "docs/**"]
+ci:
+  - changed-files:
+      - any-glob-to-any-file: [".github/**", "tests/**", "scripts/**"]

@@ -20,6 +20,22 @@
 	encode zstd gzip
 	import auth-{$TUBEHAUS_AUTH:none}
 
+	# privacy and hardening: no referrer to other sites, no FLoC/Topics, no MIME sniffing,
+	# no framing by other sites, and keep search engines out of a private instance
+	header {
+		Referrer-Policy same-origin
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Permissions-Policy "interest-cohort=(), browsing-topics=()"
+		-Server
+	}
+	handle /robots.txt {
+		respond <<TXT
+			User-agent: *
+			Disallow: /
+			TXT 200
+	}
+
 	handle /y/* {
 		root * /srv/web
 		header Cache-Control "no-cache"
