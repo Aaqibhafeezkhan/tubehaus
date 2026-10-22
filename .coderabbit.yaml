@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+
+reviews:
+  profile: chill                 # fewer nitpicks; contributors are often first-timers
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!web/y/lib/**"            # vendored Shaka Player
+    - "!**/*.png"
+    - "!**/*.jpg"
+  path_instructions:
+    - path: "web/y/lang/*.js"
+      instructions: >-
+        Interface translations. Keys are the original Korean text and must not change.
+        Values must be plain text: they are inserted into HTML, so flag any markup, script,
+        URL or code in a value. Keep {0}, {1} placeholders exactly. Judge whether the
+        wording is natural for the language; ignore line order.
+    - path: "server/**/*.py"
+      instructions: >-
+        The server must use only the Python standard library. Every request to YouTube must
+        go through the YT opener (WARP proxy). Anything that ends up in a file path or a
+        subprocess argument must be validated. Logging must not include tokens or full
+        signed googlevideo URLs.
+    - path: "web/y/*.js"
+      instructions: >-
+        Plain ES modules with no build step and no new dependencies. User-visible text goes
+        through $t() with the Korean original as the key. Text inserted with innerHTML must
+        be escaped with esc().
+    - path: "docker-compose.yml"
+      instructions: >-
+        Must keep working on both amd64 and arm64 and with only `cp .env.example .env` plus
+        the documented variables.
+
+chat:
+  auto_reply: true
