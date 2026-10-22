@@ -1,0 +1,118 @@
+# TubeHaus (튜브하우스)
+
+[English](README.md) · **한국어**
+
+**내 서버에서 돌리는 나만의 유튜브: 빠르고, 기록이 밖으로 새지 않고, 막히지 않아요.**
+
+생김새와 쓰는 법이 유튜브와 똑같아요(화면 구성, 주소, 단축키까지). 광고와 추적은 없어요.
+라이브 방송을 실시간 자막과 함께 볼 수 있고, 모든 기기가 같은 구독과 기록을 쓰고, 값싼 클라우드 서버에서도 잘 돌아가요.
+
+TubeHaus는 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
+유튜브와 데이터를 주고받는 어려운 일은 이 두 프로젝트가 하고, TubeHaus는 그 옆에 화면과 작은 서버를 붙여요.
+Invidious 팀에 감사드려요.
+
+![TubeHaus 첫 화면](docs/screenshot-home.jpg)
+
+## 왜 TubeHaus인가
+
+**⚡ 빨라요**
+- **누르자마자 열려요.** 영상 정보를 서버에 미리 받아 두고 뒤에서 새로 고쳐요. 다음에 누를 만한 영상도 미리 받아 둬요(처음 1~2초, 그다음부터는 수 밀리초)
+- **라이브가 끊기지 않아요.** 서버가 플레이어보다 먼저 영상 조각을 받아 두고, 정확한 길이로 이어 붙여서 재생 막대가 튀지 않아요
+- **늘 최고 화질이에요.** 화질을 알아서 낮추지 않아요. 60프레임과, 기기가 하드웨어로 부드럽게 푸는 코덱을 먼저 골라요. 8K도 브라우저 버퍼에 맞게 조절해요
+
+**🔒 기록이 밖으로 새지 않아요**
+- **기기가 구글과 직접 통신하지 않아요.** 영상, 썸네일, 페이지가 전부 내 서버를 거쳐요. 구글 계정, 쿠키, 유튜브 스크립트가 브라우저에 들어오지 않아요
+- **유튜브는 집 IP를 몰라요.** 서버가 유튜브에 보내는 요청은 모두 Cloudflare WARP를 거쳐 나가요
+- **계정도 추적도 없어요.** 구독, 시청 기록, 이어보기 위치, 재생목록은 내 서버의 파일이고, 우리 집 사람만 같이 써요
+
+**🛡️ 막히지 않아요**
+- 유튜브는 클라우드 서버 주소를 대부분 막아요("봇이 아닌지 확인하려면 로그인하세요"). TubeHaus는 유튜브 요청을 **Cloudflare WARP(프록시 모드)**로 내보내고, 그래도 막히면 **WARP 주소를 새로 받아 요청을 자동으로 다시 보내요**(횟수 제한 있음). 값싼 클라우드 서버에서도 재생, 라이브, 저장이 계속 돼요
+
+**🎙️ 라이브 실시간 자막**
+- 유튜브는 라이브 방송에 자막을 주지 않아요. TubeHaus는 [whisper.cpp](https://github.com/ggml-org/whisper.cpp)로 소리를 받아써서 재생보다 몇 초 앞서 자막을 만들어요. CPU 코어 하나면 돼요
+
+**🌍 12개 언어:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia · Türkçe.
+처음 접속할 때 고르고(브라우저 언어가 미리 선택돼 있어요), 계정 메뉴나 설정의 **언어**에서 언제든 바꿀 수 있어요.
+
+## 그 밖의 기능
+
+- 유튜브와 같은 화면: 홈, 검색, 채널, 재생목록, 구독, 기록, 보관함, 인기 급상승
+- [Shaka Player](https://github.com/shaka-project/shaka-player) 기반 플레이어: 챕터, 탐색 미리보기, SponsorBlock, 재생 속도, 수면 타이머, 통계, 미니 플레이어, 영화관 모드, 앰비언트 모드, 잠금 화면과 블루투스 버튼 조작
+- **모든 기기가 같은 라이브러리:** 구독(RSS 기반 피드), 시청 기록, 이어보기, 나중에 볼 동영상, 좋아요, 재생목록
+- **TV로 보내기:** 폰에서 영상을 고르면 TV에서 재생돼요(크롬캐스트 필요 없음)
+- **고화질 저장:** 1080p와 4K는 영상과 소리가 따로 와요. 서버가 둘 다 받아 ffmpeg로 합쳐 줘요
+- **번역 자막:** 내 언어 자막이 없는 영상도 자막을 볼 수 있어요
+- **TV 모드:** TV 브라우저에서 리모컨(방향키, 확인, 뒤로)만으로 조작해요
+- 싫어요 수(Return YouTube Dislike), 댓글, 스크립트
+
+브라우저가 직접 하는 선택 기능: SponsorBlock(영상 ID 대신 해시 앞부분만 보내요), Return YouTube Dislike.
+
+## 필요한 것
+
+- **서버:** Docker와 docker compose가 있는 리눅스, x86-64 또는 ARM64(오라클 클라우드 무료 ARM 서버로 충분해요)
+- **CPU / 메모리:** 2코어 이상, 전체 합쳐 메모리 약 4GB. 라이브 자막을 켜고 라이브를 볼 때만 코어 하나를 더 써요
+- **디스크:** 약 10~20GB, 대부분 Docker 이미지예요. 영상은 저장하지 않고 흘려보내서 써도 늘지 않아요
+- **HTTPS용 주소:** 도메인, 또는 sslip.io 같은 무료 와일드카드 DNS 이름. 집 안 네트워크에서만 쓰면 HTTP도 돼요
+
+## 빠른 설치 (Docker)
+
+```sh
+git clone https://github.com/biolend83/tubehaus && cd tubehaus
+cp .env.example .env        # 도메인과 비밀값 세 개를 넣어요
+docker compose pull         # 미리 빌드된 이미지 (amd64, arm64)
+docker compose up -d
+```
+
+Caddy, WARP가 들어 있는 TubeHaus 서버, 라이브용 PO 토큰 제공기, 라이브 자막용 whisper.cpp,
+공식 Invidious + companion + PostgreSQL 이미지가 한 번에 올라와요. 끝나면 도메인을 열면 돼요.
+
+**외부에 열기 전에 로그인을 붙이세요.** TubeHaus에는 계정 기능이 없어서, 주소를 아는 사람은 누구나 같은 라이브러리를 봐요.
+가장 쉬운 방법은 내장 비밀번호예요. `.env`에 `TUBEHAUS_AUTH=basic`, `TUBEHAUS_USER`, `TUBEHAUS_PASSWORD_HASH`를 넣으세요.
+해시는 `docker compose run --rm caddy caddy hash-password`로 만들고, `.env`에서는 `$`를 모두 `$$`로 써야 해요.
+Authelia, Authentik, 패스키 게이트 같은 것을 `forward_auth`로 앞에 둬도 돼요.
+
+**잘 돌아가는지 점검:**
+
+```sh
+docker compose exec tubehaus python3 /app/server/tubehaus_server.py --doctor
+```
+
+WARP, 유튜브 연결, Invidious, 실제 영상 조회, 선택 기능(yt-dlp, ffmpeg, whisper)을 한 줄씩 점검해요.
+문제가 있으면 [문제 해결](docs/TROUBLESHOOTING.md)(영어), 업데이트와 백업은 [업데이트와 백업](docs/UPGRADING.md)(영어)을 보세요.
+
+직접 설치(Docker 없이)와 설정 항목 전체는 [영어 README](README.md#manual-setup)에 있어요.
+
+## 자주 묻는 질문
+
+**Invidious를 대체하나요?**
+아니요, 같이 돌아가요. 유튜브에서 가져오는 일은 Invidious와 companion이 하고, TubeHaus는 유튜브 같은 화면과,
+라이브, 라이브 자막, 공유 라이브러리, TV로 보내기, 저장, WARP를 더하는 서버예요. docker compose가 공식 Invidious 이미지를 같이 띄워 줘요.
+
+**이미 쓰는 Invidious(또는 Yattee, FreeTube)와 같이 쓸 수 있나요?**
+네. 직접 설치 방법대로 기존 Invidious를 가리키게 하면 돼요. 같은 Invidious를 쓰는 앱들은 그대로 동작해요.
+
+**영상은 어디서 오나요? 서버에 저장되나요?**
+전부 유튜브에서 와요. 라이브러리(구독, 기록, 재생목록)와, 저장할 때 잠깐 쓰는 임시 파일 말고는 아무것도 저장하지 않아요.
+
+**추천 알고리즘이 있나요?**
+개인 맞춤 추천은 없어요. 구글 계정이 없으니 시청 내용을 학습하는 것도 없어요. 구독 피드, 인기와 분야별 탭, 영상마다 유튜브가 주는 관련 영상 목록이 있어요.
+
+**연령 제한 영상은요?**
+대부분 재생되지 않아요. 나이 확인을 통과할 로그인 계정이 없기 때문이에요. Invidious도 마찬가지예요.
+
+**밖으로 정보를 보내나요?**
+아니요. 계정도 원격 수집도 없어요. 밖으로 나가는 요청은 유튜브(Invidious와 WARP를 거쳐서)와, 브라우저의 선택 기능(SponsorBlock, Return YouTube Dislike)뿐이에요.
+
+**폰과 TV에서는 어떻게 접속하나요?**
+웹앱이에요. 브라우저에서 내 주소를 열거나, "홈 화면에 추가"로 앱처럼 설치하면 돼요. TV 브라우저에서는 리모컨으로 조작하는 TV 모드가 켜져요.
+
+## 함께하기
+
+- **질문과 설치 도움:** [Discussions](https://github.com/biolend83/tubehaus/discussions) (`--doctor` 결과를 같이 붙여 주세요)
+- **버그와 기능 제안:** [Issues](https://github.com/biolend83/tubehaus/issues/new/choose)
+- **기여:** [CONTRIBUTING.md](CONTRIBUTING.md)(영어). 번역 고치기가 첫 기여로 좋아요
+- **보안 문제:** 공개 이슈 말고 [비공개로 알려 주세요](SECURITY.md)
+
+## 라이선스
+
+AGPL-3.0, Invidious와 같아요. 유튜브나 구글과는 관계없는 프로젝트예요. 우리 집에서 쓰는 용도로, 연결하는 서비스의 약관을 지키며 써 주세요.

@@ -6,6 +6,8 @@
 ![Docker: amd64 | arm64](https://img.shields.io/badge/docker-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)
 [![Built on Invidious](https://img.shields.io/badge/built%20on-Invidious-orange)](https://invidious.io)
 
+**English** · [한국어](README.ko.md)
+
 **Your own YouTube, on your own server: fast, private, and it doesn't get blocked.**
 
 It looks and works exactly like YouTube (same layout, same URLs, same keyboard shortcuts),
