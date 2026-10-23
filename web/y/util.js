@@ -93,7 +93,8 @@ export function toGate(back = location.href) {
   const login = window.TUBEHAUS_LOGIN_URL;
   // a same-site login page only takes a path back
   if (login && login.startsWith("/") && back.startsWith(location.origin)) back = back.slice(location.origin.length) || "/";
-  location.href = login ? login + encodeURIComponent(back) : back;
+  const to = new URL(login ? login + encodeURIComponent(back) : back, location.origin);
+  if (to.protocol === "https:" || to.protocol === "http:") location.href = to.href;   // never javascript: and the like
 }
 const inflight = new Map();
 const cache = new Map();

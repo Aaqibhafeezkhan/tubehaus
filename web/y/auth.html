@@ -51,9 +51,14 @@
   import { $t, $tMsg } from "./i18n.js";
   const $ = (id) => document.getElementById(id);
   const signup = !location.pathname.startsWith("/login");
-  // only same-site paths come back from the redirect parameter
-  const back = (() => { const r = new URLSearchParams(location.search).get("r") || "/"; return /^\/(?!\/)/.test(r) ? r : "/"; })();
-  const q = location.search;
+  // where to go afterwards: only a path on this site (parsed, so "/\\evil.com" and friends can't leave it)
+  const back = (() => {
+    try {
+      const u = new URL(new URLSearchParams(location.search).get("r") || "/", location.origin);
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : "/";
+    } catch { return "/"; }
+  })();
+  const q = "?r=" + encodeURIComponent(back);
   $("title").textContent = signup ? $t("계정 만들기") : $t("로그인");
   $("sub").textContent = $t("이 서버를 쓰려면 계정이 필요해요. 이메일 같은 개인정보는 받지 않아요.");
   $("lu").textContent = $t("사용자 이름");
@@ -62,9 +67,10 @@
   $("hp").textContent = signup ? $t("8자 이상") : "";
   $("p").autocomplete = signup ? "new-password" : "current-password";
   $("go").textContent = signup ? $t("계정 만들기") : $t("로그인");
-  $("switch").innerHTML = signup
-    ? `${$t("이미 계정이 있나요?")} <a href="/login${q}">${$t("로그인")}</a>`
-    : `${$t("계정이 없나요?")} <a href="/signup${q}">${$t("계정 만들기")}</a>`;
+  const other = document.createElement("a");
+  other.href = (signup ? "/login" : "/signup") + q;
+  other.textContent = signup ? $t("로그인") : $t("계정 만들기");
+  $("switch").append(signup ? $t("이미 계정이 있나요?") : $t("계정이 없나요?"), " ", other);
   $("f").onsubmit = async (e) => {
     e.preventDefault();
     $("go").disabled = true;
@@ -76,7 +82,7 @@
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error($tMsg(d.error || String(r.status)));
-      location.replace(back);
+      location.replace(new URL(back, location.origin).href);
     } catch (ex) {
       $("err").textContent = ex.message;
       $("go").disabled = false;

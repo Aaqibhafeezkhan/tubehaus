@@ -2202,6 +2202,8 @@ class H(BaseHTTPRequestHandler):
         return None
 
     def send_cookie(self, code, obj, value, max_age):
+        # session tokens are user.expiry.generation.hex-signature; anything else is never sent
+        value = value if re.fullmatch(r"[a-z0-9_]{3,24}\.\d+\.\d+\.[0-9a-f]{64}", value or "") else ""
         b = json.dumps(obj, ensure_ascii=False).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
