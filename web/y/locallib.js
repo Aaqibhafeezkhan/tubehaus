@@ -3,7 +3,9 @@
 // visitors. Same paths and answers as the server's /api/p/yt/* so the rest of the app
 // doesn't need to know which one it talks to.
 const KEY = "yt.library";
-const VID = /^[\w-]{11}$/, UCID = /^UC[\w-]{22}$/;
+const VID = /^[\w-]{11}$/, UCID = /^UC[\w-]{22}$/, PLID = /^HP[0-9a-f]{16}$/;
+// only our own playlist IDs ever index the playlists object (no "__proto__" and friends)
+const plOf = (d, id) => (PLID.test(String(id)) && Object.hasOwn(d.playlists, id) ? d.playlists[id] : null);
 const now = () => Math.floor(Date.now() / 1000);
 
 function load() {
@@ -49,7 +51,7 @@ export function libQuery(path, qs) {
     const h = d.hist.filter((x) => !q || `${x.title || ""} ${x.author || ""}`.toLowerCase().includes(q));
     return { items: h.slice(o, o + n), total: h.length };
   }
-  if (path === "pl") return d.playlists[qs.get("id") || ""] || fail(404, "Playlist not found");
+  if (path === "pl") return plOf(d, qs.get("id")) || fail(404, "Playlist not found");
   return fail(404, "not found");
 }
 
@@ -85,8 +87,8 @@ export function libPost(path, b) {
       d[lst] = d[lst].slice(0, 5000);
     } else if (lst === "dislikes") {
       d.dislikes = [...d.dislikes.filter((x) => x !== m.id), ...(on ? [m.id] : [])];
-    } else if (d.playlists[lst]) {
-      const pl = d.playlists[lst];
+    } else if (plOf(d, lst)) {
+      const pl = plOf(d, lst);
       pl.items = pl.items.filter((x) => x.id !== m.id);
       if (on) pl.items.push(m);
       pl.updated = t;
@@ -100,9 +102,9 @@ export function libPost(path, b) {
     d.playlists[pid] = { title, items: m ? [m] : [], updated: t };
     Object.assign(res, { id: pid, playlist: summary(d.playlists[pid]) });
   } else if (path === "pl/del") {
-    delete d.playlists[String(b.id)];
+    if (plOf(d, b.id)) delete d.playlists[b.id];
   } else if (path === "pl/rename") {
-    const pl = d.playlists[String(b.id)] || fail(404, "Playlist not found");
+    const pl = plOf(d, b.id) || fail(404, "Playlist not found");
     pl.title = String(b.title || pl.title).trim().slice(0, 150);
     pl.updated = t;
     res.playlist = summary(pl);
@@ -136,7 +138,7 @@ export function libMerge(p) {
   const seen = new Set(Object.values(d.playlists).map((pl) => pl.title + "\n" + pl.items.map((x) => x.id).join(",")));
   for (const pl of p.playlists || []) {
     if (!pl.items?.length || seen.has(pl.title + "\n" + pl.items.map((x) => x.id).join(","))) continue;
-    const pid = /^HP[0-9a-f]{16}$/.test(pl.id || "") && !d.playlists[pl.id] ? pl.id
+    const pid = PLID.test(pl.id || "") && !Object.hasOwn(d.playlists, pl.id) ? pl.id
       : "HP" + [...crypto.getRandomValues(new Uint8Array(8))].map((x) => x.toString(16).padStart(2, "0")).join("");
     d.playlists[pid] = { title: pl.title || "Imported", items: pl.items.slice(0, 5000), updated: t };
     n.playlists++;
