@@ -48,7 +48,7 @@ YouTube. TubeHaus adds its own front end and a small server next to them. All cr
 - The Shorts feed learns what you like from how you watch: how long you watched, whether you looped it, liked it or swiped it away. It keeps a score per channel and per topic (tags, hashtags, genre) in a small file on your server, and picks the next Shorts from your subscriptions, channels you like, topics you like and what's popular, with every fourth slot left for something new. No Google account, nothing leaves your server, and you can reset it any time under History
 
 **🌍 13 languages:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia · Türkçe · বাংলা —
-chosen on the first visit (the browser's language is preselected) and changeable any time under **Language** in the
+chosen on the first visit (English until you pick one) and changeable any time under **Language** in the
 account menu or Settings. View counts and dates follow each language's own style.
 
 ## Everything else

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.4 — 2026-10-23
+
+### Changed
+- English is the default language until one is chosen (it used to follow the browser); the first-visit picker
+  preselects English
+
 ## v0.7.3 — 2026-10-23
 
 ### Changed

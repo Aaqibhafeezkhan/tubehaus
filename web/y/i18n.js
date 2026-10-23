@@ -1,6 +1,6 @@
 // Interface language. Messages are written in Korean in the code (the original language)
 // and looked up in y/lang/<code>.js; anything missing falls back to English, then Korean.
-// The language follows the browser unless one is chosen in Settings.
+// English until a language is chosen (asked on the first visit, changeable in Settings).
 
 export const LANGS = [
   ["ko", "한국어"], ["en", "English"], ["ja", "日本語"], ["zh", "简体中文"], ["es", "Español"],
@@ -16,12 +16,7 @@ try { saved = JSON.parse(localStorage.getItem("yt.settings") || "{}").lang; } ca
 export const FIRST_VISIT = !saved;
 
 function choose() {
-  if (saved && CODES.includes(saved)) return saved;
-  for (const l of navigator.languages || [navigator.language || "en"]) {
-    const c = String(l).toLowerCase().split("-")[0];
-    if (CODES.includes(c)) return c;
-  }
-  return "en";
+  return saved && CODES.includes(saved) ? saved : "en";
 }
 
 export const LANG = choose();
