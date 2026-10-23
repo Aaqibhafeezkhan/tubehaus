@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.7.5 — 2026-10-24
 
 ### Fixed
 - Under load the WARP relay for the companion (socat) could hit the container's process limit and exit, after which every video failed until a restart. It is now capped, restarted if it exits, and `init: true` reaps finished helper processes; the public compose allows 512 processes
