@@ -44,7 +44,7 @@ YouTube. TubeHaus adds its own front end and a small server next to them. All cr
 **🧠 Shorts that learn from you, on your server**
 - The Shorts feed learns what you like from how you watch: how long you watched, whether you looped it, liked it or swiped it away. It keeps a score per channel and per topic (tags, hashtags, genre) in a small file on your server, and picks the next Shorts from your subscriptions, channels you like, topics you like and what's popular, with every fourth slot left for something new. No Google account, nothing leaves your server, and you can reset it any time under History
 
-**🌍 12 languages:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia · Türkçe —
+**🌍 13 languages:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia · Türkçe · বাংলা —
 chosen on the first visit (the browser's language is preselected) and changeable any time under **Language** in the
 account menu or Settings. View counts and dates follow each language's own style.
 
@@ -253,6 +253,7 @@ People who made TubeHaus better, with code, translations or ideas:
 
 - [@onyks-os](https://github.com/onyks-os): first contribution, fixed the install instructions (#1)
 - [@SakarPaisen](https://github.com/SakarPaisen): Turkish translation (#8)
+- [@rahul05ranjan](https://github.com/rahul05ranjan): Bengali translation and a Hindi review by a native speaker (#16, #17)
 - [@JamesMowery](https://github.com/JamesMowery): asked for import from file and data export, which became v0.4.0 (#14, #15)
 
 Opened a useful issue or sent a pull request? You belong here too.

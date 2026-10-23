@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Bengali interface, the 13th language (thanks @rahul05ranjan, #16)
+
+### Changed
+- Hindi: a native speaker's review of strings that read unnaturally (thanks @rahul05ranjan, #17)
+
 ## v0.5.0 — 2026-10-23
 
 ### Added

@@ -37,7 +37,7 @@ Invidious 팀에 감사드려요.
 **🧠 내 서버에서 배우는 쇼츠 추천**
 - 쇼츠를 볼 때 몇 초 봤는지, 반복해서 봤는지, 좋아요를 눌렀는지, 바로 넘겼는지를 보고 취향을 배워요. 채널과 주제(태그, 해시태그, 장르)마다 점수를 매겨 내 서버의 작은 파일에 저장하고, 구독 채널, 좋아하는 채널, 좋아하는 주제, 인기 쇼츠 중에서 다음 쇼츠를 골라요. 네 번째 칸마다 새로운 것도 섞어요. 구글 계정이 필요 없고 정보가 서버 밖으로 나가지 않아요. 시청 기록 화면에서 언제든 초기화할 수 있어요
 
-**🌍 12개 언어:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia · Türkçe.
+**🌍 13개 언어:** 한국어 · English · 日本語 · 简体中文 · Español · Português · Français · Deutsch · Русский · हिन्दी · Bahasa Indonesia · Türkçe · বাংলা.
 처음 접속할 때 고르고(브라우저 언어가 미리 선택돼 있어요), 계정 메뉴나 설정의 **언어**에서 언제든 바꿀 수 있어요.
 
 ## 그 밖의 기능
@@ -131,6 +131,7 @@ Invidious, NewPipe, FreeTube 내보내기 파일, OPML, TubeHaus 백업을 가�
 
 - [@onyks-os](https://github.com/onyks-os): 첫 기여, 설치 안내 수정 (#1)
 - [@SakarPaisen](https://github.com/SakarPaisen): 터키어 번역 (#8)
+- [@rahul05ranjan](https://github.com/rahul05ranjan): 벵골어 번역, 원어민의 힌디어 다듬기 (#16, #17)
 - [@JamesMowery](https://github.com/JamesMowery): 파일 가져오기와 데이터 내보내기 제안, v0.4.0이 됐어요 (#14, #15)
 
 ## 라이선스
