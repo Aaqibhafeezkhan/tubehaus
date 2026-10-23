@@ -27,11 +27,25 @@
   .err { color: #d93025; font-size: 14px; min-height: 20px; margin-top: 12px; }
   .switch { margin-top: 18px; text-align: center; font-size: 14px; color: var(--fg2); }
   .switch a { color: var(--blue); text-decoration: none; font-weight: 500; }
+  /* language: asked first on a first visit, a small selector afterwards */
+  .langs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .langs .lang { margin: 0; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--fg); font-weight: 400; }
+  .langs .lang:hover, .langs .lang:focus { border-color: var(--blue); outline: 0; }
+  .langs .lang.on { border-color: var(--blue); color: var(--blue); font-weight: 600; }
+  .langsel { margin-top: 16px; text-align: center; }
+  .langsel select { height: 34px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--fg2); font: inherit; font-size: 13px; }
+  .langsel select option { color: initial; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <main class="card">
   <div class="logo"><svg width="30" height="20" viewBox="0 0 30 20"><rect width="30" height="20" rx="5.5" fill="#ff0033"/><path d="M12 6l8 4-8 4z" fill="#fff"/></svg>TubeHaus</div>
+  <section id="pick" hidden>
+    <h1 id="ltitle"></h1>
+    <div class="langs" id="langs"></div>
+  </section>
+  <section id="main">
   <h1 id="title"></h1>
   <p class="sub" id="sub"></p>
   <form id="f" novalidate>
@@ -46,10 +60,36 @@
     <div class="err" id="err" role="alert"></div>
   </form>
   <div class="switch" id="switch"></div>
+  <div class="langsel"><select id="lang" aria-label="Language"></select></div>
+  </section>
 </main>
 <script type="module">
-  import { $t, $tMsg } from "/y/i18n.js";   // absolute: this page is served at /signup and /login
+  import { $t, $tMsg, LANG, LANGS, FIRST_VISIT, langLabel } from "/y/i18n.js";   // absolute: this page is served at /signup and /login
   const $ = (id) => document.getElementById(id);
+  // the language comes first, like in the app: saved in the same settings, so the app follows it
+  const setLang = (c) => {
+    let s = {};
+    try { s = JSON.parse(localStorage.getItem("yt.settings") || "{}") || {}; } catch { }
+    s.lang = c;
+    try { localStorage.setItem("yt.settings", JSON.stringify(s)); } catch { }
+    location.reload();
+  };
+  for (const [c, n] of LANGS) $("lang").append(new Option(n, c, false, c === LANG));
+  $("lang").onchange = (e) => setLang(e.target.value);
+  if (FIRST_VISIT) {
+    $("main").hidden = true;
+    $("pick").hidden = false;
+    $("ltitle").textContent = langLabel();
+    for (const [c, n] of LANGS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "lang" + (c === LANG ? " on" : "");
+      b.textContent = n;
+      b.onclick = () => setLang(c);
+      $("langs").append(b);
+    }
+    $("langs").querySelector(".on")?.focus();
+  }
   const signup = !location.pathname.startsWith("/login");
   // where to go afterwards: only a path on this site (parsed, so "/\\evil.com" and friends can't leave it)
   const back = (() => {
@@ -88,7 +128,7 @@
       $("go").disabled = false;
     }
   };
-  (signup ? $("u") : $("u")).focus();
+  if (!FIRST_VISIT) $("u").focus();
 </script>
 </body>
 </html>

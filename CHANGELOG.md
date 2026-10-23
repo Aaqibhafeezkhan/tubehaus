@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.3 — 2026-10-23
+
+### Changed
+- The sign-up / sign-in page asks for the language first on a first visit (like the app), and has a language selector at the bottom; the choice carries over to the app
+
 ## v0.7.2 — 2026-10-23
 
 ### Fixed
