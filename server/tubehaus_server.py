@@ -923,6 +923,248 @@ def ytlib_query(path, qs):
     return {"error": "not found"}
 
 
+# ---------- import / export: your data is never stuck here ----------
+# Export: a full TubeHaus backup (re-importable), Invidious' export format, the CSV Google
+# Takeout uses for subscriptions, or OPML for any feed reader.
+# Import: any of those, plus NewPipe and FreeTube exports and Google Takeout's watch-history.json.
+UCID = re.compile(r"UC[\w-]{22}")
+VID = re.compile(r"[\w-]{11}")
+
+
+def ytlib_export(fmt):
+    with yt_lock:
+        d = _yt_load()
+    day = time.strftime("%Y-%m-%d")
+    if fmt == "invidious":
+        body = {"subscriptions": list(d["subs"]), "watch_history": [h["id"] for h in d["hist"]], "preferences": {},
+                "playlists": [{"title": p.get("title", ""), "description": "", "privacy": "Private",
+                               "videos": [x["id"] for x in p.get("items", [])]} for p in d["playlists"].values()]}
+        return f"invidious-export-{day}.json", "application/json", json.dumps(body, ensure_ascii=False, indent=1).encode()
+    if fmt == "csv":
+        import csv
+        import io
+        buf = io.StringIO()
+        w = csv.writer(buf, lineterminator="\n")
+        w.writerow(["Channel Id", "Channel Url", "Channel Title"])
+        for cid, s in d["subs"].items():
+            w.writerow([cid, f"http://www.youtube.com/channel/{cid}", s.get("name", "")])
+        return f"subscriptions-{day}.csv", "text/csv; charset=utf-8", buf.getvalue().encode()
+    if fmt == "opml":
+        from xml.sax.saxutils import quoteattr
+        rows = "".join(f'\n      <outline text={quoteattr(s.get("name") or cid)} title={quoteattr(s.get("name") or cid)} type="rss" '
+                       f'xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id={cid}"/>' for cid, s in d["subs"].items())
+        xml = ('<?xml version="1.0" encoding="UTF-8"?>\n<opml version="1.1">\n  <head><title>TubeHaus subscriptions</title></head>\n'
+               '  <body>\n    <outline text="YouTube" title="YouTube">' + rows + '\n    </outline>\n  </body>\n</opml>\n')
+        return f"subscriptions-{day}.opml", "text/x-opml; charset=utf-8", xml.encode()
+    body = {"format": "tubehaus-backup", "version": 1, "exported": int(time.time()), **d, "shorts": jload(SHORTS, {})}
+    return f"tubehaus-backup-{day}.json", "application/json", json.dumps(body, ensure_ascii=False).encode()
+
+
+def _yt_parse_ts(s):
+    try:
+        return int(datetime.datetime.fromisoformat(str(s).replace("Z", "+00:00")).timestamp())
+    except Exception:
+        return 0
+
+
+def ytlib_parse_import(text):
+    """Turn an export file from TubeHaus, Invidious, NewPipe, FreeTube, Google Takeout (CSV
+    subscriptions or watch-history.json) or any OPML into one shape. Pure, so it can be tested."""
+    out = {"format": None, "subs": {}, "hist": [], "playlists": [], "wl": [], "likes": [], "dislikes": [],
+           "pos": {}, "shorts": None}
+    text = text.lstrip("﻿").strip()
+
+    def sub(cid, name="", thumb=""):
+        if cid and UCID.fullmatch(cid) and cid not in out["subs"]:
+            out["subs"][cid] = {"name": str(name or cid)[:200], "thumb": str(thumb or "")[:500]}
+
+    def meta(v):
+        return _yt_meta(v) if isinstance(v, dict) else (_yt_meta({"id": v}) if isinstance(v, str) else None)
+
+    data = None
+    try:
+        data = json.loads(text)
+    except Exception:
+        pass
+    if data is None and text.startswith("{") and "\n" in text:
+        # FreeTube: one JSON object (profile) per line
+        rows = []
+        for line in text.splitlines():
+            try:
+                rows.append(json.loads(line))
+            except Exception:
+                pass
+        if rows:
+            out["format"] = "freetube"
+            for r in rows:
+                for s in r.get("subscriptions", []) if isinstance(r, dict) else []:
+                    sub(s.get("id"), s.get("name"), s.get("thumbnail"))
+            return out
+    if isinstance(data, dict) and data.get("format") == "tubehaus-backup":
+        out["format"] = "tubehaus"
+        for cid, s in (data.get("subs") or {}).items():
+            sub(cid, (s or {}).get("name"), (s or {}).get("thumb"))
+        for x in data.get("hist") or []:
+            h = meta(x)
+            if h:
+                if isinstance(x, dict) and str(x.get("at", "")).isdigit():
+                    h["at"] = int(x["at"])
+                out["hist"].append(h)
+        out["wl"] = [m for m in (meta(x) for x in data.get("wl") or []) if m]
+        out["likes"] = [m for m in (meta(x) for x in data.get("likes") or []) if m]
+        out["dislikes"] = [x for x in data.get("dislikes") or [] if isinstance(x, str) and VID.fullmatch(x)]
+        for pid, p in (data.get("playlists") or {}).items():
+            out["playlists"].append({"id": pid, "title": str(p.get("title", ""))[:150],
+                                     "items": [m for m in (meta(x) for x in p.get("items") or []) if m]})
+        out["pos"] = {k: v for k, v in (data.get("pos") or {}).items()
+                      if VID.fullmatch(k) and isinstance(v, list) and len(v) == 3}
+        out["shorts"] = data.get("shorts") if isinstance(data.get("shorts"), dict) else None
+        return out
+    if isinstance(data, dict) and isinstance(data.get("subscriptions"), list):
+        subs = data["subscriptions"]
+        if subs and isinstance(subs[0], dict) and "url" in subs[0]:
+            out["format"] = "newpipe"
+            for s in subs:
+                m = UCID.search(str(s.get("url", "")))
+                if m and str(s.get("service_id", 0)) == "0":
+                    sub(m.group(0), s.get("name"))
+        elif subs and isinstance(subs[0], dict):
+            out["format"] = "freetube"
+            for s in subs:
+                sub(s.get("id"), s.get("name"), s.get("thumbnail"))
+        else:
+            out["format"] = "invidious"
+            for cid in subs:
+                sub(str(cid))
+        hist = [x for x in data.get("watch_history") or [] if isinstance(x, str) and VID.fullmatch(x)]
+        now = int(time.time())
+        out["hist"] = [dict(_yt_meta({"id": v}), at=now - i) for i, v in enumerate(hist[:3000])]
+        for p in data.get("playlists") or []:
+            if isinstance(p, dict):
+                ids = [v for v in p.get("videos") or [] if isinstance(v, str) and VID.fullmatch(v)]
+                out["playlists"].append({"title": str(p.get("title") or "Imported")[:150],
+                                         "items": [_yt_meta({"id": v}) for v in ids]})
+        return out
+    if isinstance(data, list) and data and isinstance(data[0], dict):
+        if "titleUrl" in data[0] or "header" in data[0]:
+            # Google Takeout watch-history.json
+            out["format"] = "takeout-history"
+            for x in data[:20000]:
+                m = re.search(r"[?&]v=([\w-]{11})", str(x.get("titleUrl", "")))
+                if not m:
+                    continue
+                ch = (x.get("subtitles") or [{}])[0]
+                cm = UCID.search(str(ch.get("url", "")))
+                title = re.sub(r"^Watched ", "", str(x.get("title", "")))
+                h = _yt_meta({"id": m.group(1), "title": title, "author": ch.get("name", ""),
+                              "authorId": cm.group(0) if cm else ""})
+                if h:
+                    h["at"] = _yt_parse_ts(x.get("time"))
+                    out["hist"].append(h)
+            return out
+        out["format"] = "invidious-subscriptions"
+        for s in data:
+            sub(s.get("authorId") or s.get("id"), s.get("author") or s.get("name"))
+        return out
+    if "<opml" in text[:500].lower() or "<outline" in text:
+        out["format"] = "opml"
+        for tag in re.findall(r"<outline\b[^>]*>", text):
+            m = UCID.search(tag)
+            name = re.search(r"""\b(?:title|text)=(?:"([^"]*)"|'([^']*)')""", tag)
+            if m:
+                import html
+                sub(m.group(0), html.unescape(name.group(1) or name.group(2) or "") if name else "")
+        return out
+    if UCID.search(text):
+        import csv
+        import io
+        out["format"] = "csv"
+        for row in csv.reader(io.StringIO(text)):
+            cid = next((c.strip() for c in row if UCID.fullmatch(c.strip())), None)
+            if not cid:
+                m = UCID.search(",".join(row))
+                cid = m.group(0) if m else None
+            name = row[2].strip() if len(row) > 2 and not UCID.fullmatch(row[2].strip()) else ""
+            sub(cid, name)
+        return out
+    return out
+
+
+def ytlib_import(b):
+    text = str(b.get("text") or "")
+    if len(text) > 40_000_000:
+        return 413, {"error": "This file is too big"}
+    p = ytlib_parse_import(text)
+    if not p["format"] or not any((p["subs"], p["hist"], p["playlists"], p["wl"], p["likes"])):
+        return 400, {"error": "Couldn't find anything to import in this file"}
+    now = int(time.time())
+    n = {"format": p["format"], "subs": 0, "hist": 0, "playlists": 0, "videos": 0}
+    with yt_lock:
+        d = _yt_load()
+        for cid, s in p["subs"].items():
+            if cid not in d["subs"]:
+                d["subs"][cid] = dict(s, at=now)
+                n["subs"] += 1
+        have = {h["id"] for h in d["hist"]}
+        new_hist = [dict(h, at=h.get("at") or now) for h in p["hist"] if h["id"] not in have]
+        if new_hist:
+            d["hist"] = sorted(d["hist"] + list({h["id"]: h for h in new_hist}.values()),
+                               key=lambda h: -(h.get("at") or 0))[:3000]
+            n["hist"] = len(new_hist)
+        for lst in ("wl", "likes"):
+            ids = {x["id"] for x in d[lst]}
+            d[lst] = (d[lst] + [m for m in p[lst] if m["id"] not in ids])[:5000]
+        d["dislikes"] = list(dict.fromkeys(d["dislikes"] + p["dislikes"]))
+        for k, v in p["pos"].items():
+            if k not in d["pos"] or d["pos"][k][2] < v[2]:
+                d["pos"][k] = v
+        titles = {(pl.get("title"), tuple(x["id"] for x in pl.get("items", []))) for pl in d["playlists"].values()}
+        for pl in p["playlists"]:
+            if (pl["title"], tuple(x["id"] for x in pl["items"])) in titles or not pl["items"]:
+                continue
+            pid = pl.get("id") if re.fullmatch(r"HP[0-9a-f]{16}", str(pl.get("id"))) and pl.get("id") not in d["playlists"] \
+                else "HP" + secrets.token_hex(8)
+            d["playlists"][pid] = {"title": pl["title"] or "Imported", "items": pl["items"][:5000], "updated": now}
+            n["playlists"] += 1
+        jsave(YTLIB, d)
+    if p["shorts"] and not jload(SHORTS, {}).get("ch"):
+        with sh_lock:
+            jsave(SHORTS, p["shorts"])
+    untitled = list({x["id"] for x in p["hist"] + p["wl"] + p["likes"] + [i for pl in p["playlists"] for i in pl["items"]]
+                     if not x.get("title")})
+    n["videos"] = len(untitled)
+    threading.Thread(target=_yt_import_fill, args=(bool(n["subs"]), untitled[:500]), daemon=True).start()
+    log("import", f"{p['format']}: {n}", every=0)
+    return 200, n
+
+
+def _yt_import_fill(new_subs, ids):
+    """After an import: fetch the new channels' feeds, names and pictures, and the titles of
+    videos that came as bare IDs (Invidious exports only list video IDs)."""
+    if new_subs:
+        yt_feed_refresh()
+    got = {}
+    for vid in ids:
+        try:
+            v = json.loads(_inv(f"/api/v1/videos/{vid}?fields=title,author,authorId,lengthSeconds,viewCount,published", 20))
+            m = _yt_meta({"id": vid, "title": v.get("title"), "author": v.get("author"), "authorId": v.get("authorId"),
+                          "len": v.get("lengthSeconds"), "views": v.get("viewCount"), "published": v.get("published")})
+            if m:
+                got[vid] = m
+        except Exception:
+            pass
+    if not got:
+        return
+    with yt_lock:
+        d = _yt_load()
+        for lst in [d["hist"], d["wl"], d["likes"]] + [pl["items"] for pl in d["playlists"].values()]:
+            for i, x in enumerate(lst):
+                if x["id"] in got and not x.get("title"):
+                    lst[i] = dict(x, **{k: v for k, v in got[x["id"]].items() if v})
+        jsave(YTLIB, d)
+    log("import", f"filled {len(got)}/{len(ids)} video titles", every=0)
+
+
 # ---------- Shorts recommendations, learned on this server only ----------
 # No Google account and no cloud: every Short you watch reports how long you watched it,
 # whether you looped, liked, disliked or swiped away. That moves a score per channel and
@@ -1160,25 +1402,30 @@ def yt_feed_one(cid):
 
 
 def yt_fill_thumbs():
-    """Imported subscriptions come without channel pictures; fill them in from Invidious."""
+    """Imported subscriptions often come without a channel picture, and some import formats
+    without a name either; fill both in from Invidious."""
     with yt_lock:
-        missing = [c for c, v in _yt_load()["subs"].items() if not v.get("thumb")]
+        missing = [c for c, v in _yt_load()["subs"].items() if not v.get("thumb") or v.get("name") in ("", c)]
     got = {}
-    for cid in missing[:50]:
+    for cid in missing[:200]:
         try:
-            d = json.loads(urllib.request.urlopen(f"{INV}/api/v1/channels/{cid}?fields=authorThumbnails", timeout=20).read())
+            d = json.loads(urllib.request.urlopen(f"{INV}/api/v1/channels/{cid}?fields=author,authorThumbnails", timeout=20).read())
             th = sorted(d.get("authorThumbnails") or [], key=lambda x: x.get("width", 0))
             th = next((x for x in th if x.get("width", 0) >= 88), th[-1] if th else None)
-            if th:
-                got[cid] = re.sub(r"^https?://(yt3\.googleusercontent\.com|yt3\.ggpht\.com)/", "/ggpht/", re.sub(r"^https?://[^/]+(?=/ggpht/)", "", th["url"]))
+            got[cid] = (str(d.get("author") or "")[:200],
+                        re.sub(r"^https?://(yt3\.googleusercontent\.com|yt3\.ggpht\.com)/", "/ggpht/",
+                               re.sub(r"^https?://[^/]+(?=/ggpht/)", "", th["url"])) if th else "")
         except Exception as ex:
             log("ytfeed", f"thumb {cid} FAIL {repr(ex)[:80]}")
     if got:
         with yt_lock:
             d = _yt_load()
-            for cid, u in got.items():
+            for cid, (name, u) in got.items():
                 if cid in d["subs"]:
-                    d["subs"][cid]["thumb"] = u
+                    if u and not d["subs"][cid].get("thumb"):
+                        d["subs"][cid]["thumb"] = u
+                    if name and d["subs"][cid].get("name") in ("", cid):
+                        d["subs"][cid]["name"] = name
             jsave(YTLIB, d)
 
 
@@ -1712,6 +1959,16 @@ class H(BaseHTTPRequestHandler):
                 self.close_connection = True
             j["done_at"] = time.time()
             return
+        if p.endswith("/yt/export"):
+            name, ctype, data = ytlib_export(self.qs().get("format", ""))
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Disposition", f'attachment; filename="{name}"')
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if p.endswith("/yt/shorts/next"):
             return self.send(200, shorts_next(self.qs()))
         if "/yt/" in p and "/api/p/" in self.path:
@@ -1776,6 +2033,8 @@ class H(BaseHTTPRequestHandler):
             return self.send(*cast_send(body))
         if p.endswith("/yt/dl"):
             return self.send(*ytdl_start(body))
+        if p.endswith("/yt/import"):
+            return self.send(*ytlib_import(body))
         if p.endswith("/yt/shorts/sig"):
             return self.send(*shorts_signal(body))
         if p.endswith("/yt/shorts/reset"):

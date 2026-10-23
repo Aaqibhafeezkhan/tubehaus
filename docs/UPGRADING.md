@@ -24,7 +24,11 @@ playing, `docker compose pull && docker compose up -d` is the first thing to try
 | `warp-data` | the WARP registration; a new one is created if it's missing | no |
 | `caddy-data` | HTTPS certificates; Caddy gets new ones if it's missing | no |
 
-Back up the library:
+The easiest backup is in the app: **Settings → My data → Export → TubeHaus backup**. It's one JSON file with
+everything (subscriptions, history, resume points, playlists, likes, Shorts preferences), and **Import from file**
+restores it on any TubeHaus.
+
+From the command line instead:
 
 ```sh
 docker compose cp tubehaus:/data/ytlib.json ./ytlib-backup.json

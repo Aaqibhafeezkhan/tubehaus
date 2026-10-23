@@ -411,10 +411,17 @@ export async function channelsMgr(page) {
   const draw = () => {
     const subs = Object.entries(state.lib.subs).sort((a, b) => a[1].name.localeCompare(b[1].name, LANG));
     page.innerHTML = `<div class="narrow-page"><h2>${$t("구독 채널 {0}개", subs.length)}</h2>
-      <div class="imp"><button class="pill ghost inv">${$t("{0} Invidious 계정의 구독 가져오기", icon("download"))}</button>
+      <div class="imp"><button class="pill ghost file">${$t("{0} 파일에서 가져오기", icon("upload"))}</button>
+      <button class="pill ghost exp">${$t("{0} 내보내기", icon("download"))}</button>
+      <button class="pill ghost inv">${$t("{0} Invidious 계정의 구독 가져오기", icon("download"))}</button>
+      <input type="file" class="impfile" hidden accept=".json,.csv,.opml,.xml,.db,.txt">
       <form class="addch"><input placeholder="${$t("채널 주소나 @핸들 (예: @MBCNEWS11)")}"><button class="pill">${$t("추가")}</button></form></div>
+      <p class="sub imp-hint">${$t("구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요")}</p>
       <div class="chlist">${subs.map(([id, s]) => `<div class="chrow"><a href="/channel/${esc(id)}" data-nav>${avatar(s.thumb, "md")}<span>${esc(s.name)}</span></a>${subBtn(id, s.name, s.thumb)}</div>`).join("") || `<p class='sub'>${$t("아직 없어요")}</p>`}</div></div>`;
     $(".inv", page).onclick = () => importInvidious(true).then(draw);
+    $(".file", page).onclick = () => $(".impfile", page).click();
+    $(".impfile", page).onchange = async (e) => { if (await importFile(e.target.files[0])) draw(); };
+    $(".exp", page).onclick = exportDialog;
     $(".addch", page).onsubmit = async (e) => {
       e.preventDefault();
       const v = $(".addch input", page).value.trim();
@@ -431,6 +438,28 @@ export async function channelsMgr(page) {
     };
   };
   draw();
+}
+// Your data is never stuck here: export everything, import from other apps
+export function exportDialog() {
+  const f = (fmt, label, desc) => `<a class="exp-row" href="/api/p/yt/export?format=${fmt}" download><b>${label}</b><span>${desc}</span></a>`;
+  dialog(`<div class="dh"><b>${$t("데이터 내보내기")}</b><button data-close>${icon("close")}</button></div>
+    <div class="exp-list">
+      ${f("tubehaus", $t("TubeHaus 백업"), $t("구독, 시청 기록, 이어보기, 재생목록, 좋아요까지 전부. 그대로 다시 가져올 수 있어요"))}
+      ${f("invidious", $t("Invidious 형식"), $t("구독, 시청 기록, 재생목록. Invidious 와 그 앱들에서 가져올 수 있어요"))}
+      ${f("csv", "CSV", $t("구독 목록 (구글 Takeout 과 같은 형식)"))}
+      ${f("opml", "OPML", $t("구독 목록 (RSS 리더용)"))}
+    </div>`);
+}
+export async function importFile(file) {
+  if (!file) return false;
+  try {
+    toast($t("가져오는 중..."));
+    const res = await lib("import", { method: "POST", body: { name: file.name, text: await file.text() } });
+    await loadLib();
+    dropCache("/yt/");
+    toast($t("가져왔어요: 구독 {0}개, 재생목록 {1}개, 시청 기록 {2}개", res.subs, res.playlists, res.hist));
+    return true;
+  } catch (e) { toast(e.message); return false; }
 }
 export async function importInvidious(loud) {
   try {
@@ -578,7 +607,9 @@ export function settingsPage(page) {
     <div class="sbcats">${Object.entries(SB_CATS).map(([k, [l, c]]) => `<label class="chk"><input type="checkbox" data-cat="${k}" ${S.sponsorCats.includes(k) ? "checked" : ""}><i style="background:${c}"></i>${$t("{0} 자동 건너뛰기", l)}</label>`).join("")}</div>
     ${tog("dislikes", $t("싫어요 수 보기"), $t("Return YouTube Dislike 의 추정치"))}
     <h3>${$t("내 데이터")}</h3>
-    <div class="set-btns"><a class="pill ghost" href="/feed/channels" data-nav>${$t("구독 관리 · 가져오기")}</a><button class="pill ghost unhide">${$t("'관심 없음' {0}개 되돌리기", state.hidden.size)}</button>
+    <div class="set-btns"><a class="pill ghost" href="/feed/channels" data-nav>${$t("구독 관리 · 가져오기")}</a>
+    <button class="pill ghost simp">${$t("{0} 파일에서 가져오기", icon("upload"))}</button><input type="file" class="simpfile" hidden accept=".json,.csv,.opml,.xml,.db,.txt">
+    <button class="pill ghost sexp">${$t("{0} 내보내기", icon("download"))}</button><button class="pill ghost unhide">${$t("'관심 없음' {0}개 되돌리기", state.hidden.size)}</button>
     <button class="pill ghost keys">${$t("단축키")}</button></div>
   </div>`;
   page.addEventListener("change", (e) => {
@@ -596,5 +627,8 @@ export function settingsPage(page) {
     toast($t("저장됨"));
   });
   $(".unhide", page).onclick = () => { state.hidden.clear(); local.set("hidden", []); toast($t("되돌렸어요")); };
+  $(".simp", page).onclick = () => $(".simpfile", page).click();
+  $(".simpfile", page).onchange = (e) => importFile(e.target.files[0]);
+  $(".sexp", page).onclick = exportDialog;
   $(".keys", page).onclick = async () => (await import("./core.js")).keysDialog();
 }

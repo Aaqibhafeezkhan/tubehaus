@@ -199,6 +199,12 @@ Google, since no Google account is involved.
 **Age-restricted videos?**
 They usually don't play, since there's no signed-in account to pass the age check. That is the same as Invidious.
 
+**Can I bring my subscriptions in, and take my data out?**
+Yes. Under Settings → My data (or the subscriptions page), **Import from file** takes Google Takeout (the
+subscriptions CSV and `watch-history.json`), Invidious, NewPipe and FreeTube exports, OPML, and TubeHaus backups.
+**Export** gives you a full TubeHaus backup (subscriptions, history, resume points, playlists, likes), an
+Invidious-format file, a Takeout-style CSV, or OPML for any feed reader. Your data is never stuck here.
+
 **Does anything phone home?**
 No. There are no accounts and no telemetry. The only outside requests are YouTube (through Invidious and WARP)
 and, from the browser, the optional SponsorBlock and Return YouTube Dislike lookups.

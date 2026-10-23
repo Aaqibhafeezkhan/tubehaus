@@ -405,5 +405,19 @@ export default {
  "곧 시작하는 라이브 방송이에요": "A transmissão ao vivo vai começar em instantes",
  "{0} Shorts 추천 초기화": "{0} Redefinir recomendações de Shorts",
  "Shorts 추천을 처음부터 다시 배울까요?": "Reaprender seus gostos de Shorts do zero?",
- "Shorts 추천을 초기화했어요": "Recomendações de Shorts redefinidas"
+ "Shorts 추천을 초기화했어요": "Recomendações de Shorts redefinidas",
+ "{0} 파일에서 가져오기": "{0} Importar de arquivo",
+ "{0} 내보내기": "{0} Exportar",
+ "데이터 내보내기": "Exportar seus dados",
+ "TubeHaus 백업": "Backup do TubeHaus",
+ "구독, 시청 기록, 이어보기, 재생목록, 좋아요까지 전부. 그대로 다시 가져올 수 있어요": "Tudo: inscrições, histórico, pontos de retomada, playlists e curtidas. Pode ser importado de novo como está",
+ "Invidious 형식": "Formato do Invidious",
+ "구독, 시청 기록, 재생목록. Invidious 와 그 앱들에서 가져올 수 있어요": "Inscrições, histórico e playlists. Pode ser importado no Invidious e seus apps",
+ "구독 목록 (구글 Takeout 과 같은 형식)": "Inscrições (mesmo formato do Google Takeout)",
+ "구독 목록 (RSS 리더용)": "Inscrições (para leitores RSS)",
+ "가져오는 중...": "Importando...",
+ "가져왔어요: 구독 {0}개, 재생목록 {1}개, 시청 기록 {2}개": "Importado: {0} inscrições, {1} playlists, {2} itens do histórico",
+ "구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요": "Você pode importar arquivos do Google Takeout (CSV de inscrições, histórico), Invidious, NewPipe, FreeTube, OPML e backups do TubeHaus",
+ "이 파일에서 가져올 것을 찾지 못했어요": "Não encontramos nada para importar neste arquivo",
+ "파일이 너무 커요": "O arquivo é grande demais"
 };

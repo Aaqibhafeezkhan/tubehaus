@@ -103,6 +103,12 @@ WARP, 유튜브 연결, Invidious, 실제 영상 조회, 선택 기능(yt-dlp, f
 **연령 제한 영상은요?**
 대부분 재생되지 않아요. 나이 확인을 통과할 로그인 계정이 없기 때문이에요. Invidious도 마찬가지예요.
 
+**구독을 가져오거나, 내 데이터를 빼낼 수 있나요?**
+네. 설정 → 내 데이터(또는 구독 관리 화면)의 **파일에서 가져오기**로 구글 Takeout(구독 CSV, `watch-history.json` 시청 기록),
+Invidious, NewPipe, FreeTube 내보내기 파일, OPML, TubeHaus 백업을 가져올 수 있어요. **내보내기**로는 TubeHaus 전체 백업
+(구독, 시청 기록, 이어보기, 재생목록, 좋아요), Invidious 형식, Takeout과 같은 CSV, RSS 리더용 OPML을 받을 수 있어요.
+내 데이터가 TubeHaus에 갇히는 일은 없어요.
+
 **밖으로 정보를 보내나요?**
 아니요. 계정도 원격 수집도 없어요. 밖으로 나가는 요청은 유튜브(Invidious와 WARP를 거쳐서)와, 브라우저의 선택 기능(SponsorBlock, Return YouTube Dislike)뿐이에요.
 

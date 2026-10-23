@@ -405,5 +405,19 @@ export default {
  "곧 시작하는 라이브 방송이에요": "Bu canlı yayın birazdan başlıyor",
  "{0} Shorts 추천 초기화": "{0} Shorts önerilerini sıfırla",
  "Shorts 추천을 처음부터 다시 배울까요?": "Shorts zevkinizi baştan öğrenmek istiyor musunuz?",
- "Shorts 추천을 초기화했어요": "Shorts önerileri sıfırlandı"
+ "Shorts 추천을 초기화했어요": "Shorts önerileri sıfırlandı",
+ "{0} 파일에서 가져오기": "{0} Dosyadan içe aktar",
+ "{0} 내보내기": "{0} Dışa aktar",
+ "데이터 내보내기": "Verilerini dışa aktar",
+ "TubeHaus 백업": "TubeHaus yedeği",
+ "구독, 시청 기록, 이어보기, 재생목록, 좋아요까지 전부. 그대로 다시 가져올 수 있어요": "Her şey: abonelikler, geçmiş, kalınan yerler, oynatma listeleri, beğeniler. Olduğu gibi yeniden içe aktarılabilir",
+ "Invidious 형식": "Invidious biçimi",
+ "구독, 시청 기록, 재생목록. Invidious 와 그 앱들에서 가져올 수 있어요": "Abonelikler, geçmiş, oynatma listeleri. Invidious ve uygulamalarına aktarılabilir",
+ "구독 목록 (구글 Takeout 과 같은 형식)": "Abonelikler (Google Takeout ile aynı biçim)",
+ "구독 목록 (RSS 리더용)": "Abonelikler (RSS okuyucular için)",
+ "가져오는 중...": "İçe aktarılıyor...",
+ "가져왔어요: 구독 {0}개, 재생목록 {1}개, 시청 기록 {2}개": "İçe aktarıldı: {0} abonelik, {1} oynatma listesi, {2} geçmiş kaydı",
+ "구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요": "Google Takeout (abonelik CSV'si, izleme geçmişi), Invidious, NewPipe, FreeTube, OPML ve TubeHaus yedek dosyalarını içe aktarabilirsiniz",
+ "이 파일에서 가져올 것을 찾지 못했어요": "Bu dosyada içe aktarılacak bir şey bulunamadı",
+ "파일이 너무 커요": "Bu dosya çok büyük"
 };

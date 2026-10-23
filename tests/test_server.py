@@ -186,6 +186,99 @@ class ShortsRecommender(unittest.TestCase):
         self.assertEqual(ts._sh_load()["ch"], {})
 
 
+class ImportExport(unittest.TestCase):
+    A, B = "UC" + "a" * 22, "UC" + "b" * 22
+
+    def setUp(self):
+        for f in (ts.YTLIB, ts.SHORTS):
+            if os.path.exists(f):
+                os.remove(f)
+        ts._yt_import_fill = lambda *a: None          # no network in tests
+
+    def parse(self, text):
+        return ts.ytlib_parse_import(text)
+
+    def test_takeout_csv(self):
+        p = self.parse("﻿Channel Id,Channel Url,Channel Title\n"
+                       f"{self.A},http://www.youtube.com/channel/{self.A},Cat Channel\n"
+                       f"{self.B},http://www.youtube.com/channel/{self.B},\"Dogs, Inc\"\n")
+        self.assertEqual(p["format"], "csv")
+        self.assertEqual(p["subs"][self.A]["name"], "Cat Channel")
+        self.assertEqual(p["subs"][self.B]["name"], "Dogs, Inc")
+
+    def test_invidious_export(self):
+        import json
+        p = self.parse(json.dumps({"subscriptions": [self.A, self.B], "watch_history": ["jNQXAC9IVRw"],
+                                   "playlists": [{"title": "Mix", "videos": ["jNQXAC9IVRw", "bad"]}]}))
+        self.assertEqual(p["format"], "invidious")
+        self.assertEqual(set(p["subs"]), {self.A, self.B})
+        self.assertEqual([h["id"] for h in p["hist"]], ["jNQXAC9IVRw"])
+        self.assertEqual([x["id"] for x in p["playlists"][0]["items"]], ["jNQXAC9IVRw"])
+
+    def test_newpipe(self):
+        import json
+        p = self.parse(json.dumps({"app_version": "0.27", "subscriptions": [
+            {"service_id": 0, "url": f"https://www.youtube.com/channel/{self.A}", "name": "Cat Channel"},
+            {"service_id": 1, "url": "https://soundcloud.com/x", "name": "Not YouTube"}]}))
+        self.assertEqual(p["format"], "newpipe")
+        self.assertEqual(p["subs"], {self.A: {"name": "Cat Channel", "thumb": ""}})
+
+    def test_freetube_profiles(self):
+        import json
+        lines = [json.dumps({"name": "All Channels", "subscriptions": [{"id": self.A, "name": "Cat", "thumbnail": "t"}]}),
+                 json.dumps({"name": "Music", "subscriptions": [{"id": self.B, "name": "Dog", "thumbnail": ""}]})]
+        p = self.parse("\n".join(lines))
+        self.assertEqual(p["format"], "freetube")
+        self.assertEqual(set(p["subs"]), {self.A, self.B})
+
+    def test_opml(self):
+        p = self.parse('<?xml version="1.0"?><opml version="1.1"><body><outline text="YouTube">'
+                       f'<outline text="Cats &amp; Co" title="Cats &amp; Co" type="rss" '
+                       f'xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id={self.A}"/></outline></body></opml>')
+        self.assertEqual(p["format"], "opml")
+        self.assertEqual(p["subs"][self.A]["name"], "Cats & Co")
+
+    def test_takeout_watch_history(self):
+        import json
+        p = self.parse(json.dumps([{"header": "YouTube", "title": "Watched Me at the zoo",
+                                    "titleUrl": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+                                    "subtitles": [{"name": "jawed", "url": f"https://www.youtube.com/channel/{self.A}"}],
+                                    "time": "2024-05-01T10:00:00.000Z"}]))
+        self.assertEqual(p["format"], "takeout-history")
+        h = p["hist"][0]
+        self.assertEqual((h["id"], h["title"], h["author"], h["authorId"]), ("jNQXAC9IVRw", "Me at the zoo", "jawed", self.A))
+        self.assertGreater(h["at"], 1700000000)
+
+    def test_garbage_is_rejected(self):
+        self.assertEqual(ts.ytlib_import({"text": "hello world"})[0], 400)
+        self.assertEqual(ts.ytlib_import({"text": "{\"a\": 1}"})[0], 400)
+
+    def test_backup_round_trip(self):
+        ts.ytlib_post("/api/p/yt/sub", {"id": self.A, "name": "Cat Channel", "on": True})
+        ts.ytlib_post("/api/p/yt/pos", {"id": "jNQXAC9IVRw", "t": 7, "len": 19,
+                                         "meta": {"id": "jNQXAC9IVRw", "title": "Me at the zoo"}})
+        ts.ytlib_post("/api/p/yt/pl/new", {"title": "Mix", "video": {"id": "jNQXAC9IVRw", "title": "Me at the zoo"}})
+        name, ctype, data = ts.ytlib_export("tubehaus")
+        self.assertTrue(name.startswith("tubehaus-backup-"))
+        os.remove(ts.YTLIB)
+        code, n = ts.ytlib_import({"text": data.decode()})
+        self.assertEqual((code, n["format"], n["subs"], n["hist"], n["playlists"]), (200, "tubehaus", 1, 1, 1))
+        lib = ts.ytlib_get()
+        self.assertEqual(lib["subs"][self.A]["name"], "Cat Channel")
+        self.assertEqual(ts.ytlib_query("/api/p/yt/pos", {"ids": "jNQXAC9IVRw"}), {"jNQXAC9IVRw": [7, 19]})
+        # importing the same file again adds nothing
+        self.assertEqual(ts.ytlib_import({"text": data.decode()})[1]["playlists"], 0)
+
+    def test_other_export_formats(self):
+        ts.ytlib_post("/api/p/yt/sub", {"id": self.A, "name": "Cats & \"Co\"", "on": True})
+        for fmt in ("invidious", "csv", "opml"):
+            _, _, data = ts.ytlib_export(fmt)
+            p = self.parse(data.decode())
+            self.assertIn(self.A, p["subs"], fmt)
+            if fmt != "invidious":
+                self.assertEqual(p["subs"][self.A]["name"], "Cats & \"Co\"", fmt)
+
+
 class Health(unittest.TestCase):
     def test_health(self):
         h = ts.health()

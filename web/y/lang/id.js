@@ -405,5 +405,19 @@ export default {
  "곧 시작하는 라이브 방송이에요": "Siaran langsung akan segera dimulai",
  "{0} Shorts 추천 초기화": "{0} Atur ulang rekomendasi Shorts",
  "Shorts 추천을 처음부터 다시 배울까요?": "Pelajari ulang selera Shorts Anda dari awal?",
- "Shorts 추천을 초기화했어요": "Rekomendasi Shorts diatur ulang"
+ "Shorts 추천을 초기화했어요": "Rekomendasi Shorts diatur ulang",
+ "{0} 파일에서 가져오기": "{0} Impor dari file",
+ "{0} 내보내기": "{0} Ekspor",
+ "데이터 내보내기": "Ekspor data Anda",
+ "TubeHaus 백업": "Cadangan TubeHaus",
+ "구독, 시청 기록, 이어보기, 재생목록, 좋아요까지 전부. 그대로 다시 가져올 수 있어요": "Semua: langganan, riwayat, posisi lanjut, playlist, suka. Bisa diimpor lagi apa adanya",
+ "Invidious 형식": "Format Invidious",
+ "구독, 시청 기록, 재생목록. Invidious 와 그 앱들에서 가져올 수 있어요": "Langganan, riwayat, playlist. Bisa diimpor ke Invidious dan aplikasinya",
+ "구독 목록 (구글 Takeout 과 같은 형식)": "Langganan (format sama dengan Google Takeout)",
+ "구독 목록 (RSS 리더용)": "Langganan (untuk pembaca RSS)",
+ "가져오는 중...": "Mengimpor...",
+ "가져왔어요: 구독 {0}개, 재생목록 {1}개, 시청 기록 {2}개": "Diimpor: {0} langganan, {1} playlist, {2} riwayat",
+ "구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요": "Anda bisa mengimpor file Google Takeout (CSV langganan, riwayat), Invidious, NewPipe, FreeTube, OPML, dan cadangan TubeHaus",
+ "이 파일에서 가져올 것을 찾지 못했어요": "Tidak ada yang bisa diimpor dari file ini",
+ "파일이 너무 커요": "File ini terlalu besar"
 };

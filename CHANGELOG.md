@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.0 — 2026-10-23
+
+### Added
+- **Import from file** (Settings → My data, and the subscriptions page): Google Takeout subscriptions CSV and
+  `watch-history.json`, Invidious export, NewPipe, FreeTube, OPML, and TubeHaus backups. Channel names and pictures,
+  and the titles of videos that come as bare IDs, are filled in afterwards. Importing the same file twice adds nothing (#15)
+- **Export**: a full TubeHaus backup (re-importable), Invidious format, Takeout-style CSV, or OPML (#14)
+- `GET /api/p/yt/export?format=tubehaus|invidious|csv|opml`, `POST /api/p/yt/import`
+
 ## v0.3.0 — 2026-10-22
 
 ### Added
