@@ -105,6 +105,44 @@ def vid_store(key, code, body):
     return d
 
 
+# YouTube's player response only has the upload *date*, so Invidious reports a video
+# from this morning as published at 00:00 UTC ("17 hours ago" on the watch page while
+# the feeds say "2 hours ago"). The channel's RSS has the exact time: use it for
+# recent videos whose timestamp sits exactly on midnight.
+PUB_RSS = {}           # cid -> (fetched at, {videoId: published})
+PUB_RSS_TTL = 600
+
+
+def exact_published(d):
+    pub, cid, vid = d.get("published") or 0, d.get("authorId") or "", d.get("videoId")
+    if not pub or pub % 86400 or time.time() - pub > 3 * 86400 or not re.fullmatch(r"UC[\w-]{22}", cid):
+        return None
+    for it in yt_feed["items"].get(cid) or []:       # the subscription feed may already know it
+        if it.get("id") == vid and it.get("published"):
+            return it["published"]
+    hit = PUB_RSS.get(cid)
+    if not hit or time.time() - hit[0] > PUB_RSS_TTL:
+        ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
+        found = {}
+        try:
+            root = ET.fromstring(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}", 5))
+            for e in root.findall("a:entry", ns):
+                try:
+                    found[e.findtext("yt:videoId", "", ns)] = int(datetime.datetime.fromisoformat(
+                        e.findtext("a:published", "", ns).replace("Z", "+00:00")).timestamp())
+                except ValueError:
+                    pass
+        except Exception as ex:
+            log("videos", "published RSS FAIL %s %s" % (cid, repr(ex)[:80]))
+        hit = PUB_RSS[cid] = (time.time(), found)
+        if len(PUB_RSS) > 300:
+            for k in sorted(PUB_RSS, key=lambda k: PUB_RSS[k][0])[:100]:
+                PUB_RSS.pop(k, None)
+    exact = hit[1].get(vid)
+    # within two days of the date YouTube gave (that date can be US Pacific, not UTC)
+    return exact if exact and 0 <= exact - pub < 2 * 86400 else None
+
+
 def vid_fetch_once(key):
     """Many viewers clicking the same uncached video at once: one YouTube round trip, shared."""
     with vid_lk:
@@ -147,6 +185,10 @@ def vid_fetch(key):
             d["hlsUrl"] = "%s/api/p/live/%s.m3u8" % (LIVE_ORIGIN, d["videoId"])
             body = json.dumps(d, ensure_ascii=False).encode()
             log("videos", "hlsUrl injected %s %d" % (d["videoId"], code), t0, every=0)
+        exact = exact_published(d)
+        if exact:
+            d["published"] = exact
+            body = json.dumps(d, ensure_ascii=False).encode()
     vid_store(key, code, body)
     return code, body
 

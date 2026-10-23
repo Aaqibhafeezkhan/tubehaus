@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- The watch page showed recent videos as posted at midnight UTC (e.g. "17 hours ago" for a video from 2 hours ago): YouTube only gives Invidious the upload date, so the exact time now comes from the channel's RSS feed (#20)
+
 ## v0.7.4 — 2026-10-23
 
 ### Changed
