@@ -250,7 +250,7 @@ Before you open one, keep in mind:
   history), and don't put the built-in password on it
 - Leave `TUBEHAUS_AUTH=none`, and consider rate limiting in Caddy
 
-Running one? Add it to the [public instances discussion](https://github.com/biolend83/tubehaus/discussions/18) so
+Running one? [Add it here](https://github.com/biolend83/tubehaus/issues/new?template=public_instance.yml) (or in the [discussion](https://github.com/biolend83/tubehaus/discussions/18)) so
 others can find it.
 
 ## Configuration

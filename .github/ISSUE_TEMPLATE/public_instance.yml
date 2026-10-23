@@ -1,0 +1,48 @@
+name: Add a public instance
+description: You run a public TubeHaus instance and want it listed in the README
+title: "Public instance: "
+labels: [public-instance]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for running a public instance! 🙌 Please read [Running a public instance](https://github.com/biolend83/tubehaus#running-a-public-instance) first.
+        Instances are listed once they're reachable, run a recent release and have public mode switched on.
+  - type: input
+    id: url
+    attributes:
+      label: Address
+      placeholder: https://tube.example.org
+    validations:
+      required: true
+  - type: input
+    id: region
+    attributes:
+      label: Country / region of the server
+      placeholder: e.g. Germany, Singapore
+    validations:
+      required: true
+  - type: input
+    id: limits
+    attributes:
+      label: Limits
+      description: Your TUBEHAUS_MAX_VIEWERS and TUBEHAUS_MAX_HEIGHT, if set
+      placeholder: e.g. 50 viewers, 1080p
+  - type: input
+    id: operator
+    attributes:
+      label: Who runs it
+      description: Your name, handle or organization, and how people can reach you
+    validations:
+      required: true
+  - type: checkboxes
+    id: promises
+    attributes:
+      label: Please confirm
+      options:
+        - label: "`TUBEHAUS_PUBLIC=1` is set, so visitors' libraries stay in their own browsers"
+          required: true
+        - label: I don't log or look at what visitors watch
+          required: true
+        - label: I'll open an issue or comment here if the instance shuts down, so it can be removed
+          required: true
