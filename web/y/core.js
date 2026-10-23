@@ -1,5 +1,5 @@
 // App skeleton: router, shared state (my library), cards, popup menus, dialogs
-import { $, $$, el, esc, icon, api, lib, settings, local, toast, copy, fmtTime, fmtViews, ago, thumb, normVideo, metaOf, pickThumb, dropCache } from "./util.js";
+import { $, $$, el, esc, icon, api, lib, settings, local, toast, copy, fmtTime, fmtViews, ago, thumb, normVideo, metaOf, pickThumb, dropCache, PUBLIC } from "./util.js";
 import { Player } from "./player.js";
 import { $t, $tMsg, fmtShort, LANG, LOCALE } from "./i18n.js";
 
@@ -225,9 +225,9 @@ export function videoMenu(anchor, v, ctx = {}) {
     mi("queue", "playlists", $t("현재 재생목록에 추가")),
     mi("wl", "later", inList("wl", v.id) ? $t("나중에 볼 동영상에서 삭제") : $t("나중에 볼 동영상에 저장")),
     mi("save", "save", $t("재생목록에 저장")),
-    v.live ? "" : mi("dl", "download", $t("오프라인 저장 (다운로드)")),
+    v.live || PUBLIC ? "" : mi("dl", "download", $t("오프라인 저장 (다운로드)")),
     mi("share", "share", $t("공유")),
-    mi("cast", "tv", $t("TV로 보내기")),
+    PUBLIC ? "" : mi("cast", "tv", $t("TV로 보내기")),
     "<hr>",
     ctx.hist ? mi("unhist", "trash", $t("시청 기록에서 삭제")) : "",
     ctx.pl ? mi("unpl", "trash", $t("재생목록에서 삭제")) : "",

@@ -1,5 +1,6 @@
 // Shared helpers: DOM, number/time formats (local style), server API, settings, icons
 import { $t, $tMsg, fmtShort, fmtAgo, LANG } from "./i18n.js";
+import * as L from "./locallib.js";
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -120,7 +121,36 @@ export async function api(path, { method = "GET", body, ttl = 0, signal, quiet =
   }
   return p;
 }
-export const lib = (path, opts) => api("/api/p/yt/" + path, opts);
+// Public instances (server started with HT_PUBLIC_MODE=1) keep each visitor's library in their own
+// browser (locallib.js); the server only fetches feeds and parses imports for them.
+export let PUBLIC = false;
+export const modeReady = fetch("/api/p/health", { credentials: "same-origin" })
+  .then((r) => (r.ok ? r.json() : {})).then((h) => { PUBLIC = !!h.public; document.documentElement.classList.toggle("public", PUBLIC); return PUBLIC; })
+  .catch(() => false);
+const LOCAL = /^(lib|pos|sub|subs\/import|list|pl|pl\/new|pl\/del|pl\/rename|hist|hist\/del|shorts\/sig|shorts\/reset)$/;
+export async function lib(path, opts = {}) {
+  if (await modeReady) {
+    const [p, q] = path.split("?");
+    if (p === "feed") return api("/api/p/yt/feed?ch=" + L.subIds().join(","), opts);
+    if (p === "import") { const n = L.libMerge(await api("/api/p/yt/import", opts)); fillNames(); return n; }
+    if (LOCAL.test(p)) {
+      try { return (opts.method || "GET") === "GET" ? (p === "lib" ? L.libGet() : L.libQuery(p, new URLSearchParams(q || ""))) : L.libPost(p, opts.body || {}); }
+      catch (e) { throw new HttpError(e.status || 400, $tMsg(e.message)); }
+    }
+  }
+  return api("/api/p/yt/" + path, opts);
+}
+// imports that only had channel IDs: look the names and pictures up (the server does this itself when it keeps the library)
+async function fillNames() {
+  const subs = L.libGet().subs;
+  for (const [cid, s] of Object.entries(subs).filter(([c, s]) => !s.thumb || s.name === c).slice(0, 100)) {
+    try {
+      const c = await api(`/api/v1/channels/${cid}?fields=author,authorThumbnails`, { quiet: true });
+      L.libPost("sub", { id: cid, name: c.author || s.name, thumb: pickThumb(c.authorThumbnails, 88), on: true });
+    } catch { }
+  }
+}
+export const localLibrary = () => L.libAll();
 export const dropCache = (prefix) => { for (const k of cache.keys()) if (k.includes(prefix)) cache.delete(k); };
 
 // ---------------------------------------------------------------- video objects

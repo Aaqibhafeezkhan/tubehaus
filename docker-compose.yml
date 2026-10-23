@@ -35,6 +35,7 @@ services:
       HT_PUBLIC_URL: ${TUBEHAUS_URL}
       HT_SUB_LANG: ${TUBEHAUS_SUB_LANG:-en}
       HT_WHISPER_LANG: ${TUBEHAUS_CAPTION_LANG:-auto}
+      HT_PUBLIC_MODE: ${TUBEHAUS_PUBLIC:-0}
     volumes:
       - tubehaus-data:/data
       - warp-data:/var/lib/cloudflare-warp

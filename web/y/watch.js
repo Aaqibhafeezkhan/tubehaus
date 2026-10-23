@@ -1,5 +1,5 @@
 // Watch page, Shorts, mini player
-import { $, $$, el, esc, icon, api, lib, settings, toast, fmtTime, fmtViews, fmtCount, ago, thumb, normVideo, metaOf, pickThumb, safeHtml, linkify, parseT, copy } from "./util.js";
+import { $, $$, el, esc, icon, api, lib, settings, toast, fmtTime, fmtViews, fmtCount, ago, thumb, normVideo, metaOf, pickThumb, safeHtml, linkify, parseT, copy, PUBLIC } from "./util.js";
 import { videoInfo, prefetch, player, state, card, norm, remember, known, fillProgress, avatar, subBtn, navigate, videoMenu, shareDialog, saveDialog, downloadDialog, keysDialog, setList, inList, queue, setPosCache, getPos, pageCleanup, popup, mi } from "./core.js";
 import { loadPlaylist } from "./pages.js";
 import { $t, LANG, LOCALE, REGION } from "./i18n.js";
@@ -27,6 +27,7 @@ function saveProgress(force) {
   const body = { id: W.id, t, len };
   if (!W.sentMeta) { body.meta = metaOf(W.v); W.sentMeta = true; }
   const data = JSON.stringify(body);
+  if (PUBLIC) return lib("pos", { method: "POST", body }).catch(() => { });   // public instance: saved in this browser
   if (force === "beacon" && navigator.sendBeacon) navigator.sendBeacon("/api/p/yt/pos", new Blob([data], { type: "application/json" }));
   else fetch("/api/p/yt/pos", { method: "POST", headers: { "Content-Type": "application/json" }, body: data, credentials: "same-origin", keepalive: true }).catch(() => { });
 }

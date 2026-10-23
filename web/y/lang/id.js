@@ -422,5 +422,7 @@ export default {
  "파일이 너무 커요": "File ini terlalu besar",
  "차분 모드": "Mode tenang",
  "홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요": "Beranda hanya menampilkan video baru dari langganan; Shorts, trending, dan rekomendasi disembunyikan, putar otomatis mati, komentar muncul saat diminta",
- "{0} 댓글 보기": "{0} Tampilkan komentar"
+ "{0} 댓글 보기": "{0} Tampilkan komentar",
+ "공개 서버에서는 쓸 수 없어요": "Tidak tersedia di instans publik",
+ "공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.": "Ini instans publik. Langganan dan riwayat Anda hanya disimpan di browser ini, tidak di server. Menghapus data browser akan menghapusnya, jadi sesekali ekspor cadangan."
 };

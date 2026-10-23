@@ -1,5 +1,5 @@
 // Entry point: header (search, notifications, account), side menu, routes, global shortcuts
-import { $, $$, esc, icon, api, lib, settings, local, toast, thumb, normVideo, ago } from "./util.js";
+import { $, $$, esc, icon, api, lib, settings, local, toast, thumb, normVideo, ago, modeReady } from "./util.js";
 import { dialog } from "./core.js";
 import { player, routes, state, loadLib, navigate, render, renderGuideSubs, popup, mi, keysDialog, initCardHover, markRestore, saveScroll, known, videoMenu, pageCleanup } from "./core.js";
 import * as P from "./pages.js";
@@ -277,7 +277,7 @@ function step(name, fn) {
 step("mini", initMini);
 step("hover", initCardHover);
 step("tv", initTV);
-step("cast", startReceiver);
+step("cast", () => modeReady.then((pub) => { if (!pub) startReceiver(); }));   // no send-to-TV on public instances
 addEventListener("settings", (e) => { if (e.detail === "castReceive") startReceiver(); });
 loadLib().then(async (L) => {
   // first run: import the subscriptions of the Invidious account, if there are any

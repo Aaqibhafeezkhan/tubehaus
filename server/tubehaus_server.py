@@ -41,6 +41,10 @@ WHISPER_BIN = env("HT_WHISPER_BIN", "")                  # whisper.cpp "whisper-
 WHISPER_MODEL = env("HT_WHISPER_MODEL", "")              # e.g. ggml-base-q5_1.bin
 WHISPER_LANG = env("HT_WHISPER_LANG", "auto")
 YTDL_DIR = env("HT_DOWNLOAD_DIR", "/var/tmp/tubehaus-dl")
+# Public instance: every visitor keeps their own library in their browser, and the server
+# keeps none. Anything that would be shared between strangers (library, send to TV,
+# server downloads) is switched off.
+PUBLIC_MODE = env("HT_PUBLIC_MODE", "0") == "1"
 
 lock = threading.Lock()
 LIVE_CACHE = {}
@@ -931,9 +935,14 @@ UCID = re.compile(r"UC[\w-]{22}")
 VID = re.compile(r"[\w-]{11}")
 
 
-def ytlib_export(fmt):
-    with yt_lock:
-        d = _yt_load()
+def ytlib_export(fmt, d=None):
+    given = d is not None
+    if d is None:
+        with yt_lock:
+            d = _yt_load()
+    else:   # public mode: the visitor's own library, sent from their browser
+        d = {k: d.get(k) or ({} if k in ("subs", "pos", "playlists") else []) for k in
+             ("subs", "hist", "pos", "wl", "likes", "dislikes", "playlists")}
     day = time.strftime("%Y-%m-%d")
     if fmt == "invidious":
         body = {"subscriptions": list(d["subs"]), "watch_history": [h["id"] for h in d["hist"]], "preferences": {},
@@ -956,7 +965,8 @@ def ytlib_export(fmt):
         xml = ('<?xml version="1.0" encoding="UTF-8"?>\n<opml version="1.1">\n  <head><title>TubeHaus subscriptions</title></head>\n'
                '  <body>\n    <outline text="YouTube" title="YouTube">' + rows + '\n    </outline>\n  </body>\n</opml>\n')
         return f"subscriptions-{day}.opml", "text/x-opml; charset=utf-8", xml.encode()
-    body = {"format": "tubehaus-backup", "version": 1, "exported": int(time.time()), **d, "shorts": jload(SHORTS, {})}
+    body = {"format": "tubehaus-backup", "version": 1, "exported": int(time.time()), **d,
+            "shorts": {} if given else jload(SHORTS, {})}
     return f"tubehaus-backup-{day}.json", "application/json", json.dumps(body, ensure_ascii=False).encode()
 
 
@@ -1097,6 +1107,8 @@ def ytlib_import(b):
     p = ytlib_parse_import(text)
     if not p["format"] or not any((p["subs"], p["hist"], p["playlists"], p["wl"], p["likes"])):
         return 400, {"error": "Couldn't find anything to import in this file"}
+    if PUBLIC_MODE or b.get("dry"):
+        return 200, dict(p, dry=True)       # the browser merges it into its own library
     now = int(time.time())
     n = {"format": p["format"], "subs": 0, "hist": 0, "playlists": 0, "videos": 0}
     with yt_lock:
@@ -1368,8 +1380,11 @@ def shorts_next(qs):
     region = qs.get("region", "US")
     region = region if re.fullmatch(r"[A-Z]{2}", region) else "US"
     skip = [x for x in qs.get("skip", "").split(",") if re.fullmatch(r"[\w-]{11}", x)][:300]
-    with sh_lock:
-        d = _sh_load()
+    if PUBLIC_MODE:
+        d = {"ch": {}, "kw": {}, "seen": {}, "names": {}}
+    else:
+        with sh_lock:
+            d = _sh_load()
     items = [v for pool in shorts_candidates(d, region) for v in pool]
     return {"items": shorts_rank(d, items, n, skip),
             "learned": {"channels": len([1 for s in d["ch"].values() if s > 0]), "keywords": len(d["kw"])}}
@@ -1887,7 +1902,39 @@ def health():
     now = time.time()
     return {"ok": True, "warp_proxy": bool(YT_PROXY), "warp_rotate": WARP_ROTATE,
             "warp_rotations_30min": len([t for t in rot_hist if now - t < 1800]),
-            "live_captions": bool(WHISPER_BIN and WHISPER_MODEL)}
+            "live_captions": bool(WHISPER_BIN and WHISPER_MODEL), "public": PUBLIC_MODE}
+
+
+def public_blocked(method, path):
+    """On a public instance only the stateless parts of /api/p/yt/ stay open."""
+    if not PUBLIC_MODE:
+        return False
+    if "/api/p/yt/" not in path and not path.endswith("/latest_version"):
+        return False
+    allowed = {("GET", "/yt/feed"), ("GET", "/yt/shorts/next"), ("POST", "/yt/import"), ("POST", "/yt/export")}
+    return not any(method == m and path.endswith(suffix) for m, suffix in allowed)
+
+
+yt_feed_at = {}              # cid -> last RSS fetch (public mode: feeds for any visitor's channels)
+
+
+def feed_for(chs):
+    """Public mode: the visitor sends their channel list, the server only fetches the feeds."""
+    from concurrent.futures import ThreadPoolExecutor
+    chs = list(dict.fromkeys(c for c in chs if UCID.fullmatch(c)))[:300]
+    now = time.time()
+    stale = [c for c in chs if now - yt_feed_at.get(c, 0) > 900][:60]
+    if stale:
+        with ThreadPoolExecutor(6) as ex:
+            list(ex.map(yt_feed_one, stale))
+        for c in stale:
+            yt_feed_at[c] = time.time()
+    if len(yt_feed_at) > 5000:
+        for c in sorted(yt_feed_at, key=yt_feed_at.get)[:1000]:
+            yt_feed_at.pop(c, None)
+            yt_feed["items"].pop(c, None)
+    items = sorted((e for c in chs for e in yt_feed["items"].get(c, [])), key=lambda e: -e["published"])[:400]
+    return {"items": items, "updated": now, "updating": any(c not in yt_feed_at for c in chs)}
 
 
 class H(BaseHTTPRequestHandler):
@@ -1933,6 +1980,10 @@ class H(BaseHTTPRequestHandler):
 
     def do_GET(self):
         p = self.path.split("?")[0].rstrip("/")
+        if public_blocked("GET", p):
+            return self.send(403, {"error": "Not available on public instances"})
+        if PUBLIC_MODE and p.endswith("/yt/feed"):
+            return self.send(200, feed_for(self.qs().get("ch", "").split(",")))
         if "/yt/cast/" in p:
             if p.endswith("/cast/devices"):
                 return self.send(200, cast_devices())
@@ -2029,6 +2080,17 @@ class H(BaseHTTPRequestHandler):
         except Exception:
             body = {}
         body = body if isinstance(body, dict) else {}
+        if public_blocked("POST", p):
+            return self.send(403, {"error": "Not available on public instances"})
+        if p.endswith("/yt/export"):
+            name, ctype, data = ytlib_export(str(body.get("format", "")), body.get("lib") if isinstance(body.get("lib"), dict) else {})
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Disposition", f'attachment; filename="{name}"')
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if p.endswith("/yt/cast/send"):
             return self.send(*cast_send(body))
         if p.endswith("/yt/dl"):

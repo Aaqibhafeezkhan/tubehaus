@@ -1,5 +1,5 @@
 // List pages: home, search, channel, playlist, subscriptions, history, you, trending, settings
-import { $, $$, el, esc, icon, api, lib, settings, local, toast, fmtTime, fmtViews, ago, thumb, normVideo, pickThumb, localUrl, safeHtml, linkify, dropCache } from "./util.js";
+import { $, $$, el, esc, icon, api, lib, settings, local, toast, fmtTime, fmtViews, ago, thumb, normVideo, pickThumb, localUrl, safeHtml, linkify, dropCache, PUBLIC, localLibrary } from "./util.js";
 import { state, card, channelCard, playlistCard, norm, remember, known, fillProgress, infinite, avatar, subBtn, isSub, navigate, popup, mi, videoMenu, dialog, loadLib, setList, pageCleanup, renderGuideSubs } from "./core.js";
 import { SB_CATS } from "./player.js";
 import { $t, LANG, LANGS, LOCALE, REGION, fmtShort, langLabel } from "./i18n.js";
@@ -417,6 +417,7 @@ export async function channelsMgr(page) {
       <button class="pill ghost inv">${$t("{0} Invidious 계정의 구독 가져오기", icon("download"))}</button>
       <input type="file" class="impfile" hidden accept=".json,.csv,.opml,.xml,.db,.txt">
       <form class="addch"><input placeholder="${$t("채널 주소나 @핸들 (예: @MBCNEWS11)")}"><button class="pill">${$t("추가")}</button></form></div>
+      ${PUBLIC ? `<p class="sub pub-note">${$t("공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.")}</p>` : ""}
       <p class="sub imp-hint">${$t("구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요")}</p>
       <div class="chlist">${subs.map(([id, s]) => `<div class="chrow"><a href="/channel/${esc(id)}" data-nav>${avatar(s.thumb, "md")}<span>${esc(s.name)}</span></a>${subBtn(id, s.name, s.thumb)}</div>`).join("") || `<p class='sub'>${$t("아직 없어요")}</p>`}</div></div>`;
     $(".inv", page).onclick = () => importInvidious(true).then(draw);
@@ -442,14 +443,24 @@ export async function channelsMgr(page) {
 }
 // Your data is never stuck here: export everything, import from other apps
 export function exportDialog() {
-  const f = (fmt, label, desc) => `<a class="exp-row" href="/api/p/yt/export?format=${fmt}" download><b>${label}</b><span>${desc}</span></a>`;
-  dialog(`<div class="dh"><b>${$t("데이터 내보내기")}</b><button data-close>${icon("close")}</button></div>
+  // public instance: the library lives in this browser, so send it along and let the server only convert it
+  const f = (fmt, label, desc) => PUBLIC
+    ? `<button class="exp-row" data-fmt="${fmt}"><b>${label}</b><span>${desc}</span></button>`
+    : `<a class="exp-row" href="/api/p/yt/export?format=${fmt}" download><b>${label}</b><span>${desc}</span></a>`;
+  const { box } = dialog(`<div class="dh"><b>${$t("데이터 내보내기")}</b><button data-close>${icon("close")}</button></div>
     <div class="exp-list">
       ${f("tubehaus", $t("TubeHaus 백업"), $t("구독, 시청 기록, 이어보기, 재생목록, 좋아요까지 전부. 그대로 다시 가져올 수 있어요"))}
       ${f("invidious", $t("Invidious 형식"), $t("구독, 시청 기록, 재생목록. Invidious 와 그 앱들에서 가져올 수 있어요"))}
       ${f("csv", "CSV", $t("구독 목록 (구글 Takeout 과 같은 형식)"))}
       ${f("opml", "OPML", $t("구독 목록 (RSS 리더용)"))}
     </div>`);
+  box.querySelectorAll("button.exp-row").forEach((b) => (b.onclick = async () => {
+    const r = await fetch("/api/p/yt/export", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ format: b.dataset.fmt, lib: localLibrary() }) });
+    const name = (r.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/)?.[1] || "tubehaus-export";
+    const a = el(`<a href="${URL.createObjectURL(await r.blob())}" download="${esc(name)}" hidden></a>`);
+    document.body.append(a); a.click(); a.remove();
+  }));
 }
 export async function importFile(file) {
   if (!file) return false;
@@ -596,9 +607,9 @@ export function settingsPage(page) {
     ${tog("dataSaver", $t("데이터 절약"), $t("480p 이하, 미리 받는 양을 줄여요"))}
     ${tog("resume", $t("이어서 보기"), $t("보던 곳부터 재생 (모든 기기 공유)"))}
     ${tog("miniplayer", $t("미니 플레이어"), $t("다른 페이지로 가도 작은 화면으로 계속 재생"))}
-    <h3>${$t("TV로 보내기")}</h3>
+    ${PUBLIC ? "" : `<h3>${$t("TV로 보내기")}</h3>
     ${tog("castReceive", $t("이 기기에서 받기"), $t("다른 기기가 'TV로 보내기'로 이 화면에 영상을 보낼 수 있어요 (TV 모드면 늘 켜짐)"))}
-    ${row($t("이 기기 이름"), `<input data-k="deviceName" maxlength="40" placeholder="${$t("예: 거실 TV")}" value="${esc(S.deviceName || "")}" style="height:36px;padding:0 10px;border:1px solid var(--input-line);background:var(--input);min-width:160px">`, $t("보낼 때 목록에 이렇게 보여요"))}
+    ${row($t("이 기기 이름"), `<input data-k="deviceName" maxlength="40" placeholder="${$t("예: 거실 TV")}" value="${esc(S.deviceName || "")}" style="height:36px;padding:0 10px;border:1px solid var(--input-line);background:var(--input);min-width:160px">`, $t("보낼 때 목록에 이렇게 보여요"))}`}
     <h3>${$t("자막")}</h3>
     ${tog("captions", $t("자막 항상 표시"))}
     ${row($t("자막 언어"), sel("capLang", LANGS))}
@@ -609,6 +620,7 @@ export function settingsPage(page) {
     <div class="sbcats">${Object.entries(SB_CATS).map(([k, [l, c]]) => `<label class="chk"><input type="checkbox" data-cat="${k}" ${S.sponsorCats.includes(k) ? "checked" : ""}><i style="background:${c}"></i>${$t("{0} 자동 건너뛰기", l)}</label>`).join("")}</div>
     ${tog("dislikes", $t("싫어요 수 보기"), $t("Return YouTube Dislike 의 추정치"))}
     <h3>${$t("내 데이터")}</h3>
+    ${PUBLIC ? `<p class="sub pub-note">${$t("공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.")}</p>` : ""}
     <div class="set-btns"><a class="pill ghost" href="/feed/channels" data-nav>${$t("구독 관리 · 가져오기")}</a>
     <button class="pill ghost simp">${$t("{0} 파일에서 가져오기", icon("upload"))}</button><input type="file" class="simpfile" hidden accept=".json,.csv,.opml,.xml,.db,.txt">
     <button class="pill ghost sexp">${$t("{0} 내보내기", icon("download"))}</button><button class="pill ghost unhide">${$t("'관심 없음' {0}개 되돌리기", state.hidden.size)}</button>

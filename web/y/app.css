@@ -391,6 +391,9 @@ input.sw:checked::after { left: 19px; background: var(--blue); }
 html.calm .gi[data-r="shorts"], html.calm #mguide a[data-r="shorts"], html.calm .g-explore,
 html.calm .shorts-shelf, html.calm .chips:not(.small), html.calm .w-related { display: none !important; }
 .cm-open { margin: 16px 0; }
+/* public instance: nothing that would be shared between strangers */
+html.public .w-actions .cast { display: none !important; }
+.pub-note { padding: 10px 12px; border-radius: 10px; background: var(--chip); color: var(--fg); margin: 8px 0 16px; }
 .imp { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0 24px; }
 .exp-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .exp-row { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; color: inherit; text-decoration: none; }

@@ -216,6 +216,30 @@ and, from the browser, the optional SponsorBlock and Return YouTube Dislike look
 It's a web app: open your address in the browser, or use "Add to Home Screen" to install it like an app.
 TV browsers get a TV mode with remote-control navigation.
 
+## Running a public instance
+
+Want to let people try TubeHaus without installing it? Set `TUBEHAUS_PUBLIC=1` in `.env` (or `HT_PUBLIC_MODE=1`
+for a manual install). Then:
+
+- **Every visitor's library lives in their own browser.** Subscriptions, history, resume points and playlists are
+  kept in the browser's local storage; the server stores nothing about its visitors, and visitors never see each
+  other's data. A note in Settings tells them to export a backup now and then
+- **The server only does stateless work:** fetching feeds for the channels a browser sends, parsing imports and
+  converting exports, and playing video
+- **Switched off:** send to TV and server-side downloads (they would be shared between strangers), and Shorts
+  recommendations don't learn
+
+Before you open one, keep in mind:
+
+- **Bandwidth:** video is streamed through your server. Watch your provider's traffic limits
+- **YouTube blocks:** many viewers on one address get it flagged sooner; WARP rotation helps but has limits
+- **Trust:** visitors' requests pass through your server. Be clear about what you log (TubeHaus logs no viewing
+  history), and don't put the built-in password on it
+- Leave `TUBEHAUS_AUTH=none`, and consider rate limiting in Caddy
+
+Running one? Add it to the [public instances discussion](https://github.com/biolend83/tubehaus/discussions) so
+others can find it.
+
 ## Configuration
 
 All settings are environment variables — see [`.env.example`](.env.example).
@@ -233,6 +257,7 @@ All settings are environment variables — see [`.env.example`](.env.example).
 | `HT_WHISPER_BIN`, `HT_WHISPER_MODEL`, `HT_WHISPER_LANG` | empty, empty, `auto` | live captions |
 | `HT_SUB_LANG`, `HT_LIBRETRANSLATE` | `en`, empty | default subtitle translation target (the app asks for its own language), optional fallback |
 | `HT_DOWNLOAD_DIR` | `/var/tmp/tubehaus-dl` | offline save workspace |
+| `HT_PUBLIC_MODE` | `0` | public instance: libraries stay in visitors' browsers (see above) |
 
 ## Translations
 

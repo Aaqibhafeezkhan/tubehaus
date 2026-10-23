@@ -422,5 +422,7 @@ export default {
  "파일이 너무 커요": "Diese Datei ist zu groß",
  "차분 모드": "Ruhemodus",
  "홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요": "Die Startseite zeigt nur neue Videos deiner Abos; Shorts, Trends und Empfehlungen ausgeblendet, kein Autoplay, Kommentare erst auf Klick",
- "{0} 댓글 보기": "{0} Kommentare anzeigen"
+ "{0} 댓글 보기": "{0} Kommentare anzeigen",
+ "공개 서버에서는 쓸 수 없어요": "Auf öffentlichen Instanzen nicht verfügbar",
+ "공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.": "Das ist eine öffentliche Instanz. Deine Abos und dein Verlauf werden nur in diesem Browser gespeichert, nie auf dem Server. Wenn du die Browserdaten löschst, sind sie weg – exportiere also ab und zu eine Sicherung."
 };

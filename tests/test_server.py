@@ -279,6 +279,48 @@ class ImportExport(unittest.TestCase):
                 self.assertEqual(p["subs"][self.A]["name"], "Cats & \"Co\"", fmt)
 
 
+class PublicMode(unittest.TestCase):
+    def setUp(self):
+        ts.PUBLIC_MODE = True
+        for f in (ts.YTLIB, ts.SHORTS):
+            if os.path.exists(f):
+                os.remove(f)
+
+    def tearDown(self):
+        ts.PUBLIC_MODE = False
+
+    def test_only_stateless_endpoints_are_open(self):
+        b = ts.public_blocked
+        for m, p in (("GET", "/api/p/yt/lib"), ("POST", "/api/p/yt/sub"), ("POST", "/api/p/yt/pos"),
+                     ("GET", "/api/p/yt/hist"), ("GET", "/api/p/yt/cast/devices"), ("POST", "/api/p/yt/cast/send"),
+                     ("POST", "/api/p/yt/dl"), ("GET", "/api/p/yt/export"), ("POST", "/api/p/yt/shorts/sig"),
+                     ("GET", "/latest_version")):
+            self.assertTrue(b(m, p), (m, p))
+        for m, p in (("GET", "/api/p/yt/feed"), ("GET", "/api/p/yt/shorts/next"), ("POST", "/api/p/yt/import"),
+                     ("POST", "/api/p/yt/export"), ("GET", "/api/v1/videos/jNQXAC9IVRw"), ("GET", "/api/p/health"),
+                     ("GET", "/api/p/live/abc/cc.json")):
+            self.assertFalse(b(m, p), (m, p))
+        ts.PUBLIC_MODE = False
+        self.assertFalse(b("GET", "/api/p/yt/lib"))
+
+    def test_import_is_only_parsed_never_stored(self):
+        code, p = ts.ytlib_import({"text": "Channel Id,Channel Url,Channel Title\nUC" + "a" * 22 + ",x,Cats\n"})
+        self.assertEqual((code, p["dry"], p["format"]), (200, True, "csv"))
+        self.assertIn("UC" + "a" * 22, p["subs"])
+        self.assertFalse(os.path.exists(ts.YTLIB))
+
+    def test_export_converts_the_visitors_library(self):
+        lib = {"subs": {"UC" + "a" * 22: {"name": "Cats"}}, "hist": [], "playlists": {}}
+        name, _, data = ts.ytlib_export("csv", lib)
+        self.assertIn(b"Cats", data)
+        _, _, data = ts.ytlib_export("tubehaus", lib)
+        import json
+        self.assertEqual(json.loads(data)["shorts"], {})
+
+    def test_health_says_public(self):
+        self.assertTrue(ts.health()["public"])
+
+
 class Health(unittest.TestCase):
     def test_health(self):
         h = ts.health()

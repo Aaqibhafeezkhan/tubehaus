@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.6.0 — 2026-10-23
 
 ### Added
+- **Public instance mode** (`TUBEHAUS_PUBLIC=1` / `HT_PUBLIC_MODE=1`): each visitor's library lives in their own
+  browser, the server stores nothing about visitors and only fetches feeds, parses imports and converts exports;
+  send to TV and server downloads are off. A note in Settings reminds visitors to export backups
 - Bengali interface, the 13th language (thanks @rahul05ranjan, #16)
 
 ### Changed
