@@ -122,6 +122,14 @@ Invidious, NewPipe, FreeTube 내보내기 파일, OPML, TubeHaus 백업을 가�
 - **기여:** [CONTRIBUTING.md](CONTRIBUTING.md)(영어). 번역 고치기가 첫 기여로 좋아요
 - **보안 문제:** 공개 이슈 말고 [비공개로 알려 주세요](SECURITY.md)
 
+## 고마운 사람들
+
+코드, 번역, 아이디어로 TubeHaus를 더 좋게 만들어 준 분들이에요.
+
+- [@onyks-os](https://github.com/onyks-os): 첫 기여, 설치 안내 수정 (#1)
+- [@SakarPaisen](https://github.com/SakarPaisen): 터키어 번역 (#8)
+- [@JamesMowery](https://github.com/JamesMowery): 파일 가져오기와 데이터 내보내기 제안, v0.4.0이 됐어요 (#14, #15)
+
 ## 라이선스
 
 AGPL-3.0, Invidious와 같아요. 유튜브나 구글과는 관계없는 프로젝트예요. 우리 집에서 쓰는 용도로, 연결하는 서비스의 약관을 지키며 써 주세요.

@@ -244,6 +244,16 @@ Interface text lives in `web/y/lang/<code>.js` (the key is the original Korean t
 - **Security problems:** report them privately, see [SECURITY.md](SECURITY.md)
 - **What changed:** [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/biolend83/tubehaus/releases)
 
+## Thanks
+
+People who made TubeHaus better, with code, translations or ideas:
+
+- [@onyks-os](https://github.com/onyks-os): first contribution, fixed the install instructions (#1)
+- [@SakarPaisen](https://github.com/SakarPaisen): Turkish translation (#8)
+- [@JamesMowery](https://github.com/JamesMowery): asked for import from file and data export, which became v0.4.0 (#14, #15)
+
+Opened a useful issue or sent a pull request? You belong here too.
+
 ## Credits
 
 - [Invidious](https://github.com/iv-org/invidious) and [invidious-companion](https://github.com/iv-org/invidious-companion) (AGPL-3.0) — the backend this sits on
