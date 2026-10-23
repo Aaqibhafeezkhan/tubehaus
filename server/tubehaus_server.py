@@ -45,6 +45,19 @@ YTDL_DIR = env("HT_DOWNLOAD_DIR", "/var/tmp/tubehaus-dl")
 # keeps none. Anything that would be shared between strangers (library, send to TV,
 # server downloads) is switched off.
 PUBLIC_MODE = env("HT_PUBLIC_MODE", "0") == "1"
+# Load limits, so a crowd can't take the server (or your YouTube access) down. 0 = no limit.
+def env_int(key, default):
+    """An empty or unset variable means the default (docker compose passes unset ones as "")."""
+    try:
+        return int(env(key, "").strip() or default)
+    except ValueError:
+        return default
+
+
+MAX_CONN = env_int("HT_MAX_CONNECTIONS", 256)            # requests handled at the same time
+MAX_VIEWERS = env_int("HT_MAX_VIEWERS", 0)               # people watching at once (by IP, 3 min window)
+RATE_PER_MIN = env_int("HT_RATE_PER_MIN", 120 if PUBLIC_MODE else 0)   # API requests per IP per minute
+MAX_HEIGHT = env_int("HT_MAX_HEIGHT", 0)                 # highest quality offered to players, e.g. 1080
 
 lock = threading.Lock()
 LIVE_CACHE = {}
@@ -63,10 +76,11 @@ LIVE_BASE = LIVE_ORIGIN + "/api/p/live/s/"   # + base64url(segment url) + ".ts";
 VID_FRESH = 900        # younger than this: hand it over, do nothing else
 VID_STALE = 7200       # older than this: fetch synchronously (URLs would be near expiry)
 VID_KEEP = 400         # entries
-VID_PREFETCH = 4       # recommended videos warmed after a cold click
+VID_PREFETCH = 4       # recommended videos warmed after a cold click (off on public instances)
 vid_cache = {}         # path -> (ts, code, body)
 vid_lk = threading.Lock()
 vid_busy = set()       # paths currently being refreshed
+vid_wait = {}          # path -> Event: a cold fetch in flight; others wait for it instead of asking YouTube again
 
 
 def vid_store(key, code, body):
@@ -85,6 +99,28 @@ def vid_store(key, code, body):
             for k, _ in sorted(vid_cache.items(), key=lambda kv: kv[1][0])[:len(vid_cache) - VID_KEEP]:
                 vid_cache.pop(k, None)
     return d
+
+
+def vid_fetch_once(key):
+    """Many viewers clicking the same uncached video at once: one YouTube round trip, shared."""
+    with vid_lk:
+        ev = vid_wait.get(key)
+        mine = ev is None
+        if mine:
+            ev = vid_wait[key] = threading.Event()
+    if not mine:
+        ev.wait(60)
+        with vid_lk:
+            hit = vid_cache.get(key)
+        if hit:
+            return hit[1], hit[2]
+        return vid_fetch(key)        # it failed or wasn't cacheable (live): ask ourselves
+    try:
+        return vid_fetch(key)
+    finally:
+        with vid_lk:
+            vid_wait.pop(key, None)
+        ev.set()
 
 
 def vid_fetch(key):
@@ -121,7 +157,7 @@ def vid_bg(key, prefetch_from=None):
         finally:
             with vid_lk:
                 vid_busy.discard(key)
-    if not prefetch_from:
+    if not prefetch_from or PUBLIC_MODE:
         return
     try:
         ids = [v.get("videoId") for v in (prefetch_from.get("recommendedVideos") or [])]
@@ -1902,7 +1938,43 @@ def health():
     now = time.time()
     return {"ok": True, "warp_proxy": bool(YT_PROXY), "warp_rotate": WARP_ROTATE,
             "warp_rotations_30min": len([t for t in rot_hist if now - t < 1800]),
-            "live_captions": bool(WHISPER_BIN and WHISPER_MODEL), "public": PUBLIC_MODE}
+            "live_captions": bool(WHISPER_BIN and WHISPER_MODEL), "public": PUBLIC_MODE,
+            "max_height": MAX_HEIGHT or None, "viewers": len([1 for t in list(viewers.values()) if now - t < 180]),
+            "max_viewers": MAX_VIEWERS or None}
+
+
+viewers, rate, load_lk = {}, {}, threading.Lock()   # ip -> last seen / (tokens, time)
+
+
+def viewer_admit(ip):
+    """False when the server already has MAX_VIEWERS people watching and this is someone new."""
+    if not MAX_VIEWERS:
+        return True
+    now = time.time()
+    with load_lk:
+        for k in [k for k, t in viewers.items() if now - t > 180]:
+            del viewers[k]
+        if ip not in viewers and len(viewers) >= MAX_VIEWERS:
+            return False
+        viewers[ip] = now
+        return True
+
+
+def rate_ok(ip):
+    """Token bucket per IP: RATE_PER_MIN requests a minute, bursts up to the same number."""
+    if not RATE_PER_MIN:
+        return True
+    now = time.time()
+    with load_lk:
+        tokens, last = rate.get(ip, (RATE_PER_MIN, now))
+        tokens = min(RATE_PER_MIN, tokens + (now - last) * RATE_PER_MIN / 60)
+        if len(rate) > 20000:
+            rate.clear()
+        if tokens < 1:
+            rate[ip] = (tokens, now)
+            return False
+        rate[ip] = (tokens - 1, now)
+        return True
 
 
 def public_blocked(method, path):
@@ -1916,6 +1988,7 @@ def public_blocked(method, path):
 
 
 yt_feed_at = {}              # cid -> last RSS fetch (public mode: feeds for any visitor's channels)
+feed_busy = set()
 
 
 def feed_for(chs):
@@ -1923,12 +1996,18 @@ def feed_for(chs):
     from concurrent.futures import ThreadPoolExecutor
     chs = list(dict.fromkeys(c for c in chs if UCID.fullmatch(c)))[:300]
     now = time.time()
-    stale = [c for c in chs if now - yt_feed_at.get(c, 0) > 900][:60]
+    with load_lk:      # a channel another visitor is already fetching isn't fetched twice
+        stale = [c for c in chs if now - yt_feed_at.get(c, 0) > 900 and c not in feed_busy][:60]
+        feed_busy.update(stale)
     if stale:
-        with ThreadPoolExecutor(6) as ex:
-            list(ex.map(yt_feed_one, stale))
-        for c in stale:
-            yt_feed_at[c] = time.time()
+        try:
+            with ThreadPoolExecutor(6) as ex:
+                list(ex.map(yt_feed_one, stale))
+            for c in stale:
+                yt_feed_at[c] = time.time()
+        finally:
+            with load_lk:
+                feed_busy.difference_update(stale)
     if len(yt_feed_at) > 5000:
         for c in sorted(yt_feed_at, key=yt_feed_at.get)[:1000]:
             yt_feed_at.pop(c, None)
@@ -1942,6 +2021,9 @@ class H(BaseHTTPRequestHandler):
     # the socket. Every reply below either sends a real Content-Length or sets
     # close_connection, so the framing stays honest. Bodies are unchanged.
     protocol_version = "HTTP/1.1"
+    # a connection that says nothing for this long is dropped, so idle or deliberately slow
+    # clients can't sit on the request slots (kept-alive sockets wait for their next request the same way)
+    timeout = 30
 
     def handle_one_request(self):
         # Handler exceptions used to escape into a socketserver traceback nobody reads.
@@ -1978,8 +2060,27 @@ class H(BaseHTTPRequestHandler):
     def qs(self):
         return {k: v[0] for k, v in urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).items()}
 
+    def client_ip(self):
+        # behind Caddy the real visitor is the first X-Forwarded-For entry
+        return (self.headers.get("X-Forwarded-For") or self.client_address[0]).split(",")[0].strip()
+
+    def over_limit(self, p):
+        """429 when one visitor sends too much, 503 when the server is full of viewers."""
+        if p.startswith("/companion") or p.endswith("/api/p/health"):
+            return False
+        ip = self.client_ip()
+        if not rate_ok(ip):
+            self.send(429, {"error": "Too many requests. Please slow down a little"})
+            return True
+        if ("/api/v1/videos/" in p or "/live/" in p) and not viewer_admit(ip):
+            self.send(503, {"error": "This server is busy right now. Please try again in a few minutes"})
+            return True
+        return False
+
     def do_GET(self):
         p = self.path.split("?")[0].rstrip("/")
+        if self.over_limit(p):
+            return
         if public_blocked("GET", p):
             return self.send(403, {"error": "Not available on public instances"})
         if PUBLIC_MODE and p.endswith("/yt/feed"):
@@ -2080,6 +2181,8 @@ class H(BaseHTTPRequestHandler):
         except Exception:
             body = {}
         body = body if isinstance(body, dict) else {}
+        if self.over_limit(p):
+            return
         if public_blocked("POST", p):
             return self.send(403, {"error": "Not available on public instances"})
         if p.endswith("/yt/export"):
@@ -2244,7 +2347,7 @@ class H(BaseHTTPRequestHandler):
                     threading.Thread(target=vid_bg, args=(key,), name="vid-" + key[-11:], daemon=True).start()
             log("videos", "cache %ds %s" % (age, key.split("/")[-1][:20]), t0, every=300)
         else:
-            code, body = vid_fetch(key)
+            code, body = vid_fetch_once(key)
             d = None
             try:
                 if code == 200:
@@ -2447,6 +2550,31 @@ class H(BaseHTTPRequestHandler):
         pass
 
 
+class Server(ThreadingHTTPServer):
+    """At most MAX_CONN requests at once; beyond that answer 503 right away instead of piling up threads."""
+    daemon_threads = True
+    slots = threading.BoundedSemaphore(MAX_CONN) if MAX_CONN else None
+    BUSY = b'{"error": "This server is busy right now. Try again soon"}'
+
+    def process_request(self, request, client_address):
+        if self.slots and not self.slots.acquire(timeout=0.2):   # short: never stall the accept loop
+            try:
+                request.sendall(b"HTTP/1.1 503 Service Unavailable\r\nContent-Type: application/json\r\n"
+                                b"Retry-After: 10\r\nConnection: close\r\nContent-Length: %d\r\n\r\n" % len(self.BUSY) + self.BUSY)
+            except OSError:
+                pass
+            self.shutdown_request(request)
+            return
+        super().process_request(request, client_address)
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            if self.slots:
+                self.slots.release()
+
+
 if __name__ == "__main__":
     import sys
     if "--doctor" in sys.argv:
@@ -2455,4 +2583,4 @@ if __name__ == "__main__":
     threading.Thread(target=yt_feed_loop, daemon=True).start()
     threading.Thread(target=ytdl_gc_loop, daemon=True).start()
     log("start", "TubeHaus server on %s:%d, Invidious %s" % (BIND[0], BIND[1], INV), every=0)
-    ThreadingHTTPServer(BIND, H).serve_forever()
+    Server(BIND, H).serve_forever()

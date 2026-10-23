@@ -6,6 +6,10 @@
 - **Public instance mode** (`TUBEHAUS_PUBLIC=1` / `HT_PUBLIC_MODE=1`): each visitor's library lives in their own
   browser, the server stores nothing about visitors and only fetches feeds, parses imports and converts exports;
   send to TV and server downloads are off. A note in Settings reminds visitors to export backups
+- **Load limits**: max viewers at once (`HT_MAX_VIEWERS`), max quality (`HT_MAX_HEIGHT`), requests per visitor per
+  minute (`HT_RATE_PER_MIN`, 120 on public instances) and concurrent requests (`HT_MAX_CONNECTIONS`, 256)
+- Many people opening the same uncached video, or the same channel feeds, at once cause a single YouTube request;
+  idle connections are dropped after 30 s; public instances don't pre-load recommended videos
 - Bengali interface, the 13th language (thanks @rahul05ranjan, #16)
 
 ### Changed

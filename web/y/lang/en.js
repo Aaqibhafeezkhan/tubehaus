@@ -424,5 +424,7 @@ export default {
  "홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요": "Home shows only new videos from your subscriptions; Shorts, trending and recommendations are hidden, autoplay is off, and comments open only when you ask",
  "{0} 댓글 보기": "{0} Show comments",
  "공개 서버에서는 쓸 수 없어요": "Not available on public instances",
- "공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.": "This is a public instance. Your subscriptions and history are stored only in this browser, never on the server. Clearing your browser data deletes them, so export a backup now and then."
+ "공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.": "This is a public instance. Your subscriptions and history are stored only in this browser, never on the server. Clearing your browser data deletes them, so export a backup now and then.",
+ "서버가 지금 바빠요. 몇 분 뒤에 다시 시도해 주세요": "This server is busy right now. Please try again in a few minutes",
+ "요청이 너무 많아요. 조금 천천히 해 주세요": "Too many requests. Please slow down a little"
 };

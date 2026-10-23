@@ -124,8 +124,14 @@ export async function api(path, { method = "GET", body, ttl = 0, signal, quiet =
 // Public instances (server started with HT_PUBLIC_MODE=1) keep each visitor's library in their own
 // browser (locallib.js); the server only fetches feeds and parses imports for them.
 export let PUBLIC = false;
+export let SERVER_MAX_H = Infinity;     // the operator's quality cap (HT_MAX_HEIGHT), to save bandwidth
 export const modeReady = fetch("/api/p/health", { credentials: "same-origin" })
-  .then((r) => (r.ok ? r.json() : {})).then((h) => { PUBLIC = !!h.public; document.documentElement.classList.toggle("public", PUBLIC); return PUBLIC; })
+  .then((r) => (r.ok ? r.json() : {})).then((h) => {
+    PUBLIC = !!h.public;
+    SERVER_MAX_H = +h.max_height || Infinity;
+    document.documentElement.classList.toggle("public", PUBLIC);
+    return PUBLIC;
+  })
   .catch(() => false);
 const LOCAL = /^(lib|pos|sub|subs\/import|list|pl|pl\/new|pl\/del|pl\/rename|hist|hist\/del|shorts\/sig|shorts\/reset)$/;
 export async function lib(path, opts = {}) {

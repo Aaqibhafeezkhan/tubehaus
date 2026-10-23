@@ -229,6 +229,19 @@ for a manual install). Then:
 - **Switched off:** send to TV and server-side downloads (they would be shared between strangers), and Shorts
   recommendations don't learn
 
+**Handling a crowd.** TubeHaus protects itself, and your YouTube access, when many people show up at once:
+
+| Setting (`.env`) | Default | What it does |
+|---|---|---|
+| `TUBEHAUS_MAX_VIEWERS` | `0` (off) | people watching at once; newcomers beyond it get "busy, try again in a few minutes", people already watching are never cut off |
+| `TUBEHAUS_MAX_HEIGHT` | `0` (off) | highest quality offered, e.g. `1080`, to keep bandwidth in check |
+| `TUBEHAUS_RATE_PER_MIN` | `120` on public instances | API requests per visitor per minute; more get "slow down" (429) |
+| `HT_MAX_CONNECTIONS` | `256` | requests handled at the same time; beyond it the server answers "busy" at once instead of falling over |
+
+Always on: when many people open the same video (or the same channel feeds) at once, YouTube is asked once and the
+answer is shared; live streams are fetched once per stream however many people watch; idle connections are dropped
+after 30 seconds; and public instances don't pre-load recommended videos.
+
 Before you open one, keep in mind:
 
 - **Bandwidth:** video is streamed through your server. Watch your provider's traffic limits
@@ -258,6 +271,7 @@ All settings are environment variables — see [`.env.example`](.env.example).
 | `HT_SUB_LANG`, `HT_LIBRETRANSLATE` | `en`, empty | default subtitle translation target (the app asks for its own language), optional fallback |
 | `HT_DOWNLOAD_DIR` | `/var/tmp/tubehaus-dl` | offline save workspace |
 | `HT_PUBLIC_MODE` | `0` | public instance: libraries stay in visitors' browsers (see above) |
+| `HT_MAX_VIEWERS`, `HT_MAX_HEIGHT`, `HT_RATE_PER_MIN`, `HT_MAX_CONNECTIONS` | `0`, `0`, `120` public / `0`, `256` | load limits (see *Handling a crowd*) |
 
 ## Translations
 

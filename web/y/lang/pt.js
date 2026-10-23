@@ -424,5 +424,7 @@ export default {
  "홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요": "A página inicial mostra só vídeos novos das suas inscrições; Shorts, em alta e recomendações ocultos, sem reprodução automática e comentários só quando você abrir",
  "{0} 댓글 보기": "{0} Ver comentários",
  "공개 서버에서는 쓸 수 없어요": "Indisponível em instâncias públicas",
- "공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.": "Esta é uma instância pública. Suas inscrições e histórico ficam só neste navegador, nunca no servidor. Limpar os dados do navegador apaga tudo, então exporte um backup de vez em quando."
+ "공개 서버예요. 구독과 기록은 이 브라우저에만 저장되고 서버에는 남지 않아요. 브라우저 데이터를 지우면 사라지니 가끔 내보내기로 백업해 두세요.": "Esta é uma instância pública. Suas inscrições e histórico ficam só neste navegador, nunca no servidor. Limpar os dados do navegador apaga tudo, então exporte um backup de vez em quando.",
+ "서버가 지금 바빠요. 몇 분 뒤에 다시 시도해 주세요": "O servidor está ocupado agora. Tente de novo em alguns minutos",
+ "요청이 너무 많아요. 조금 천천히 해 주세요": "Solicitações demais. Vá um pouco mais devagar"
 };

@@ -1,6 +1,6 @@
 // YouTube-style player: controls, captions, storyboards, chapters and SponsorBlock drawn on top of Shaka (DASH/HLS).
 // Built once and reused (moving between pages continues seamlessly in the mini player).
-import { $, $$, el, esc, icon, fmtTime, settings, toast, copy, localUrl, parseT, toGate } from "./util.js";
+import { $, $$, el, esc, icon, fmtTime, settings, toast, copy, localUrl, parseT, toGate, SERVER_MAX_H } from "./util.js";
 import { $t, LANG, LANGS } from "./i18n.js";
 
 const isTouch = matchMedia("(pointer: coarse)").matches;
@@ -311,7 +311,8 @@ export class Player {
       const k = t.height;
       if (!m.has(k) || (t.frameRate || 0) > (m.get(k).frameRate || 0)) m.set(k, t);
     }
-    return [...m.values()].sort((a, b) => b.height - a.height);
+    // above the operator's cap (HT_MAX_HEIGHT) isn't offered at all
+    return [...m.values()].filter((t) => t.height <= SERVER_MAX_H).sort((a, b) => b.height - a.height);
   }
   pickHeight(h) {
     // same height: 60 fps first -> a codec this device plays smoothly -> codecs that dropped frames last -> higher bitrate
@@ -337,7 +338,7 @@ export class Player {
   setQuality(h) {
     // choosing a quality above the cap in the menu lifts the cap
     const lim = this.sp.getConfiguration().abr.restrictions.maxHeight;
-    if (h > lim) this.sp.configure("abr.restrictions.maxHeight", Infinity);
+    if (h > lim) this.sp.configure("abr.restrictions.maxHeight", SERVER_MAX_H);   // lift the user cap, never the server's
     const t = this.pickHeight(h);
     if (!t) return;
     this.lockH = h;
@@ -358,6 +359,9 @@ export class Player {
     this.sp.configure({ streaming: { bufferingGoal: goal, bufferBehind: behind } });
   }
   capHeight() {
+    return Math.min(SERVER_MAX_H, this.userCap());
+  }
+  userCap() {
     // Default: always the best quality. A cap chosen in settings limits it; data saver means 480p or less.
     // TVs: up to the screen resolution (more is invisible and only makes the start slower)
     if (settings.dataSaver) return 480;

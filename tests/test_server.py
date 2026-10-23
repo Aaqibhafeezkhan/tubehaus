@@ -8,6 +8,7 @@ import os
 import pathlib
 import re
 import tempfile
+import time
 import unittest
 
 STATE = tempfile.mkdtemp(prefix="tubehaus-test-")
@@ -319,6 +320,61 @@ class PublicMode(unittest.TestCase):
 
     def test_health_says_public(self):
         self.assertTrue(ts.health()["public"])
+
+
+class LoadLimits(unittest.TestCase):
+    def setUp(self):
+        self.saved = (ts.MAX_VIEWERS, ts.RATE_PER_MIN, ts.vid_fetch)
+        ts.viewers.clear()
+        ts.rate.clear()
+
+    def tearDown(self):
+        ts.MAX_VIEWERS, ts.RATE_PER_MIN, ts.vid_fetch = self.saved
+        ts.viewers.clear()
+        ts.rate.clear()
+
+    def test_empty_env_means_default(self):
+        for v, want in (("", 7), ("  ", 7), ("abc", 7), ("12", 12)):
+            os.environ["HT_TEST_INT"] = v
+            self.assertEqual(ts.env_int("HT_TEST_INT", 7), want)
+        del os.environ["HT_TEST_INT"]
+        self.assertEqual(ts.env_int("HT_TEST_INT", 7), 7)
+
+    def test_viewer_cap_lets_current_viewers_stay(self):
+        ts.MAX_VIEWERS = 2
+        self.assertTrue(ts.viewer_admit("1.1.1.1"))
+        self.assertTrue(ts.viewer_admit("2.2.2.2"))
+        self.assertFalse(ts.viewer_admit("3.3.3.3"))      # full
+        self.assertTrue(ts.viewer_admit("1.1.1.1"))       # already watching
+        ts.viewers["1.1.1.1"] -= 600                      # left a while ago
+        self.assertTrue(ts.viewer_admit("3.3.3.3"))
+
+    def test_rate_limit_per_ip(self):
+        ts.RATE_PER_MIN = 5
+        self.assertEqual([ts.rate_ok("9.9.9.9") for _ in range(7)], [True] * 5 + [False] * 2)
+        self.assertTrue(ts.rate_ok("8.8.8.8"))            # someone else is unaffected
+
+    def test_same_cold_video_is_fetched_once(self):
+        import threading
+        calls = []
+
+        def slow_fetch(key):
+            calls.append(key)
+            time.sleep(0.3)
+            body = b'{"videoId": "jNQXAC9IVRw"}'
+            ts.vid_store(key, 200, body)
+            return 200, body
+        ts.vid_fetch = slow_fetch
+        key = "/api/v1/videos/jNQXAC9IVRw?test=once"
+        out = []
+        threads = [threading.Thread(target=lambda: out.append(ts.vid_fetch_once(key))) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(out), 8)
+        self.assertTrue(all(code == 200 for code, _ in out))
 
 
 class Health(unittest.TestCase):
