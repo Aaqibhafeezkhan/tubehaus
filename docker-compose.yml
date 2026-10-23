@@ -28,6 +28,7 @@ services:
     # prebuilt for amd64 and arm64; `docker compose up -d --build` builds it from this checkout instead
     image: ghcr.io/biolend83/tubehaus:latest
     cap_add: [NET_ADMIN]       # WARP sets up its own routing (inside this container only); without it WARP never connects
+    init: true                 # reaps finished helper processes (socat, yt-dlp, ffmpeg)
     build: .
     restart: unless-stopped
     environment:

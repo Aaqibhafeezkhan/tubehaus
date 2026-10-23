@@ -59,6 +59,7 @@ services:
     <<: *hard
     image: ghcr.io/biolend83/tubehaus:latest
     cap_add: [NET_ADMIN]       # WARP sets up its own routing, inside this container only
+    init: true                 # reaps finished helper processes (socat, yt-dlp, ffmpeg)
     environment:
       HT_INVIDIOUS: http://invidious:3000
       HT_COMPANION: http://companion:8282
@@ -77,7 +78,7 @@ services:
     networks: [pub]
     cpus: 0.5
     mem_limit: 768m
-    pids_limit: 256
+    pids_limit: 512            # one socat process per proxied connection (capped at 150)
 
   bgutil:
     <<: *hard

@@ -18,8 +18,14 @@ for i in $(seq 1 40); do
   sleep 1
 done
 
-# WARP's proxy only listens on 127.0.0.1; re-expose it so invidious-companion can use it
-socat TCP-LISTEN:1080,fork,reuseaddr TCP:127.0.0.1:40000 &
+# WARP's proxy only listens on 127.0.0.1; re-expose it so invidious-companion can use it.
+# socat forks a process per connection: cap them (it waits instead of failing when the
+# container's process limit is near) and restart it if it ever exits, or every video
+# request through the companion fails until the container restarts.
+(while :; do
+  socat TCP-LISTEN:1080,fork,reuseaddr,max-children=150 TCP:127.0.0.1:40000 || echo "socat exited ($?)"   # set -e must not end the loop
+  echo "socat restarting"; sleep 1
+done) &
 
 mkdir -p "$HT_STATE"
 exec python3 /app/server/tubehaus_server.py
