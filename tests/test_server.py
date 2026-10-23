@@ -377,6 +377,57 @@ class LoadLimits(unittest.TestCase):
         self.assertTrue(all(code == 200 for code, _ in out))
 
 
+class Accounts(unittest.TestCase):
+    def setUp(self):
+        for f in (ts.USERS, ts.SESSION_KEY):
+            if os.path.exists(f):
+                os.remove(f)
+        ts.auth_tries.clear()
+
+    def test_signup_then_session(self):
+        code, d = ts.auth_signup({"username": "Alice_1", "password": "correct horse"}, "1.1.1.1")
+        self.assertEqual((code, d["user"]), (200, "alice_1"))
+        self.assertEqual(ts.session_user(d["cookie"]), "alice_1")
+        self.assertNotIn("correct horse", open(ts.USERS).read())          # only a hash is stored
+
+    def test_bad_input_and_duplicates(self):
+        sign = lambda u, p, **kw: ts.auth_signup(dict(username=u, password=p, **kw), "2.2.2.2")[0]
+        self.assertEqual(sign("ab", "password123"), 400)                    # too short a name
+        self.assertEqual(sign("bad name!", "password123"), 400)
+        self.assertEqual(sign("bob", "short"), 400)
+        self.assertEqual(sign("bob", "12345678"), 400)                      # too guessable
+        self.assertEqual(sign("bob", "a fine password", website="spam"), 400)   # honeypot
+        self.assertEqual(sign("bob", "a fine password"), 200)
+        ts.auth_tries.clear()
+        self.assertEqual(sign("bob", "another password"), 409)
+
+    def test_login_and_wrong_password(self):
+        ts.auth_signup({"username": "carol", "password": "carol's secret"}, "3.3.3.3")
+        self.assertEqual(ts.auth_login({"username": "carol", "password": "nope nope"}, "3.3.3.3")[0], 401)
+        self.assertEqual(ts.auth_login({"username": "nobody", "password": "nope nope"}, "3.3.3.3")[0], 401)
+        code, d = ts.auth_login({"username": "Carol", "password": "carol's secret"}, "3.3.3.3")
+        self.assertEqual((code, ts.session_user(d["cookie"])), (200, "carol"))
+
+    def test_signup_rate_limit_per_network(self):
+        codes = [ts.auth_signup({"username": f"user{i}", "password": "a fine password"}, "4.4.4.4")[0] for i in range(4)]
+        self.assertEqual(codes, [200, 200, 200, 429])
+        self.assertEqual(ts.auth_signup({"username": "user9", "password": "a fine password"}, "5.5.5.5")[0], 200)
+
+    def test_tampered_or_expired_sessions_are_rejected(self):
+        _, d = ts.auth_signup({"username": "dave", "password": "dave's secret"}, "6.6.6.6")
+        user, exp, gen, sig = d["cookie"].split(".")
+        self.assertIsNone(ts.session_user(f"mallory.{exp}.{gen}.{sig}"))      # other user, same signature
+        self.assertIsNone(ts.session_user(f"{user}.{int(exp) + 999}.{gen}.{sig}"))
+        self.assertIsNone(ts.session_user(f"{user}.1.{gen}.{sig}"))
+        self.assertIsNone(ts.session_user("garbage"))
+        old = ts.session_make("dave", 1)
+        import json
+        users = json.load(open(ts.USERS))
+        users["dave"]["gen"] = 2                                            # password changed / sessions revoked
+        json.dump(users, open(ts.USERS, "w"))
+        self.assertIsNone(ts.session_user(old))
+
+
 class Health(unittest.TestCase):
     def test_health(self):
         h = ts.health()

@@ -1,0 +1,174 @@
+# A hardened public TubeHaus: Anubis bot check, sign-up wall, load limits, nothing kept about
+# visitors' viewing. Run from the repo root:
+#   cp .env.example .env    (set TUBEHAUS_SITE / TUBEHAUS_URL / TUBEHAUS_DOMAIN, the secrets, and ANUBIS_KEY)
+#   docker compose --env-file .env -f deploy/docker-compose.public.yml up -d
+# Also firewall the box so the containers reach the internet only (see "Running a public instance").
+name: tubehaus-public
+
+x-hardening: &hard
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "1m"
+      max-file: "2"
+
+services:
+  caddy:
+    <<: *hard
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      TUBEHAUS_SITE: ${TUBEHAUS_SITE}
+    volumes:
+      - ./Caddyfile.public:/etc/caddy/Caddyfile:ro
+      - ../web:/srv/web:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    networks: [pub]
+    cpus: 0.5
+    mem_limit: 256m
+    pids_limit: 256
+
+  anubis:
+    <<: *hard
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      BIND: ":8923"
+      TARGET: "http://caddy:8080"
+      POLICY_FNAME: /policy.yaml
+      ED25519_PRIVATE_KEY_HEX: ${ANUBIS_KEY}       # openssl rand -hex 32; keeps passes valid across restarts
+      SERVE_ROBOTS_TXT: "false"
+    volumes:
+      - ./anubis-policy.yaml:/policy.yaml:ro
+    cap_drop: [ALL]
+    read_only: true
+    networks: [pub]
+    cpus: 0.5
+    mem_limit: 256m
+    pids_limit: 256
+
+  tubehaus:
+    <<: *hard
+    image: ghcr.io/biolend83/tubehaus:latest
+    cap_add: [NET_ADMIN]       # WARP sets up its own routing, inside this container only
+    environment:
+      HT_INVIDIOUS: http://invidious:3000
+      HT_COMPANION: http://companion:8282
+      HT_PUBLIC_URL: ${TUBEHAUS_URL}
+      HT_PUBLIC_MODE: "1"
+      HT_ACCOUNTS: "1"
+      HT_MAX_VIEWERS: ${TUBEHAUS_MAX_VIEWERS:-15}
+      HT_MAX_HEIGHT: ${TUBEHAUS_MAX_HEIGHT:-720}
+      HT_RATE_PER_MIN: ${TUBEHAUS_RATE_PER_MIN:-120}
+      HT_MAX_CONNECTIONS: "128"
+      HT_WHISPER_BIN: ""          # live captions use a whole CPU core; off on a public instance
+      HT_SUB_LANG: ${TUBEHAUS_SUB_LANG:-en}
+    volumes:
+      - data:/data
+      - warp:/var/lib/cloudflare-warp
+    networks: [pub]
+    cpus: 0.5
+    mem_limit: 768m
+    pids_limit: 256
+
+  bgutil:
+    <<: *hard
+    image: brainicism/bgutil-ytdlp-pot-provider
+    network_mode: "service:tubehaus"
+    cpus: 0.5
+    mem_limit: 512m
+    pids_limit: 256
+
+  invidious:
+    <<: *hard
+    image: quay.io/invidious/invidious:latest
+    environment:
+      INVIDIOUS_CONFIG: |
+        db:
+          dbname: invidious
+          user: kemal
+          password: ${POSTGRES_PASSWORD}
+          host: invidious-db
+          port: 5432
+        check_tables: true
+        domain: ${TUBEHAUS_DOMAIN}
+        https_only: true
+        external_port: 443
+        use_innertube_for_captions: true
+        registration_enabled: false
+        login_enabled: false
+        captcha_enabled: false
+        statistics_enabled: false
+        log_level: Error
+        invidious_companion:
+        - private_url: "http://tubehaus:3010/companion"
+          public_url: "${TUBEHAUS_URL}/companion"
+        invidious_companion_key: ${COMPANION_KEY}
+        hmac_key: ${INVIDIOUS_HMAC_KEY}
+    depends_on: [invidious-db]
+    networks: [pub]
+    cpus: 0.5
+    mem_limit: 512m
+    pids_limit: 256
+
+  companion:
+    <<: *hard
+    image: quay.io/invidious/invidious-companion:latest
+    environment:
+      - SERVER_SECRET_KEY=${COMPANION_KEY}
+      - PROXY=socks5://tubehaus:1080
+      - NETWORKING_FETCH_TIMEOUT_MS=15000
+      - NETWORKING_FETCH_RETRY_ENABLED=true
+      - NETWORKING_FETCH_RETRY_TIMES=3
+      - NETWORKING_FETCH_RETRY_INITIAL_DEBOUNCE=200
+      - NETWORKING_FETCH_RETRY_DEBOUNCE_MULTIPLIER=2
+      - "JOBS_YOUTUBE_SESSION_FREQUENCY=0 * * * *"
+    shm_size: 256mb
+    user: "10001:10001"
+    cap_drop: [ALL]
+    read_only: true
+    volumes:
+      - companion-cache:/var/tmp/youtubei.js:rw
+    networks: [pub]
+    cpus: 0.75
+    mem_limit: 1g
+    pids_limit: 256
+
+  invidious-db:
+    <<: *hard
+    image: docker.io/library/postgres:14
+    environment:
+      POSTGRES_DB: invidious
+      POSTGRES_USER: kemal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks: [pub]
+    cpus: 0.25
+    mem_limit: 256m
+    pids_limit: 128
+
+networks:
+  pub:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-thpub
+    ipam:
+      config:
+        - subnet: 172.30.99.0/24
+
+volumes:
+  caddy-data:
+  caddy-config:
+  data:
+  warp:
+  companion-cache:
+  db:

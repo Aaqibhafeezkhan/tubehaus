@@ -245,6 +245,24 @@ Always on: when many people open the same video (or the same channel feeds) at o
 answer is shared; live streams are fetched once per stream however many people watch; idle connections are dropped
 after 30 seconds; and public instances don't pre-load recommended videos.
 
+**The ready-made public setup.** `deploy/docker-compose.public.yml` puts all of this together the way the instance
+above runs:
+
+- **Anubis** in front: every visitor's browser solves a short proof-of-work check ("Making sure you're not a bot")
+  before anything else loads, which keeps scrapers and bulk bots out
+- **Sign-up required** (`HT_ACCOUNTS=1`): a user name and a password, no e-mail or other personal details. Passwords are
+  stored as PBKDF2 hashes (600,000 rounds); sessions are signed HttpOnly cookies; sign-ups and log-ins are rate-limited
+  per network
+- Invidious' own accounts and admin pages switched off, only the player's reads allowed on the companion, load limits,
+  memory/CPU caps, no access log
+
+```sh
+docker compose --env-file .env -f deploy/docker-compose.public.yml up -d
+```
+
+Also firewall the box so the containers can reach the internet only: no private networks, no cloud metadata
+service, none of your other servers.
+
 Before you open one, keep in mind:
 
 - **Bandwidth:** video is streamed through your server. Watch your provider's traffic limits
@@ -280,6 +298,7 @@ All settings are environment variables — see [`.env.example`](.env.example).
 | `HT_SUB_LANG`, `HT_LIBRETRANSLATE` | `en`, empty | default subtitle translation target (the app asks for its own language), optional fallback |
 | `HT_DOWNLOAD_DIR` | `/var/tmp/tubehaus-dl` | offline save workspace |
 | `HT_PUBLIC_MODE` | `0` | public instance: libraries stay in visitors' browsers (see above) |
+| `HT_ACCOUNTS`, `HT_MAX_ACCOUNTS` | `0`, `1000` | require sign-up (user name + password) before anything else |
 | `HT_MAX_VIEWERS`, `HT_MAX_HEIGHT`, `HT_RATE_PER_MIN`, `HT_MAX_CONNECTIONS` | `0`, `0`, `120` public / `0`, `256` | load limits (see *Handling a crowd*) |
 
 ## Translations

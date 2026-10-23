@@ -641,6 +641,16 @@ export function settingsPage(page) {
     toast($t("저장됨"));
   });
   $(".unhide", page).onclick = () => { state.hidden.clear(); local.set("hidden", []); toast($t("되돌렸어요")); };
+  // signed-in account on an instance that requires one
+  api("/api/p/auth/me", { quiet: true }).then((d) => {
+    if (!d?.accounts || !d.user) return;
+    const row = el(`<div class="set-btns"><span class="sub">${esc($t("{0} 으로 로그인했어요", d.user))}</span><button class="pill ghost logout">${$t("로그아웃")}</button></div>`);
+    $(".set-btns", page).after(row);
+    $(".logout", row).onclick = async () => {
+      await api("/api/p/auth/logout", { method: "POST", body: {} }).catch(() => { });
+      location.href = "/login";
+    };
+  }).catch(() => { });
   $(".simp", page).onclick = () => $(".simpfile", page).click();
   $(".simpfile", page).onchange = (e) => importFile(e.target.files[0]);
   $(".sexp", page).onclick = exportDialog;

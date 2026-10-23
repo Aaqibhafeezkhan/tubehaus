@@ -18,7 +18,7 @@ const warn = (msg) => { problems++; console.log((process.env.GITHUB_ACTIONS ? ":
 
 // 1. keys used in the code
 const used = new Set();
-for (const f of readdirSync(join(root, "web/y")).filter((f) => f.endsWith(".js"))) {
+for (const f of readdirSync(join(root, "web/y")).filter((f) => /\.(js|html)$/.test(f))) {
   const src = readFileSync(join(root, "web/y", f), "utf8");
   for (const m of src.matchAll(/\$t\(\s*"((?:[^"\\]|\\.)*)"/g)) used.add(JSON.parse(`"${m[1]}"`));
   for (const m of src.matchAll(/\$t\(\s*'((?:[^'\\]|\\.)*)'/g)) used.add(m[1].replace(/\\'/g, "'"));

@@ -1,0 +1,121 @@
+# A public TubeHaus instance behind Anubis (proof-of-work bot check) and a sign-up wall.
+#   visitor -> :443 (this file, first block) -> anubis:8923 -> :8080 (second block) -> TubeHaus / Invidious
+# Used with deploy/docker-compose.public.yml; the address comes from TUBEHAUS_SITE in .env.
+{
+	admin off
+	servers :8080 {
+		# Anubis and the first block are our own; keep the visitor's address they pass along
+		trusted_proxies static private_ranges
+	}
+}
+
+{$TUBEHAUS_SITE} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		Referrer-Policy same-origin
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Permissions-Policy "interest-cohort=(), browsing-topics=(), camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+	reverse_proxy anubis:8923 {
+		header_up X-Real-Ip {remote_host}
+		flush_interval -1
+	}
+}
+
+:8080 {
+	# small bodies everywhere; a Takeout import can be bigger
+	@import path /api/p/yt/import
+	request_body @import {
+		max_size 25MB
+	}
+	@notimport not path /api/p/yt/import
+	request_body @notimport {
+		max_size 1MB
+	}
+
+	handle /robots.txt {
+		respond <<TXT
+			User-agent: *
+			Disallow: /
+			TXT 200
+	}
+
+	# Invidious' own accounts, admin and webhook pages are off on a public instance
+	@closed path /register* /signout* /subscription_manager* /data_control* /delete_account* /change_password* /token_manager* /authorize_token* /modify_notifications* /clear_watch_history* /feed/webhook* /api/v1/auth/* /api/v1/stats
+	handle @closed {
+		respond 404
+	}
+
+	# sign-up / sign-in pages and their API stay open; everything else needs an account
+	@member not path /signup /login /y/* /api/p/auth/* /api/p/health /robots.txt
+	forward_auth @member tubehaus:3010 {
+		uri /api/p/auth/check
+		@unauth status 401
+		handle_response @unauth {
+			@htmlreq header Accept *text/html*
+			redir @htmlreq /signup?r={uri} 302
+			respond 401
+		}
+	}
+
+	handle /signup {
+		root * /srv/web
+		rewrite * /y/auth.html
+		file_server
+	}
+	handle /login {
+		root * /srv/web
+		rewrite * /y/auth.html
+		file_server
+	}
+
+	handle /y/* {
+		root * /srv/web
+		header Cache-Control "no-cache"
+		file_server
+	}
+
+	@page {
+		method GET HEAD
+		path / /watch /results /shorts /shorts/* /channel/* /c/* /user/* /@* /playlist /feed/* /settings /hashtag/*
+		header Accept *text/html*
+		not path /feed/channel/* /feed/playlist/* /feed/private* /feed/webhook/*
+		not query classic=*
+	}
+	handle @page {
+		root * /srv/web
+		header Cache-Control "no-cache"
+		rewrite * /index.html
+		file_server
+	}
+
+	handle /api/p/* {
+		reverse_proxy tubehaus:3010 {
+			flush_interval -1
+		}
+	}
+	handle /api/v1/videos/* {
+		reverse_proxy tubehaus:3010
+	}
+
+	# companion: only the reads a player makes (video bytes, manifests)
+	@companion {
+		method GET HEAD
+		path /companion/videoplayback* /companion/latest_version* /companion/api/manifest/*
+	}
+	handle @companion {
+		reverse_proxy companion:8282 {
+			flush_interval -1
+		}
+	}
+	handle /companion/* {
+		respond 403
+	}
+
+	handle {
+		reverse_proxy invidious:3000
+	}
+}

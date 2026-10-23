@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.7.0 — 2026-10-23
+
+### Added
+- **Sign-up wall for public instances** (`HT_ACCOUNTS=1`): user name + password, no e-mail. PBKDF2-SHA256 (600k rounds)
+  hashes, HMAC-signed HttpOnly/Secure session cookies, sign-ups limited to 3 per hour per network, log-ins to 10 per
+  10 minutes per network and per user, a honeypot field, constant-work login. The reverse proxy asks
+  `GET /api/p/auth/check`; sign-up/sign-in page `web/y/auth.html`, sign-out in Settings
+- **`deploy/docker-compose.public.yml`**: the hardened public setup - Anubis proof-of-work bot check in front
+  (`deploy/anubis-policy.yaml`), the sign-up wall, Invidious accounts/admin off, companion limited to the player's reads,
+  load limits, CPU/memory/process caps, no access log
+- Strings in 13 languages
+
 ## v0.6.1 — 2026-10-23
 
 ### Fixed

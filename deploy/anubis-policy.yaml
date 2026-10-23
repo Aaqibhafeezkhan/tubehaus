@@ -1,0 +1,15 @@
+# Anubis bot policy for a public TubeHaus: every visitor solves the proof-of-work check once
+# (it then keeps a cookie for a week). Only ACME and robots.txt skip it.
+bots:
+  - name: well-known
+    path_regex: ^/\.well-known/.*$
+    action: ALLOW
+  - name: robots-txt
+    path_regex: ^/robots\.txt$
+    action: ALLOW
+  - name: everyone-else
+    path_regex: .*
+    action: CHALLENGE
+    challenge:
+      difficulty: 4
+      algorithm: fast

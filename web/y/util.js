@@ -91,6 +91,8 @@ export class HttpError extends Error {
 // otherwise the page is simply reloaded so the auth proxy can step in.
 export function toGate(back = location.href) {
   const login = window.TUBEHAUS_LOGIN_URL;
+  // a same-site login page only takes a path back
+  if (login && login.startsWith("/") && back.startsWith(location.origin)) back = back.slice(location.origin.length) || "/";
   location.href = login ? login + encodeURIComponent(back) : back;
 }
 const inflight = new Map();
@@ -129,6 +131,7 @@ export const modeReady = fetch("/api/p/health", { credentials: "same-origin" })
   .then((r) => (r.ok ? r.json() : {})).then((h) => {
     PUBLIC = !!h.public;
     SERVER_MAX_H = +h.max_height || Infinity;
+    if (h.accounts && !window.TUBEHAUS_LOGIN_URL) window.TUBEHAUS_LOGIN_URL = "/login?r=";   // sign-up required
     document.documentElement.classList.toggle("public", PUBLIC);
     return PUBLIC;
   })

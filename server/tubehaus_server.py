@@ -58,6 +58,10 @@ MAX_CONN = env_int("HT_MAX_CONNECTIONS", 256)            # requests handled at t
 MAX_VIEWERS = env_int("HT_MAX_VIEWERS", 0)               # people watching at once (by IP, 3 min window)
 RATE_PER_MIN = env_int("HT_RATE_PER_MIN", 120 if PUBLIC_MODE else 0)   # API requests per IP per minute
 MAX_HEIGHT = env_int("HT_MAX_HEIGHT", 0)                 # highest quality offered to players, e.g. 1080
+# Sign-up required (meant for public instances): username + password only, no e-mail.
+# The reverse proxy asks GET /api/p/auth/check before letting anyone in (see deploy/Caddyfile.public).
+ACCOUNTS = env("HT_ACCOUNTS", "0") == "1"
+MAX_ACCOUNTS = env_int("HT_MAX_ACCOUNTS", 1000)
 
 lock = threading.Lock()
 LIVE_CACHE = {}
@@ -1934,13 +1938,126 @@ def doctor():
     return fails
 
 
+# ---------- accounts: sign-up required on a public instance ----------
+# Users live in STATE/users.json as PBKDF2-SHA256 hashes (600k rounds, random salt). A session
+# is an HMAC-signed cookie (user, expiry, password generation); the key never leaves the server.
+import hashlib
+import hmac
+
+USERS = f"{STATE}/users.json"
+SESSION_KEY = f"{STATE}/session.key"
+SESSION_DAYS = 30
+COOKIE = "th_session"
+auth_lk = threading.Lock()
+auth_tries = {}      # key -> [timestamps] for sign-up / login rate limits
+USERNAME = re.compile(r"[a-z0-9_]{3,24}")
+
+
+def _session_key():
+    with auth_lk:
+        try:
+            with open(SESSION_KEY, "rb") as f:
+                k = f.read()
+            if len(k) >= 32:
+                return k
+        except OSError:
+            pass
+        k = secrets.token_bytes(32)
+        os.makedirs(STATE, exist_ok=True)
+        fd = os.open(SESSION_KEY, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "wb") as f:
+            f.write(k)
+        return k
+
+
+def _pw_hash(password, salt):
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 600_000).hex()
+
+
+def _too_many(key, limit, window):
+    now = time.time()
+    with auth_lk:
+        hits = [t for t in auth_tries.get(key, []) if now - t < window]
+        if len(auth_tries) > 50000:
+            auth_tries.clear()
+        if len(hits) >= limit:
+            auth_tries[key] = hits
+            return True
+        hits.append(now)
+        auth_tries[key] = hits
+        return False
+
+
+def session_make(user, gen):
+    exp = int(time.time()) + SESSION_DAYS * 86400
+    msg = f"{user}.{exp}.{gen}"
+    sig = hmac.new(_session_key(), msg.encode(), hashlib.sha256).hexdigest()
+    return f"{msg}.{sig}"
+
+
+def session_user(token):
+    """The user name a session cookie belongs to, or None (bad signature, expired, user gone)."""
+    try:
+        user, exp, gen, sig = str(token).split(".")
+    except ValueError:
+        return None
+    msg = f"{user}.{exp}.{gen}"
+    good = hmac.new(_session_key(), msg.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(good, sig) or not exp.isdigit() or int(exp) < time.time():
+        return None
+    u = jload(USERS, {}).get(user)
+    return user if u and str(u.get("gen", 0)) == gen else None
+
+
+def auth_signup(b, ip):
+    user = str(b.get("username", "")).strip().lower()
+    pw = str(b.get("password", ""))
+    if b.get("website"):                      # honeypot field real people never fill in
+        return 400, {"error": "Could not create the account"}
+    if not USERNAME.fullmatch(user):
+        return 400, {"error": "Use 3-24 letters, numbers or _ for the user name"}
+    if len(pw) < 8 or len(pw) > 200:
+        return 400, {"error": "The password needs at least 8 characters"}
+    if pw.lower() == user or pw in ("password", "12345678", "123456789", "qwertyui", "11111111"):
+        return 400, {"error": "Please choose a less guessable password"}
+    if _too_many("signup:" + ip, 3, 3600):
+        return 429, {"error": "Too many new accounts from your network. Please try again later"}
+    salt = secrets.token_bytes(16)
+    h = _pw_hash(pw, salt)
+    with auth_lk:
+        users = jload(USERS, {})
+        if user in users:
+            return 409, {"error": "That user name is taken"}
+        if len(users) >= MAX_ACCOUNTS:
+            return 403, {"error": "This server is not taking new accounts right now"}
+        users[user] = {"salt": salt.hex(), "hash": h, "gen": 1, "created": int(time.time())}
+        jsave(USERS, users)
+        os.chmod(USERS, 0o600)
+    log("auth", "new account", every=0)
+    return 200, {"ok": True, "user": user, "cookie": session_make(user, 1)}
+
+
+def auth_login(b, ip):
+    user = str(b.get("username", "")).strip().lower()
+    pw = str(b.get("password", ""))
+    if _too_many("login:" + ip, 10, 600) or _too_many("user:" + user, 10, 600):
+        return 429, {"error": "Too many attempts. Please wait a few minutes"}
+    u = jload(USERS, {}).get(user) if USERNAME.fullmatch(user) else None
+    # same work whether or not the user exists, so timing doesn't reveal names
+    salt = bytes.fromhex(u["salt"]) if u else b"\0" * 16
+    ok = hmac.compare_digest(_pw_hash(pw, salt), u["hash"]) if u else (_pw_hash(pw, salt) and False)
+    if not ok:
+        return 401, {"error": "Wrong user name or password"}
+    return 200, {"ok": True, "user": user, "cookie": session_make(user, u.get("gen", 1))}
+
+
 def health():
     now = time.time()
     return {"ok": True, "warp_proxy": bool(YT_PROXY), "warp_rotate": WARP_ROTATE,
             "warp_rotations_30min": len([t for t in rot_hist if now - t < 1800]),
             "live_captions": bool(WHISPER_BIN and WHISPER_MODEL), "public": PUBLIC_MODE,
             "max_height": MAX_HEIGHT or None, "viewers": len([1 for t in list(viewers.values()) if now - t < 180]),
-            "max_viewers": MAX_VIEWERS or None}
+            "max_viewers": MAX_VIEWERS or None, "accounts": ACCOUNTS}
 
 
 viewers, rate, load_lk = {}, {}, threading.Lock()   # ip -> last seen / (tokens, time)
@@ -2077,8 +2194,34 @@ class H(BaseHTTPRequestHandler):
             return True
         return False
 
+    def cookie_user(self):
+        for part in (self.headers.get("Cookie") or "").split(";"):
+            k, _, v = part.strip().partition("=")
+            if k == COOKIE:
+                return session_user(v)
+        return None
+
+    def send_cookie(self, code, obj, value, max_age):
+        b = json.dumps(obj, ensure_ascii=False).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Set-Cookie", f"{COOKIE}={value}; Path=/; Max-Age={max_age}; HttpOnly; Secure; SameSite=Lax")
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
+
     def do_GET(self):
         p = self.path.split("?")[0].rstrip("/")
+        if p.endswith("/api/p/auth/check"):         # asked by the reverse proxy for every request
+            if not ACCOUNTS or self.cookie_user():
+                self.send_response(204)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            return self.send(401, {"error": "Please sign in"})
+        if p.endswith("/api/p/auth/me"):
+            return self.send(200, {"accounts": ACCOUNTS, "user": self.cookie_user() if ACCOUNTS else None})
         if self.over_limit(p):
             return
         if public_blocked("GET", p):
@@ -2181,6 +2324,15 @@ class H(BaseHTTPRequestHandler):
         except Exception:
             body = {}
         body = body if isinstance(body, dict) else {}
+        if ACCOUNTS and p.endswith("/api/p/auth/logout"):
+            return self.send_cookie(200, {"ok": True}, "", 0)
+        if ACCOUNTS and (p.endswith("/api/p/auth/signup") or p.endswith("/api/p/auth/login")):
+            fn = auth_signup if p.endswith("/signup") else auth_login
+            code, d = fn(body, self.client_ip())
+            if code != 200:
+                return self.send(code, d)
+            cookie = d.pop("cookie")
+            return self.send_cookie(200, d, cookie, SESSION_DAYS * 86400)
         if self.over_limit(p):
             return
         if public_blocked("POST", p):
