@@ -18,8 +18,9 @@ document.title = $t("튜브하우스");
 routes.push(
   [/^\/$/, P.home, { name: "home" }],
   [/^\/watch$/, watch, { name: "watch" }],
-  [/^\/shorts\/([\w-]{11})$/, shorts, { name: "shorts" }],
+  [/^\/shorts\/([\w-]{11})$/, (page, m, alive) => (settings.calm ? navigate(`/watch?v=${m[1]}`, { replace: true }) : shorts(page, m, alive)), { name: "shorts" }],
   [/^\/shorts\/?$/, async (page) => {
+    if (settings.calm) return navigate("/", { replace: true });
     // Shorts tab: recommendations learned on this server -> Shorts from the subscription feed -> popular Shorts
     let id = null;
     try {

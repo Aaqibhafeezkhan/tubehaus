@@ -419,5 +419,8 @@ export default {
  "가져왔어요: 구독 {0}개, 재생목록 {1}개, 시청 기록 {2}개": "Diimpor: {0} langganan, {1} playlist, {2} riwayat",
  "구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요": "Anda bisa mengimpor file Google Takeout (CSV langganan, riwayat), Invidious, NewPipe, FreeTube, OPML, dan cadangan TubeHaus",
  "이 파일에서 가져올 것을 찾지 못했어요": "Tidak ada yang bisa diimpor dari file ini",
- "파일이 너무 커요": "File ini terlalu besar"
+ "파일이 너무 커요": "File ini terlalu besar",
+ "차분 모드": "Mode tenang",
+ "홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요": "Beranda hanya menampilkan video baru dari langganan; Shorts, trending, dan rekomendasi disembunyikan, putar otomatis mati, komentar muncul saat diminta",
+ "{0} 댓글 보기": "{0} Tampilkan komentar"
 };

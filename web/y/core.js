@@ -118,7 +118,7 @@ export function chAvatar(v) {
 
 // kind: grid | row (search results / history) | compact (related videos) | short
 export function card(v, kind = "grid", extra = "") {
-  if (!v || !v.id || state.hidden.has(v.id)) return "";
+  if (!v || !v.id || state.hidden.has(v.id) || (v.short && settings.calm)) return "";
   const href = v.short ? `/shorts/${v.id}` : `/watch?v=${v.id}${extra}`;
   const by = v.authorId ? `<a href="/channel/${esc(v.authorId)}" data-nav class="by">${esc(v.author)}${v.verified ? icon("verified", "vf") : ""}</a>` : `<span class="by">${esc(v.author)}</span>`;
   const more = `<button class="dots" data-menu="${esc(v.id)}" aria-label="${$t("작업 메뉴")}">${icon("more")}</button>`;

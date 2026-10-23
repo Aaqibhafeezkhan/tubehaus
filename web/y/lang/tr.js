@@ -419,5 +419,8 @@ export default {
  "가져왔어요: 구독 {0}개, 재생목록 {1}개, 시청 기록 {2}개": "İçe aktarıldı: {0} abonelik, {1} oynatma listesi, {2} geçmiş kaydı",
  "구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요": "Google Takeout (abonelik CSV'si, izleme geçmişi), Invidious, NewPipe, FreeTube, OPML ve TubeHaus yedek dosyalarını içe aktarabilirsiniz",
  "이 파일에서 가져올 것을 찾지 못했어요": "Bu dosyada içe aktarılacak bir şey bulunamadı",
- "파일이 너무 커요": "Bu dosya çok büyük"
+ "파일이 너무 커요": "Bu dosya çok büyük",
+ "차분 모드": "Sakin mod",
+ "홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요": "Ana sayfada yalnızca aboneliklerinizin yeni videoları; Shorts, trendler ve öneriler gizli, otomatik oynatma kapalı, yorumlar yalnızca açınca görünür",
+ "{0} 댓글 보기": "{0} Yorumları göster"
 };

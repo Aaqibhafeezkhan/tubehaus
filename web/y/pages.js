@@ -33,7 +33,8 @@ const CHIP_SEARCH = {
 };
 
 export async function home(page, m, alive) {
-  const chip = new URLSearchParams(location.search).get("chip") || "all";
+  // calm mode: the home screen is just your subscriptions, newest first
+  const chip = settings.calm ? "recent" : new URLSearchParams(location.search).get("chip") || "all";
   page.innerHTML = `<div class="chips">${CHIPS.map(([k, l]) => `<a class="chip ${k === chip ? "on" : ""}" href="/?chip=${k}" data-nav>${l}</a>`).join("")}</div>
     <div class="shorts-shelf" hidden></div><div data-ctx="home">${grid("home")}</div>`;
   const box = $(".vgrid", page);
@@ -71,7 +72,7 @@ export async function home(page, m, alive) {
   const step = () => { const part = pool.slice(i, i + 24); i += 24; append(box, part, "grid", ""); return i < pool.length; };
   step();
   infinite(box, async () => (i < pool.length ? step() : more ? more() : false));
-  if (chip === "all") shortsShelf($(".shorts-shelf", page));
+  if (chip === "all" && !settings.calm) shortsShelf($(".shorts-shelf", page));
 }
 
 async function homeMix() {
@@ -214,7 +215,7 @@ export async function channel(page, m, alive) {
   const av = pickThumb(c.authorThumbnails, 176);
   const banner = c.authorBanners?.length ? localUrl([...c.authorBanners].sort((a, b) => b.width - a.width)[0].url) : "";
   const base = `/channel/${ucid}`;
-  const tabsAvail = new Set((c.tabs || ["videos", "shorts", "streams", "playlists"]).map((t) => t.toLowerCase()));
+  const tabsAvail = new Set((c.tabs || ["videos", "shorts", "streams", "playlists"]).map((t) => t.toLowerCase()).filter((t) => !(settings.calm && t === "shorts")));
   const sp = new URLSearchParams(location.search);
   page.innerHTML = `
     <div class="channel">
@@ -589,6 +590,7 @@ export function settingsPage(page) {
     ${tog("ambient", $t("앰비언트 모드"), $t("영상 색이 플레이어 뒤로 은은하게 번져요 (어두운 테마)"))}
     ${row($t("TV 모드"), sel("tv", [["auto", $t("자동 (안드로이드 TV 에서 켜짐)")], ["on", $t("켜기")], ["off", $t("끄기")]]), $t("리모컨 방향키로 이동 · 큰 글씨 · 바꾸면 새로고침"))}
     <h3>${$t("재생")}</h3>
+    ${tog("calm", $t("차분 모드"), $t("홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요"))}
     ${tog("autoplay", $t("자동재생"), $t("영상이 끝나면 다음 영상을 재생해요"))}
     ${row($t("선호 화질"), sel("quality", [["auto", $t("최고 화질 (기본)")], ["2160", "4K (2160p)"], ["1440", "1440p"], ["1080", "1080p"], ["720", "720p"], ["480", "480p"], ["360", "360p"]]), $t("화질을 알아서 낮추지 않고 이 화질로 고정해요 (영상에 없으면 그 아래 최고)"))}
     ${tog("dataSaver", $t("데이터 절약"), $t("480p 이하, 미리 받는 양을 줄여요"))}
@@ -623,7 +625,7 @@ export function settingsPage(page) {
     const k = t.dataset.k;
     if (!k) return;
     S[k] = t.type === "checkbox" ? t.checked : /^\d+$/.test(t.value) && k !== "quality" ? +t.value : t.value;
-    if (k === "lang") return location.reload();     // the whole interface changes
+    if (k === "lang" || k === "calm") return location.reload();     // the whole interface changes
     toast($t("저장됨"));
   });
   $(".unhide", page).onclick = () => { state.hidden.clear(); local.set("hidden", []); toast($t("되돌렸어요")); };

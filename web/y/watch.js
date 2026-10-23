@@ -50,6 +50,7 @@ function nextItem() {
     const i = q.findIndex((x) => x.id === W.id);
     if (i + 1 < q.length) return { v: normVideo(q[i + 1]), href: `/watch?v=${q[i + 1].id}&list=QUEUE&index=${i + 2}` };
   }
+  if (settings.calm) return null;   // calm mode: nothing queues itself up after a video
   const v = W.related.find((r) => !r.live && !W.watchedSession.has(r.id) && r.id !== W.id) || W.related[0];
   return v ? { v, href: `/watch?v=${v.id}` } : null;
 }
@@ -368,6 +369,7 @@ function renderInfo(page, info) {
 
 function renderRelated(page) {
   const box = $(".w-related", page);
+  if (settings.calm) { box.innerHTML = ""; return; }
   const chips = [...new Set([$t("전체"), W.info.author, $t("관련 콘텐츠")])];
   box.innerHTML = `<div class="rel-auto"><b>${$t("다음 동영상")}</b><label class="autosw">${$t("자동재생")} <input type="checkbox" class="sw" ${settings.autoplay ? "checked" : ""}></label></div>` +
     W.related.map((v) => card(v, "compact")).join("");
@@ -446,6 +448,12 @@ async function openPanel(kind) {
 async function renderComments(page, info, sortBy = "top", target) {
   const box = target || $(".w-comments", page);
   if (info.liveNow) { box.innerHTML = `<div class="cm-h"><b>${$t("실시간 채팅은 지원하지 않아요")}</b></div>`; return; }
+  if (settings.calm && !target && !box.dataset.open) {
+    // calm mode: comments stay folded until you ask for them
+    box.innerHTML = `<button class="pill ghost cm-open">${$t("{0} 댓글 보기", icon("chat"))}</button>`;
+    $(".cm-open", box).onclick = () => { box.dataset.open = "1"; renderComments(page, info, sortBy); };
+    return;
+  }
   if (!target && innerWidth < 1000) {
     box.classList.add("teaser");
     box.addEventListener("click", () => box.classList.remove("teaser"), { once: true });

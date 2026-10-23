@@ -46,6 +46,7 @@ const DEFAULTS = {
   lang: "auto",           // interface language: auto = the browser's
   theme: "light",         // light | dark | system (default: light, like classic YouTube)
   autoplay: true,         // autoplay the next video
+  calm: false,            // calm mode: subscriptions only, no Shorts, trending or recommendations, no autoplay
   quality: "auto",        // auto | 2160 | 1440 | 1080 | 720 | 480 | 360
   dataSaver: false,
   captions: false,        // captions always on

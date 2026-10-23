@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.0 — 2026-10-23
+
+### Added
+- **Calm mode** (Settings → Playback): the home screen shows only new videos from your subscriptions; Shorts,
+  trending, the explore menu and recommended videos are hidden everywhere; nothing plays after a video ends (playlists
+  still continue); comments stay folded behind a button. Shorts links open as regular videos
+- README: a Thanks section for everyone who helped
+
 ## v0.4.0 — 2026-10-23
 
 ### Added

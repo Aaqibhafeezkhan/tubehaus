@@ -419,5 +419,8 @@ export default {
  "가져왔어요: 구독 {0}개, 재생목록 {1}개, 시청 기록 {2}개": "Imported: {0} subscriptions, {1} playlists, {2} history entries",
  "구글 Takeout (구독 CSV, 시청 기록), Invidious, NewPipe, FreeTube, OPML, TubeHaus 백업 파일을 가져올 수 있어요": "You can import Google Takeout (subscriptions CSV, watch history), Invidious, NewPipe, FreeTube, OPML and TubeHaus backup files",
  "이 파일에서 가져올 것을 찾지 못했어요": "Couldn't find anything to import in this file",
- "파일이 너무 커요": "This file is too big"
+ "파일이 너무 커요": "This file is too big",
+ "차분 모드": "Calm mode",
+ "홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요": "Home shows only new videos from your subscriptions; Shorts, trending and recommendations are hidden, autoplay is off, and comments open only when you ask",
+ "{0} 댓글 보기": "{0} Show comments"
 };
