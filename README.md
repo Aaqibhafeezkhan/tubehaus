@@ -14,6 +14,9 @@ It looks and works exactly like YouTube (same layout, same URLs, same keyboard s
 with no ads and no tracking. It also plays live streams with real-time captions, keeps one
 library for all your devices, and keeps working even from a cheap cloud VPS.
 
+**👉 Try it without installing: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (a small public
+instance: up to 15 viewers at a time, 720p; your history stays in your own browser)
+
 TubeHaus is built on top of [Invidious](https://invidious.io) and
 [invidious-companion](https://github.com/iv-org/invidious-companion), which do the hard work of talking to
 YouTube. TubeHaus adds its own front end and a small server next to them. All credit to the Invidious team.
@@ -249,6 +252,12 @@ Before you open one, keep in mind:
 - **Trust:** visitors' requests pass through your server. Be clear about what you log (TubeHaus logs no viewing
   history), and don't put the built-in password on it
 - Leave `TUBEHAUS_AUTH=none`, and consider rate limiting in Caddy
+
+**Public instances**
+
+| Address | Region | Limits | Run by |
+|---|---|---|---|
+| [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io) | South Korea | 15 viewers, 720p | the maintainer |
 
 Running one? [Add it here](https://github.com/biolend83/tubehaus/issues/new?template=public_instance.yml) (or in the [discussion](https://github.com/biolend83/tubehaus/discussions/18)) so
 others can find it.

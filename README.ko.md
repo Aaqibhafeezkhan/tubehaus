@@ -7,6 +7,8 @@
 생김새와 쓰는 법이 유튜브와 똑같아요(화면 구성, 주소, 단축키까지). 광고와 추적은 없어요.
 라이브 방송을 실시간 자막과 함께 볼 수 있고, 모든 기기가 같은 구독과 기록을 쓰고, 값싼 클라우드 서버에서도 잘 돌아가요.
 
+**👉 설치 없이 써 보기: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (작은 공개 서버: 동시 15명, 720p, 기록은 내 브라우저에만 저장)
+
 TubeHaus는 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
 유튜브와 데이터를 주고받는 어려운 일은 이 두 프로젝트가 하고, TubeHaus는 그 옆에 화면과 작은 서버를 붙여요.
 Invidious 팀에 감사드려요.

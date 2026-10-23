@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.1 — 2026-10-23
+
+### Fixed
+- docker compose: the TubeHaus container gets `NET_ADMIN` (inside its own network namespace only); without it WARP
+  never finishes connecting and every YouTube request fails
+- docker compose: invidious-companion gets `NETWORKING_FETCH_RETRY_INITIAL_DEBOUNCE` and
+  `NETWORKING_FETCH_RETRY_DEBOUNCE_MULTIPLIER`; without them its PO-token job never succeeds
+
+### Added
+- A public instance to try TubeHaus without installing it: https://try.168-107-27-85.sslip.io
+
 ## v0.6.0 — 2026-10-23
 
 ### Added

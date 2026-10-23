@@ -27,6 +27,7 @@ services:
   tubehaus:
     # prebuilt for amd64 and arm64; `docker compose up -d --build` builds it from this checkout instead
     image: ghcr.io/biolend83/tubehaus:latest
+    cap_add: [NET_ADMIN]       # WARP sets up its own routing (inside this container only); without it WARP never connects
     build: .
     restart: unless-stopped
     environment:
@@ -92,6 +93,8 @@ services:
       - NETWORKING_FETCH_TIMEOUT_MS=15000
       - NETWORKING_FETCH_RETRY_ENABLED=true
       - NETWORKING_FETCH_RETRY_TIMES=3
+      - NETWORKING_FETCH_RETRY_INITIAL_DEBOUNCE=200
+      - NETWORKING_FETCH_RETRY_DEBOUNCE_MULTIPLIER=2   # without these two the PO-token job never succeeds
       # refresh the PO token hourly instead of every few minutes (each refresh starts a browser)
       - "JOBS_YOUTUBE_SESSION_FREQUENCY=0 * * * *"
     shm_size: 256mb
