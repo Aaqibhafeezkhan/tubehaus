@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.1 — 2026-10-23
+
+### Fixed
+- The sign-up / sign-in page loaded its texts from the wrong path when served at /signup and /login
+
 ## v0.7.0 — 2026-10-23
 
 ### Added

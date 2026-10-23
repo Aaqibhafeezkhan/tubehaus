@@ -48,7 +48,7 @@
   <div class="switch" id="switch"></div>
 </main>
 <script type="module">
-  import { $t, $tMsg } from "./i18n.js";
+  import { $t, $tMsg } from "/y/i18n.js";   // absolute: this page is served at /signup and /login
   const $ = (id) => document.getElementById(id);
   const signup = !location.pathname.startsWith("/login");
   // where to go afterwards: only a path on this site (parsed, so "/\\evil.com" and friends can't leave it)
