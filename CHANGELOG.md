@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.2 — 2026-10-23
+
+### Fixed
+- `Caddyfile.public`: the sign-up / sign-in page is never cached, so an update shows at once
+
 ## v0.7.1 — 2026-10-23
 
 ### Fixed

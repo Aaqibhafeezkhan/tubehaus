@@ -63,11 +63,13 @@
 
 	handle /signup {
 		root * /srv/web
+		header Cache-Control "no-cache"
 		rewrite * /y/auth.html
 		file_server
 	}
 	handle /login {
 		root * /srv/web
+		header Cache-Control "no-cache"
 		rewrite * /y/auth.html
 		file_server
 	}
