@@ -236,8 +236,9 @@ All settings are environment variables — see [`.env.example`](.env.example).
 
 ## Translations
 
-Interface text lives in `web/y/lang/<code>.js` (the key is the original Korean text). To add a language, copy
-`en.js`, translate the values, and add the code to `LANGS` in `web/y/i18n.js`. Corrections are very welcome.
+Interface text lives in `web/y/lang/<code>.js` (the key is the original Korean text). The 13 languages are complete
+and no new ones are being added for now, so each can be kept up to date with every release. Corrections to the
+existing translations are very welcome.
 
 ## Community
 

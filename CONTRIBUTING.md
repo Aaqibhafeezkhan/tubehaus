@@ -31,9 +31,10 @@ node scripts/i18n-check.mjs
 
 ## Translations
 
-Interface text lives in `web/y/lang/<code>.js`, keyed by the original Korean text. To add a language,
-copy `en.js`, translate the values, and add the code to `LANGS` in `web/y/i18n.js`. Fixes to existing
-translations are very welcome; several were machine-assisted.
+Interface text lives in `web/y/lang/<code>.js`, keyed by the original Korean text. TubeHaus has 13 languages and
+isn't taking new ones for now, so every language can be kept complete with each release. Fixes to the existing
+translations are very welcome; several were machine-assisted. Edit the values only and keep the keys and the
+`{0}` placeholders as they are.
 
 `node scripts/i18n-check.mjs` lists missing keys and `{0}` placeholders that don't match English.
 CI runs it in strict mode.
