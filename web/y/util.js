@@ -56,6 +56,7 @@ const DEFAULTS = {
   capBg: 75,              // background opacity %
   autoTranslate: true,    // translated captions when a video has none in your language
   speed: 1,
+  rememberSpeed: false,
   volume: 1,
   muted: false,
   ambient: true,
