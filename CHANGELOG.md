@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.7.6 — 2026-10-24
+
+### Added
+- Hovering a relative time ("3 days ago") shows the exact date and time (#27, thanks @bh-official)
+- Settings → Playback → *Remember playback speed* keeps your speed between visits (#29, thanks @Aaqibhafeezkhan)
+- An nginx reverse proxy example, `deploy/nginx.conf.example` (#28, thanks @Aaqibhafeezkhan)
+- Tests for the exact upload time from RSS (#26, thanks @bh-official)
+
+### Fixed
+- When YouTube's RSS feeds stop answering (they return 404 from some addresses for hours at a time), the subscription feed now gets each channel's latest uploads from Invidious instead of coming up empty, and RSS is skipped for an hour
+
 ## v0.7.5 — 2026-10-24
 
 ### Fixed

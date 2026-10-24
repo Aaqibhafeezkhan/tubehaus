@@ -4,12 +4,14 @@
 """
 import base64
 import importlib.util
+import json
 import os
 import pathlib
 import re
 import tempfile
 import time
 import unittest
+import urllib.error
 
 STATE = tempfile.mkdtemp(prefix="tubehaus-test-")
 os.environ.update(HT_STATE=STATE, HT_YT_PROXY="", HT_WARP_ROTATE="0")
@@ -437,6 +439,7 @@ class ExactPublished(unittest.TestCase):
         self.calls = []
         ts.PUB_RSS.clear()
         ts.yt_feed["items"].clear()
+        ts.RSS_DOWN["until"] = 0
         self.midnight = int(time.time()) // 86400 * 86400      # today 00:00 UTC, so within the 3 day window
 
     def tearDown(self):
@@ -488,6 +491,52 @@ class ExactPublished(unittest.TestCase):
     def test_feed_time_too_far_from_the_date_is_ignored(self):
         self.fake_get(self.feed("vid00000001", self.iso(self.midnight + 2 * 86400 + 60)))
         self.assertIsNone(ts.exact_published(self.video(self.midnight)))
+
+
+class FeedFallback(unittest.TestCase):
+    """YouTube's RSS feeds go down now and then (404 for every channel): the subscription feed falls back to Invidious."""
+    CID = "UC" + "b" * 22
+
+    def setUp(self):
+        self.old_get = ts.get
+        self.calls = []
+        ts.RSS_DOWN["until"] = 0
+        ts.yt_feed["items"].clear()
+
+    def tearDown(self):
+        ts.get = self.old_get
+        ts.RSS_DOWN["until"] = 0
+        ts.yt_feed["items"].clear()
+
+    def fake(self, rss=None, rss_error=None):
+        inv = json.dumps({"videos": [{"videoId": "inv00000001", "title": "From Invidious", "author": "Chan",
+                                       "published": 1790000000, "viewCount": 5}]}).encode()
+        def get(url, *a, **k):
+            self.calls.append(url)
+            if "feeds/videos.xml" in url:
+                if rss_error:
+                    raise urllib.error.HTTPError(url, rss_error, "Not Found", None, None)
+                return rss
+            return inv
+        ts.get = get
+
+    def test_rss_404_uses_invidious_and_skips_rss_for_a_while(self):
+        self.fake(rss_error=404)
+        ts.yt_feed_one(self.CID)
+        self.assertEqual([v["id"] for v in ts.yt_feed["items"][self.CID]], ["inv00000001"])
+        self.assertGreater(ts.RSS_DOWN["until"], time.time())
+        self.calls.clear()
+        ts.yt_feed_one(self.CID)                     # RSS is down: straight to Invidious
+        self.assertFalse(any("feeds/videos.xml" in u for u in self.calls))
+
+    def test_working_rss_is_used(self):
+        rss = ('<feed xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://www.youtube.com/xml/schemas/2015">'
+               '<entry><yt:videoId>rss00000001</yt:videoId><title>From RSS</title>'
+               '<published>2026-10-20T10:00:00+00:00</published></entry></feed>')
+        self.fake(rss=rss.encode())
+        ts.yt_feed_one(self.CID)
+        self.assertEqual([v["id"] for v in ts.yt_feed["items"][self.CID]], ["rss00000001"])
+        self.assertEqual(ts.RSS_DOWN["until"], 0)
 
 
 class Health(unittest.TestCase):

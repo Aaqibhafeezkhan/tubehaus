@@ -120,6 +120,8 @@ def exact_published(d):
     for it in yt_feed["items"].get(cid) or []:       # the subscription feed may already know it
         if it.get("id") == vid and it.get("published"):
             return it["published"]
+    if time.time() < RSS_DOWN["until"]:            # YouTube's RSS is down: keep the date as it is
+        return None
     hit = PUB_RSS.get(cid)
     if not hit or time.time() - hit[0] > PUB_RSS_TTL:
         ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
@@ -1472,13 +1474,37 @@ def shorts_next(qs):
             "learned": {"channels": len([1 for s in d["ch"].values() if s > 0]), "keywords": len(d["kw"])}}
 
 
+RSS_DOWN = {"until": 0}   # YouTube takes its RSS feeds down now and then (404 for every channel)
+
+
+def yt_feed_invidious(cid):
+    """A channel's latest uploads from Invidious, for when YouTube's RSS is down."""
+    try:
+        d = json.loads(get(f"{INV}/api/v1/channels/{cid}/videos", 20))
+    except Exception as ex:
+        log("ytfeed", f"{cid} invidious FAIL {repr(ex)[:100]}")
+        return None
+    return [{"id": v.get("videoId"), "title": v.get("title") or "", "author": v.get("author") or "", "authorId": cid,
+             "published": int(v.get("published") or 0), "views": v.get("viewCount"), "short": False}
+            for v in (d.get("videos") or [])[:15] if v.get("videoId")]
+
+
 def yt_feed_one(cid):
     ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015",
           "m": "http://search.yahoo.com/mrss/"}
-    try:
-        root = ET.fromstring(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}", 15))
-    except Exception as ex:
-        log("ytfeed", f"{cid} FAIL {repr(ex)[:100]}")
+    root = None
+    if time.time() > RSS_DOWN["until"]:
+        try:
+            root = ET.fromstring(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}", 15))
+        except Exception as ex:
+            log("ytfeed", f"{cid} FAIL {repr(ex)[:100]}")
+            # a 404 or 5xx here is YouTube's feed service, not the channel: skip RSS for an hour
+            if isinstance(ex, urllib.error.HTTPError) and (ex.code == 404 or ex.code >= 500):
+                RSS_DOWN["until"] = time.time() + 3600
+    if root is None:
+        got = yt_feed_invidious(cid)
+        if got is not None:
+            yt_feed["items"][cid] = got
         return
     out = []
     for e in root.findall("a:entry", ns)[:15]:
