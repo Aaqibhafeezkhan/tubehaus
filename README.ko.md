@@ -9,8 +9,8 @@
 
 **👉 설치 없이 써 보기: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (작은 공개 서버: 동시 15명, 720p, 기록은 내 브라우저에만 저장)
 
-**📱 서버가 없다면 앱으로: [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.2/TubeHaus-0.3.2.apk)
-(안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.3/TubeHaus-0.3.3.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.3/TubeHaus-0.3.3-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.3/TubeHaus-0.3.3-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.3/TubeHaus-0.3.3-linux-x86_64.rpm)**
+**📱 서버가 없다면 앱으로: [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.5/TubeHaus-0.3.5.apk)
+(안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.5/TubeHaus-0.3.5.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.5/TubeHaus-0.3.5-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.5/TubeHaus-0.3.5-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/desktop-v0.3.5/TubeHaus-0.3.5-linux-x86_64.rpm)**
 (베타). 자체 유튜브 엔진으로 기기 안에서만 돌아가요. 서버도 계정도 필요 없어요.
 소스는 [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app) 브랜치에 있어요.
 
