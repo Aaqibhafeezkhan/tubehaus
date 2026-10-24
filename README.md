@@ -20,7 +20,7 @@ instance: up to 15 viewers at a time, 720p; your history stays in your own brows
 **📱 No server? Get the app: [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8.apk)
 (Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8-linux-x86_64.rpm)**
 (beta). It runs entirely on your device with its own YouTube engine: no server, no account.
-Source on the [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app) and [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app) branches.
+Source and install notes per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app) and [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app).
 
 TubeHaus is built on top of [Invidious](https://invidious.io) and
 [invidious-companion](https://github.com/iv-org/invidious-companion), which do the hard work of talking to

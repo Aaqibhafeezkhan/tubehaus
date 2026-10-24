@@ -12,7 +12,7 @@
 **📱 서버가 없다면 앱으로: [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8.apk)
 (안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.8/TubeHaus-0.3.8-linux-x86_64.rpm)**
 (베타). 자체 유튜브 엔진으로 기기 안에서만 돌아가요. 서버도 계정도 필요 없어요.
-소스는 [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app) 브랜치에 있어요.
+플랫폼별 소스와 설치 안내는 [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app) 브랜치에 있어요.
 
 TubeHaus는 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
 유튜브와 데이터를 주고받는 어려운 일은 이 두 프로젝트가 하고, TubeHaus는 그 옆에 화면과 작은 서버를 붙여요.
