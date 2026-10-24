@@ -323,14 +323,27 @@ existing translations are very welcome.
 
 ## Thanks
 
-People who made TubeHaus better, with code, translations or ideas:
+People who made TubeHaus better, with code, translations, testing or ideas:
 
-- [@onyks-os](https://github.com/onyks-os): first contribution, fixed the install instructions (#1)
-- [@SakarPaisen](https://github.com/SakarPaisen): Turkish translation (#8)
-- [@rahul05ranjan](https://github.com/rahul05ranjan): Bengali translation and a Hindi review by a native speaker (#16, #17)
-- [@JamesMowery](https://github.com/JamesMowery): asked for import from file and data export, which became v0.4.0 (#14, #15)
+**Code and design**
+- [@Aaqibhafeezkhan](https://github.com/Aaqibhafeezkhan): the house-and-play icon, remembering the playback speed, an nginx example (#28, #29, #30)
+- [@bh-official](https://github.com/bh-official): the exact upload date on hover, and tests for exact upload times (#26, #27)
+- [@onyks-os](https://github.com/onyks-os): the first contribution, fixing the install instructions (#1)
 
-Opened a useful issue or sent a pull request? You belong here too.
+**Translations**
+- [@SakarPaisen](https://github.com/SakarPaisen): Turkish (#8)
+- [@rahul05ranjan](https://github.com/rahul05ranjan): Bengali, and a Hindi review by a native speaker (#16, #17)
+
+**Ideas and bug reports**
+- [@JamesMowery](https://github.com/JamesMowery): import from file and data export (which became v0.4.0), and the wrong posted time on new videos (#14, #15, #20)
+
+**Testing the apps** (on [r/DigitalEscapeTools](https://www.reddit.com/r/DigitalEscapeTools/))
+- [u/Proper_Witness9173](https://www.reddit.com/user/Proper_Witness9173/): brightness and volume swipes, the tablet layout, comments beside the video, picture-in-picture and most of 0.3.8
+- [u/DryYam2258](https://www.reddit.com/user/DryYam2258/): the first Mac tester; asked for text size, removing subscriptions and channel pictures, and suggested subscription groups
+- [u/Gloomy_Acadia_445](https://www.reddit.com/user/Gloomy_Acadia_445/): asked for Linux, which led to the .deb, .rpm and tar.gz builds
+- [u/Victor_Orbis35](https://www.reddit.com/user/Victor_Orbis35/): reported "mpv is missing" on Windows, which turned out to be a missing Vulkan runtime (fixed in 0.3.5)
+
+Opened a useful issue, sent a pull request or tested an app? You belong here too.
 
 ## Credits
 
