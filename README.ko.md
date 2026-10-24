@@ -9,6 +9,10 @@
 
 **👉 설치 없이 써 보기: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (작은 공개 서버: 동시 15명, 720p, 기록은 내 브라우저에만 저장)
 
+**📱 서버가 없다면 안드로이드 앱: [APK 바로 받기](https://github.com/biolend83/tubehaus/releases/download/app-v0.1.2/TubeHaus-0.1.2.apk)**
+(베타, 안드로이드 8 이상). 자체 유튜브 엔진으로 폰 안에서만 돌아가요. 서버도 계정도 필요 없어요.
+소스는 [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app) 브랜치에 있어요.
+
 TubeHaus는 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
 유튜브와 데이터를 주고받는 어려운 일은 이 두 프로젝트가 하고, TubeHaus는 그 옆에 화면과 작은 서버를 붙여요.
 Invidious 팀에 감사드려요.
@@ -129,6 +133,7 @@ Invidious, NewPipe, FreeTube 내보내기 파일, OPML, TubeHaus 백업을 가�
 
 **폰과 TV에서는 어떻게 접속하나요?**
 웹앱이에요. 브라우저에서 내 주소를 열거나, "홈 화면에 추가"로 앱처럼 설치하면 돼요. TV 브라우저에서는 리모컨으로 조작하는 TV 모드가 켜져요.
+안드로이드에서는 서버 없이 [TubeHaus 앱](https://github.com/biolend83/tubehaus/tree/android-app)을 쓸 수도 있어요.
 
 ## 함께하기
 

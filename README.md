@@ -17,6 +17,10 @@ library for all your devices, and keeps working even from a cheap cloud VPS.
 **👉 Try it without installing: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (a small public
 instance: up to 15 viewers at a time, 720p; your history stays in your own browser)
 
+**📱 No server? Get the Android app: [download the APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.1.2/TubeHaus-0.1.2.apk)**
+(beta, Android 8+). It runs entirely on your phone with its own YouTube engine: no server, no account.
+Source on the [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app) branch.
+
 TubeHaus is built on top of [Invidious](https://invidious.io) and
 [invidious-companion](https://github.com/iv-org/invidious-companion), which do the hard work of talking to
 YouTube. TubeHaus adds its own front end and a small server next to them. All credit to the Invidious team.
@@ -218,6 +222,7 @@ and, from the browser, the optional SponsorBlock and Return YouTube Dislike look
 **How do phones and TVs connect?**
 It's a web app: open your address in the browser, or use "Add to Home Screen" to install it like an app.
 TV browsers get a TV mode with remote-control navigation.
+On Android you can also skip the server entirely with the [TubeHaus app](https://github.com/biolend83/tubehaus/tree/android-app).
 
 ## Running a public instance
 
