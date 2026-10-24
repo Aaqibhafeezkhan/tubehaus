@@ -2102,6 +2102,7 @@ def auth_signup(b, ip):
         jsave(USERS, users)
         os.chmod(USERS, 0o600)
     log("auth", "new account", every=0)
+    stat("signups")
     return 200, {"ok": True, "user": user, "cookie": session_make(user, 1)}
 
 
@@ -2116,7 +2117,58 @@ def auth_login(b, ip):
     ok = hmac.compare_digest(_pw_hash(pw, salt), u["hash"]) if u else (_pw_hash(pw, salt) and False)
     if not ok:
         return 401, {"error": "Wrong user name or password"}
+    stat("logins")
     return 200, {"ok": True, "user": user, "cookie": session_make(user, u.get("gen", 1))}
+
+
+# ---------- usage counts (public instances only) ----------
+# How many people visit and watch, per hour, so the operator can see how the instance is used.
+# Only numbers are kept: no addresses, accounts or videos. People are told apart within an hour
+# by a hash with a key that exists only in memory, so the counts can't be tied to anyone later.
+STATS = f"{STATE}/stats.json"
+STATS_DAYS = 60
+stats_lk = threading.Lock()
+stats = {}                                    # "2026-10-24T11" (UTC) -> {"visitors": 3, "plays": 5, ...}
+stats_seen = {"hour": "", "visitors": set(), "watchers": set()}
+STATS_KEY = secrets.token_bytes(16)
+
+
+def stat(kind, ip=""):
+    """Count one event: visitors and watchers once per person an hour; plays, signups and logins each time."""
+    if not PUBLIC_MODE:
+        return
+    hour = time.strftime("%Y-%m-%dT%H", time.gmtime())
+    with stats_lk:
+        if stats_seen["hour"] != hour:
+            stats_seen.update(hour=hour, visitors=set(), watchers=set())
+        if kind in ("visitors", "watchers"):
+            h = hmac.new(STATS_KEY, ip.encode(), "sha256").digest()[:8]
+            if h in stats_seen[kind]:
+                return
+            stats_seen[kind].add(h)
+        row = stats.setdefault(hour, {})
+        row[kind] = row.get(kind, 0) + 1
+
+
+def stats_loop():
+    """Keeps the counts on disk every five minutes, the last STATS_DAYS days of them."""
+    if not PUBLIC_MODE:
+        return
+    with stats_lk:
+        for h, row in jload(STATS, {}).items():
+            if isinstance(row, dict):
+                stats.setdefault(h, {}).update({k: v for k, v in row.items() if k not in stats.get(h, {})})
+    while True:
+        time.sleep(300)
+        cut = time.strftime("%Y-%m-%dT%H", time.gmtime(time.time() - STATS_DAYS * 86400))
+        with stats_lk:
+            for h in [h for h in stats if h < cut]:
+                del stats[h]
+            snap = {h: dict(r) for h, r in sorted(stats.items())}
+        try:
+            jsave(STATS, snap)
+        except Exception as ex:
+            log("stats", "save FAIL %s" % repr(ex)[:80])
 
 
 def health():
@@ -2140,9 +2192,11 @@ def viewer_admit(ip):
         for k in [k for k, t in viewers.items() if now - t > 180]:
             del viewers[k]
         if ip not in viewers and len(viewers) >= MAX_VIEWERS:
+            stat("turned_away")
             return False
         viewers[ip] = now
-        return True
+    stat("watchers", ip)
+    return True
 
 
 def rate_ok(ip):
@@ -2254,6 +2308,7 @@ class H(BaseHTTPRequestHandler):
         if p.startswith("/companion") or p.endswith("/api/p/health"):
             return False
         ip = self.client_ip()
+        stat("visitors", ip)
         if not rate_ok(ip):
             self.send(429, {"error": "Too many requests. Please slow down a little"})
             return True
@@ -2285,6 +2340,7 @@ class H(BaseHTTPRequestHandler):
         p = self.path.split("?")[0].rstrip("/")
         if p.endswith("/api/p/auth/check"):         # asked by the reverse proxy for every request
             if not ACCOUNTS or self.cookie_user():
+                stat("visitors", self.client_ip())
                 self.send_response(204)
                 self.send_header("Content-Length", "0")
                 self.end_headers()
@@ -2405,6 +2461,9 @@ class H(BaseHTTPRequestHandler):
             return self.send_cookie(200, d, cookie, SESSION_DAYS * 86400)
         if self.over_limit(p):
             return
+        if p.endswith("/api/p/stat/play"):           # the player started a video (public instances count it)
+            stat("plays")
+            return self.send(200, {"ok": True})
         if public_blocked("POST", p):
             return self.send(403, {"error": "Not available on public instances"})
         if p.endswith("/yt/export"):
@@ -2804,5 +2863,6 @@ if __name__ == "__main__":
     os.makedirs(STATE, exist_ok=True)
     threading.Thread(target=yt_feed_loop, daemon=True).start()
     threading.Thread(target=ytdl_gc_loop, daemon=True).start()
+    threading.Thread(target=stats_loop, daemon=True).start()
     log("start", "TubeHaus server on %s:%d, Invidious %s" % (BIND[0], BIND[1], INV), every=0)
     Server(BIND, H).serve_forever()

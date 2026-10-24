@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.10 — 2026-10-24
+
+### Added
+- Public instances keep anonymous usage counts per hour in `state/stats.json`: visitors, people who opened a video, videos played, people turned away when full, sign-ups and log-ins. Only numbers are stored, no addresses, accounts or videos. People are told apart within an hour by a keyed hash whose key lives only in memory. The last 60 days are kept. Private servers count nothing
+
 ## v0.7.9 — 2026-10-24
 
 ### Fixed

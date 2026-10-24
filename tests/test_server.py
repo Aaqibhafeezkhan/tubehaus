@@ -493,6 +493,37 @@ class ExactPublished(unittest.TestCase):
         self.assertIsNone(ts.exact_published(self.video(self.midnight)))
 
 
+class UsageStats(unittest.TestCase):
+    """Public instances count people and plays per hour, and nothing else."""
+
+    def setUp(self):
+        self.was = ts.PUBLIC_MODE
+        ts.PUBLIC_MODE = True
+        ts.stats.clear()
+        ts.stats_seen.update(hour="", visitors=set(), watchers=set())
+
+    def tearDown(self):
+        ts.PUBLIC_MODE = self.was
+        ts.stats.clear()
+
+    def test_people_once_an_hour_events_each_time(self):
+        for ip in ("1.2.3.4", "1.2.3.4", "5.6.7.8"):
+            ts.stat("visitors", ip)
+        ts.stat("watchers", "1.2.3.4"); ts.stat("watchers", "1.2.3.4")
+        for _ in range(3):
+            ts.stat("plays")
+        ts.stat("signups")
+        (row,) = ts.stats.values()
+        self.assertEqual(row, {"visitors": 2, "watchers": 1, "plays": 3, "signups": 1})
+        # nothing that identifies anyone is kept in the counts
+        self.assertNotIn("1.2.3.4", json.dumps(ts.stats))
+
+    def test_private_servers_count_nothing(self):
+        ts.PUBLIC_MODE = False
+        ts.stat("visitors", "1.2.3.4")
+        self.assertEqual(ts.stats, {})
+
+
 class FeedFallback(unittest.TestCase):
     """YouTube's RSS feeds go down now and then (404 for every channel): the subscription feed falls back to Invidious."""
     CID = "UC" + "b" * 22

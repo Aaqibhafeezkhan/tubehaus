@@ -1,6 +1,6 @@
 // YouTube-style player: controls, captions, storyboards, chapters and SponsorBlock drawn on top of Shaka (DASH/HLS).
 // Built once and reused (moving between pages continues seamlessly in the mini player).
-import { $, $$, el, esc, icon, fmtTime, settings, toast, copy, localUrl, parseT, toGate, SERVER_MAX_H } from "./util.js";
+import { $, $$, el, esc, icon, fmtTime, settings, toast, copy, localUrl, parseT, toGate, SERVER_MAX_H, PUBLIC } from "./util.js";
 import { $t, LANG, LANGS } from "./i18n.js";
 
 const isTouch = matchMedia("(pointer: coarse)").matches;
@@ -665,7 +665,11 @@ export class Player {
     const v = this.video, r = this.root;
     v.addEventListener("play", () => { r.classList.remove("paused"); this.setIcons(); this.autoHide(); });
     v.addEventListener("pause", () => { r.classList.add("paused"); this.setIcons(); this.showCtl(true); this.on.progress?.(true); });
-    v.addEventListener("playing", () => { this.setBuffering(false); r.classList.remove("poster"); this.hideErr(); });
+    v.addEventListener("playing", () => {
+      this.setBuffering(false); r.classList.remove("poster"); this.hideErr();
+      // public instances count how many videos are played (just the number, see stat() on the server)
+      if (PUBLIC && this.info && this.counted !== this.info) { this.counted = this.info; navigator.sendBeacon?.("/api/p/stat/play"); }
+    });
     v.addEventListener("waiting", () => this.setBuffering(true));
     v.addEventListener("loadeddata", () => r.classList.remove("poster"));
     v.addEventListener("durationchange", () => this.drawSegs());
