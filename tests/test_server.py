@@ -428,6 +428,68 @@ class Accounts(unittest.TestCase):
         self.assertIsNone(ts.session_user(old))
 
 
+class ExactPublished(unittest.TestCase):
+    """Recent videos Invidious dates at 00:00 UTC get their real time from the channel's RSS feed."""
+    CID = "UC" + "a" * 22
+
+    def setUp(self):
+        self.old_get = ts.get
+        self.calls = []
+        ts.PUB_RSS.clear()
+        ts.yt_feed["items"].clear()
+        self.midnight = int(time.time()) // 86400 * 86400      # today 00:00 UTC, so within the 3 day window
+
+    def tearDown(self):
+        ts.get = self.old_get
+        ts.PUB_RSS.clear()
+        ts.yt_feed["items"].clear()
+
+    def feed(self, vid, iso):
+        return ('<feed xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://www.youtube.com/xml/schemas/2015">'
+                "<entry><yt:videoId>%s</yt:videoId><published>%s</published></entry></feed>" % (vid, iso))
+
+    def fake_get(self, body):
+        def get(url, *a, **k):
+            self.calls.append(url)
+            return body
+        ts.get = get
+
+    def video(self, pub):
+        return {"videoId": "vid00000001", "authorId": self.CID, "published": pub}
+
+    def iso(self, ts_):
+        return time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime(ts_))
+
+    def test_not_midnight_is_left_alone(self):
+        self.fake_get(self.feed("vid00000001", self.iso(self.midnight + 3600)))
+        self.assertIsNone(ts.exact_published(self.video(self.midnight + 3600)))
+        self.assertEqual(self.calls, [])
+
+    def test_old_video_is_left_alone(self):
+        old = self.midnight - 4 * 86400
+        self.fake_get(self.feed("vid00000001", self.iso(old + 3600)))
+        self.assertIsNone(ts.exact_published(self.video(old)))
+        self.assertEqual(self.calls, [])
+
+    def test_recent_midnight_gets_time_from_feed(self):
+        exact = self.midnight + 5 * 3600 + 17 * 60
+        self.fake_get(self.feed("vid00000001", self.iso(exact)))
+        self.assertEqual(ts.exact_published(self.video(self.midnight)), exact)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_subscription_feed_cache_is_used_before_fetching(self):
+        exact = self.midnight + 7 * 3600
+        ts.yt_feed["items"][self.CID] = [{"id": "other", "published": 1},
+                                         {"id": "vid00000001", "published": exact}]
+        self.fake_get("not xml")
+        self.assertEqual(ts.exact_published(self.video(self.midnight)), exact)
+        self.assertEqual(self.calls, [])
+
+    def test_feed_time_too_far_from_the_date_is_ignored(self):
+        self.fake_get(self.feed("vid00000001", self.iso(self.midnight + 2 * 86400 + 60)))
+        self.assertIsNone(ts.exact_published(self.video(self.midnight)))
+
+
 class Health(unittest.TestCase):
     def test_health(self):
         h = ts.health()
