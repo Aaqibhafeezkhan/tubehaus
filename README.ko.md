@@ -9,9 +9,10 @@
 
 **👉 설치 없이 써 보기: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (작은 공개 서버: 동시 15명, 720p, 기록은 내 브라우저에만 저장)
 
-**📱 서버가 없다면 안드로이드 앱: [APK 바로 받기](https://github.com/biolend83/tubehaus/releases/download/app-v0.1.2/TubeHaus-0.1.2.apk)**
-(베타, 안드로이드 8 이상). 자체 유튜브 엔진으로 폰 안에서만 돌아가요. 서버도 계정도 필요 없어요.
-소스는 [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app) 브랜치에 있어요.
+**📱 서버가 없다면 앱으로: [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.2.1/TubeHaus-0.2.1.apk)
+(안드로이드 8 이상) · [Windows 설치 파일](https://github.com/biolend83/tubehaus/releases/download/win-v0.2.1/TubeHaus-0.2.1.msi) (Windows 10/11)**
+(베타). 자체 유튜브 엔진으로 기기 안에서만 돌아가요. 서버도 계정도 필요 없어요.
+소스는 [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app) 브랜치에 있어요.
 
 TubeHaus는 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
 유튜브와 데이터를 주고받는 어려운 일은 이 두 프로젝트가 하고, TubeHaus는 그 옆에 화면과 작은 서버를 붙여요.
