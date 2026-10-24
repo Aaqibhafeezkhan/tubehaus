@@ -176,9 +176,9 @@ Optional extras:
 - **Live captions:** build whisper.cpp and download `ggml-base-q5_1.bin`; set `HT_WHISPER_BIN` / `HT_WHISPER_MODEL`
 - **Offline save:** `ffmpeg`
 
-### 4. Caddy
+### 4. Reverse proxy: Caddy or nginx
 
-Copy `web/` to `/srv/tubehaus/web` and adapt [`deploy/Caddyfile.example`](deploy/Caddyfile.example).
+Copy `web/` to `/srv/tubehaus/web` and adapt [`deploy/Caddyfile.example`](deploy/Caddyfile.example) for Caddy. If you use nginx instead, start from [`deploy/nginx.conf.example`](deploy/nginx.conf.example) and replace the hostname, TLS certificate paths and upstream addresses for your setup. The nginx example keeps long-lived API, companion and download requests unbuffered with extended timeouts.
 
 **TubeHaus has no accounts.** Anyone who can open it shares the same library. Put your own
 login in front (Caddy `basic_auth`, or `forward_auth` to Authelia / Authentik / a passkey gate)
