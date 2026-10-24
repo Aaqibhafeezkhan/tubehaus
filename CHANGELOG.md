@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.7 — 2026-10-24
+
+### Changed
+- TubeHaus has its own icon: a house with a play button, replacing the YouTube-like red play button, as the favicon, the app icon and the header logo (#30, thanks @Aaqibhafeezkhan)
+
 ## v0.7.6 — 2026-10-24
 
 ### Added
