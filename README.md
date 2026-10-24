@@ -311,7 +311,7 @@ existing translations are very welcome.
 
 - **Questions and setup help:** [Discussions](https://github.com/biolend83/tubehaus/discussions) (please include the `--doctor` output)
 - **Bugs and feature requests:** [Issues](https://github.com/biolend83/tubehaus/issues/new/choose)
-- **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md). Translation fixes are a great first contribution
+- **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md). Start with a [`good first issue`](https://github.com/biolend83/tubehaus/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22); [ROADMAP.md](ROADMAP.md) shows what's planned and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) maps the code
 - **Security problems:** report them privately, see [SECURITY.md](SECURITY.md)
 - **What changed:** [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/biolend83/tubehaus/releases)
 

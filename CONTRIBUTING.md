@@ -2,6 +2,15 @@
 
 Thanks for helping out! Bug reports, translations and pull requests are all welcome.
 
+## Where to start
+
+- Issues labelled [`good first issue`](https://github.com/biolend83/tubehaus/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+  are small and self-contained. Comment that you are taking one so nobody does it twice
+- [ROADMAP.md](ROADMAP.md) lists what's planned and where help is wanted
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) is a map of the code: which file does what
+
+First pull requests get a reply within a day or two, usually sooner.
+
 ## Reporting a bug
 
 Open an [issue](https://github.com/biolend83/tubehaus/issues/new/choose) and include your setup
@@ -13,6 +22,14 @@ If plain Invidious fails the same way, the problem is probably upstream in Invid
 1. Fork the repo and create a branch
 2. Make your change. For anything big, open an issue first so we can agree on the approach
 3. Open a pull request describing what changed and how you tested it
+
+### Using AI tools
+
+Welcome, and TubeHaus itself is built with their help. Two things, so reviews stay quick:
+
+- **Say so in the pull request**, in a line (e.g. "drafted with an AI assistant, reviewed and tested by me")
+- **Run it yourself before you send it.** Open the app and try the change, and run the checks below.
+  Pull requests that were clearly never run may be closed without a detailed review
 
 The code is deliberately dependency-free:
 

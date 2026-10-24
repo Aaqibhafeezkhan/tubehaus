@@ -1,0 +1,30 @@
+name: Welcome
+
+# Says hello on a first-time contributor's first pull request.
+# pull_request_target only to be allowed to comment: nothing from the pull request is checked out or run.
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  welcome:
+    if: contains(fromJSON('["FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: [
+                "Thanks for your first pull request to TubeHaus! 🎉",
+                "",
+                "CI runs the same checks as CONTRIBUTING.md, and a maintainer will reply within a day or two.",
+                "If anything in the code is unclear, docs/ARCHITECTURE.md is a map of where things live.",
+              ].join("\n"),
+            });
