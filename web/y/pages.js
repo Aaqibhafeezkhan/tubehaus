@@ -603,7 +603,7 @@ export function settingsPage(page) {
     <h3>${$t("재생")}</h3>
     ${tog("calm", $t("차분 모드"), $t("홈은 구독 채널의 새 영상만, 쇼츠·인기·추천 영상은 숨기고, 자동재생은 끄고, 댓글은 눌러야 보여요"))}
     ${tog("autoplay", $t("자동재생"), $t("영상이 끝나면 다음 영상을 재생해요"))}
-    ${tog("rememberSpeed", $t("Remember playback speed"), $t("Keep your chosen playback speed when you return"))}
+    ${tog("rememberSpeed", $t("재생 속도 기억"), $t("다음에 와도 고른 재생 속도를 그대로 써요"))}
     ${row($t("선호 화질"), sel("quality", [["auto", $t("최고 화질 (기본)")], ["2160", "4K (2160p)"], ["1440", "1440p"], ["1080", "1080p"], ["720", "720p"], ["480", "480p"], ["360", "360p"]]), $t("화질을 알아서 낮추지 않고 이 화질로 고정해요 (영상에 없으면 그 아래 최고)"))}
     ${tog("dataSaver", $t("데이터 절약"), $t("480p 이하, 미리 받는 양을 줄여요"))}
     ${tog("resume", $t("이어서 보기"), $t("보던 곳부터 재생 (모든 기기 공유)"))}

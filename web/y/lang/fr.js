@@ -246,6 +246,8 @@ export default {
  "영상을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.": "Impossible de charger la vidéo. Réessayez dans un instant.",
  "영상의 0% … 90% 지점으로": "Aller à 0 % … 90 % de la vidéo",
  "영상이 끝나면 다음 영상을 재생해요": "Lit la vidéo suivante à la fin",
+ "재생 속도 기억": "Mémoriser la vitesse de lecture",
+ "다음에 와도 고른 재생 속도를 그대로 써요": "Garde la vitesse choisie lors de vos prochaines visites",
  "영상이 없어요": "Aucune vidéo",
  "영화": "Films",
  "영화 리뷰": "critique de film",

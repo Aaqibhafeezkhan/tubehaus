@@ -246,6 +246,8 @@ export default {
  "영상을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.": "Video yüklenemedi. Lütfen birazdan tekrar dene.",
  "영상의 0% … 90% 지점으로": "Videonun %0 … %90 noktasına git",
  "영상이 끝나면 다음 영상을 재생해요": "Bu video bitince sıradakini oynatır",
+ "재생 속도 기억": "Oynatma hızını hatırla",
+ "다음에 와도 고른 재생 속도를 그대로 써요": "Seçtiğiniz hız sonraki ziyaretlerde de kullanılır",
  "영상이 없어요": "Video yok",
  "영화": "Filmler",
  "영화 리뷰": "film incelemesi",
