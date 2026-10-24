@@ -128,7 +128,8 @@ q.addEventListener("input", () => {
   sTimer = setTimeout(async () => {
     try {
       const r = await api(`/api/v1/search/suggestions?q=${encodeURIComponent(v)}&hl=ko&gl=KR`, { ttl: 300000 });
-      if (q.value.trim() === v) showSugg(r.suggestions || []);
+      // a late answer must not reopen the list after Enter or after leaving the box
+      if (q.value.trim() === v && document.activeElement === q) showSugg(r.suggestions || []);
     } catch { }
   }, 120);
 });
@@ -159,6 +160,7 @@ $(".sclear").onclick = () => { q.value = ""; q.focus(); $(".sclear").hidden = tr
 function doSearch() {
   const v = q.value.trim();
   if (!v) return;
+  clearTimeout(sTimer);
   sugg.hidden = true;
   q.blur();
   document.body.classList.remove("msearch");

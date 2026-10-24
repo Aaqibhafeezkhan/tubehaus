@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.8 — 2026-10-24
+
+### Fixed
+- Pressing Enter right after typing a search left the suggestion list open over the results: a suggestion request that was still on its way reopened it. Late answers are now ignored once the search box is left
+
 ## v0.7.7 — 2026-10-24
 
 ### Changed
