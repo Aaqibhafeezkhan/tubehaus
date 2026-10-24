@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- A usage page for public instances, `/y/admin.html`: people watching now, accounts, today's totals, visitors and plays per hour for the last 48 hours, sign-ups per day and a daily table. It refreshes every 5 seconds while open. It needs a key, `TUBEHAUS_ADMIN_TOKEN` in `.env`; without one the page is off. After 10 wrong keys in 10 minutes nothing is checked
+
 ## v0.7.10 — 2026-10-24
 
 ### Added

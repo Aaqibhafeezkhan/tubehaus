@@ -518,6 +518,13 @@ class UsageStats(unittest.TestCase):
         # nothing that identifies anyone is kept in the counts
         self.assertNotIn("1.2.3.4", json.dumps(ts.stats))
 
+    def test_admin_page_sums_signups_by_day(self):
+        ts.stat("plays")
+        d = ts.admin_stats()
+        self.assertEqual(sum(r.get("plays", 0) for r in d["hours"].values()), 1)
+        self.assertIn("watching", d)
+        self.assertIn("signups_by_day", d)
+
     def test_private_servers_count_nothing(self):
         ts.PUBLIC_MODE = False
         ts.stat("visitors", "1.2.3.4")

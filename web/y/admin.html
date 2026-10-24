@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TubeHaus 통계</title>
+<link rel="icon" href="/y/icon.svg">
+<!-- The usage page of a public instance (HT_ADMIN_TOKEN). Only counts per hour: see stat() in the server. -->
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --ink: #14181f; --ink2: #4a5260; --muted: #7a8291; --line: #e3e6eb;
+    --bar: #0f766e; --bar-soft: #99d5cf; --grid: #eef0f3; --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1216; --card: #171b21; --ink: #e8ebef; --ink2: #b4bbc6; --muted: #8a93a1; --line: #2a3039;
+      --bar: #2dd4bf; --bar-soft: #1d5e57; --grid: #222831; --warn: #f59e0b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 18px; }
+  header button { white-space: nowrap; }
+  header img { width: 32px; height: 32px; }
+  h1 { font-size: 20px; margin: 0; flex: 1; white-space: nowrap; }
+  .upd { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  @media (max-width: 520px) { .upd { order: 5; flex-basis: 100%; } }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .tile, .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .tile { padding: 14px 16px; }
+  .tile .k { color: var(--ink2); font-size: 13px; }
+  .tile .v { font-size: 30px; font-weight: 700; letter-spacing: -.5px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tile .s { color: var(--muted); font-size: 12px; }
+  .card { padding: 16px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; margin: 0 0 2px; }
+  .card p.sub { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
+  .chart { position: relative; }
+  svg { display: block; width: 100%; height: 170px; overflow: visible; }
+  .tiles .tile:last-child:nth-child(odd) { grid-column: auto; }
+  .axis { fill: var(--muted); font-size: 11px; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 6px 9px;
+    border-radius: 6px; white-space: nowrap; transform: translate(-50%, -110%); display: none; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th, td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--ink2); font-weight: 600; font-size: 13px; }
+  .scroll { overflow-x: auto; }
+  .warn { color: var(--warn); }
+  form { max-width: 360px; margin: 18vh auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+  form h1 { margin-bottom: 6px; }
+  form p { color: var(--ink2); font-size: 14px; margin: 0 0 14px; }
+  input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+  button { margin-top: 10px; width: 100%; padding: 10px; border: 0; border-radius: 8px; background: var(--bar); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  .err { color: var(--warn); font-size: 13px; min-height: 18px; margin-top: 8px; }
+  .out { background: none; color: var(--muted); width: auto; margin: 0; padding: 0; font-size: 13px; font-weight: 400; }
+  .live { display: inline-flex; align-items: center; gap: 6px; background: none; color: var(--ink2); width: auto; margin: 0; padding: 5px 10px;
+    border: 1px solid var(--line); border-radius: 999px; font-size: 13px; font-weight: 500; }
+  .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .live.on i { background: #16a34a; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .live.on i { animation: none; } }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script type="module">
+const app = document.getElementById("app");
+const KEY = "th.adminKey";
+const store = { get() { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } },
+                set(v) { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch {} } };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const n = (x) => (x || 0).toLocaleString("ko-KR");
+// the server keeps hours in UTC ("2026-10-24T11"); everything here is shown in this browser's time
+const hourDate = (h) => new Date(h + ":00:00Z");
+const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function askKey(msg = "") {
+  app.innerHTML = `<form><h1>TubeHaus 통계</h1><p>관리자 키를 넣어 주세요. 이 브라우저에만 저장돼요.</p>
+    <input type="password" autocomplete="off" placeholder="관리자 키"><button>열기</button><div class="err">${esc(msg)}</div></form>`;
+  const f = app.querySelector("form");
+  f.onsubmit = (e) => { e.preventDefault(); store.set(f.querySelector("input").value.trim()); load(); };
+  f.querySelector("input").focus();
+}
+
+async function load() {
+  const key = store.get();
+  if (!key) return askKey();
+  let r;
+  try { r = await fetch("/api/p/admin/stats", { headers: { "X-Admin-Token": key }, cache: "no-store" }); }
+  catch { return askKey("서버에 연결하지 못했어요"); }
+  if (r.status === 403) { store.set(""); return askKey("키가 맞지 않아요"); }
+  if (r.status === 429) return askKey("잘못된 키를 너무 많이 넣었어요. 10분 뒤에 다시 해 주세요");
+  if (r.status === 401 || r.redirected || !(r.headers.get("content-type") || "").includes("json")) return askKey("먼저 사이트에 로그인해 주세요");
+  if (!r.ok) return askKey("통계를 쓸 수 없는 서버예요 (HT_ADMIN_TOKEN이 없어요)");
+  render(await r.json());
+}
+
+/** One series of bars with a hover tooltip; thin bars, rounded tops on the baseline. */
+function bars(el, points, label) {
+  const W = Math.max(280, el.clientWidth || 600), H = 170, top = 10, bottom = 22, left = 30;
+  const max = Math.max(1, ...points.map((p) => p.v));
+  const nice = max <= 4 ? 4 : Math.ceil(max / 10) * 10;      // halves stay whole numbers
+  const bw = (W - left) / points.length;
+  const y = (v) => H - bottom - (v / nice) * (H - top - bottom);
+  let s = "";
+  for (const t of [0, nice / 2, nice]) {
+    s += `<line x1="${left}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/>`;
+    s += `<text class="axis" x="${left - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  }
+  points.forEach((p, i) => {
+    const x = left + i * bw, w = Math.max(2, bw - 2), h = H - bottom - y(p.v);
+    if (p.v) s += `<path d="M${x + 1},${H - bottom}v${-Math.max(0, h - 3)}q0,-3 3,-3h${w - 6}q3,0 3,3v${Math.max(0, h - 3)}z" fill="var(--bar)"/>`;
+    if (p.tick && (bw >= 9 || p.major)) s += `<text class="axis" x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${esc(p.tick)}</text>`;
+    s += `<rect data-i="${i}" x="${x}" y="${top}" width="${bw}" height="${H - top - bottom}" fill="transparent"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">${s}</svg><div class="tip"></div>`;
+  const tip = el.querySelector(".tip"), svg = el.querySelector("svg");
+  svg.addEventListener("pointermove", (e) => {
+    const i = e.target.dataset?.i;
+    if (i == null) { tip.style.display = "none"; return; }
+    const p = points[+i], b = svg.getBoundingClientRect();
+    tip.innerHTML = `${esc(p.when)}<br><b>${esc(label)} ${n(p.v)}</b>`;
+    tip.style.display = "block";
+    tip.style.left = `${e.clientX - b.left}px`;
+    tip.style.top = `${e.clientY - b.top}px`;
+  });
+  svg.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+}
+
+function render(d) {
+  const hours = d.hours || {};
+  const now = new Date(d.now * 1000);
+  // the last 48 hours, one slot each, empty hours included
+  const slots = [];
+  for (let i = 47; i >= 0; i--) {
+    const t = new Date(now.getTime() - i * 3600e3);
+    const key = t.toISOString().slice(0, 13);
+    slots.push({ key, t, row: hours[key] || {} });
+  }
+  const point = (field) => slots.map((s, i) => ({
+    v: s.row[field] || 0,
+    when: s.t.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "numeric" }),
+    tick: s.t.getHours() % 6 === 0 ? (s.t.getHours() === 0 ? `${s.t.getMonth() + 1}/${s.t.getDate()}` : `${s.t.getHours()}시`) : "",
+    major: s.t.getHours() % 12 === 0,
+  }));
+  // per local day
+  const days = {};
+  for (const [h, row] of Object.entries(hours)) {
+    const k = dayKey(hourDate(h));
+    const o = days[k] ||= {};
+    for (const [f, v] of Object.entries(row)) o[f] = (o[f] || 0) + v;
+  }
+  const today = days[dayKey(now)] || {};
+  const signDays = Object.entries(d.signups_by_day || {}).sort();
+  const firstStat = Object.keys(hours).sort()[0];
+
+  app.innerHTML = `
+    <header><img src="/y/icon.svg" alt=""><h1>TubeHaus 통계</h1>
+      <span class="upd">${now.toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit", second: "2-digit" })} 기준</span>
+      <button class="live ${live ? "on" : ""}" id="live" title="켜면 ${LIVE_SEC}초마다 새로고침">${live ? `<i></i>실시간` : `<i></i>멈춤`}</button>
+      <button class="out" id="now">새로고침</button>
+      <button class="out" id="out">키 지우기</button></header>
+    <div class="tiles">
+      <div class="tile"><div class="k">지금 보는 중</div><div class="v">${n(d.watching)}${d.max_viewers ? `<small style="font-size:15px;color:var(--muted)"> / ${d.max_viewers}</small>` : ""}</div><div class="s">최근 3분, IP 기준</div></div>
+      <div class="tile"><div class="k">전체 가입자</div><div class="v">${n(d.accounts)}</div><div class="s">오늘 +${n(today.signups)}</div></div>
+      <div class="tile"><div class="k">오늘 방문자</div><div class="v">${n(today.visitors)}</div><div class="s">시간마다 센 사람의 합</div></div>
+      <div class="tile"><div class="k">오늘 재생</div><div class="v">${n(today.plays)}</div><div class="s">영상을 연 사람 ${n(today.watchers)}</div></div>
+      <div class="tile"><div class="k">오늘 못 들어온 사람</div><div class="v ${today.turned_away ? "warn" : ""}">${n(today.turned_away)}</div><div class="s">동시 시청 한도에 걸림</div></div>
+    </div>
+    <div class="card"><h2>시간대별 방문자</h2><p class="sub">최근 48시간 · 한 시간에 한 사람은 한 번만</p><div class="chart" id="c1"></div></div>
+    <div class="card"><h2>시간대별 재생</h2><p class="sub">최근 48시간 · 재생이 실제로 시작된 영상 수</p><div class="chart" id="c2"></div></div>
+    <div class="card"><h2>날짜별 가입자</h2><p class="sub">계정이 만들어진 날 (UTC)</p><div class="chart" id="c3"></div></div>
+    <div class="card"><h2>날짜별 합계</h2><p class="sub">${firstStat ? `${hourDate(firstStat).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "numeric" })}부터 기록` : "아직 기록이 없어요"} · 숫자만 저장, 누가 무엇을 봤는지는 남기지 않아요</p>
+      <div class="scroll"><table><thead><tr><th>날짜</th><th>방문자</th><th>영상 연 사람</th><th>재생</th><th>가입</th><th>로그인</th><th>못 들어옴</th></tr></thead><tbody>
+      ${Object.entries(days).sort().reverse().map(([k, o]) => `<tr><td>${esc(k)}</td><td>${n(o.visitors)}</td><td>${n(o.watchers)}</td><td>${n(o.plays)}</td><td>${n(o.signups)}</td><td>${n(o.logins)}</td><td>${n(o.turned_away)}</td></tr>`).join("") || `<tr><td colspan="7" style="text-align:left;color:var(--muted)">아직 기록이 없어요</td></tr>`}
+      </tbody></table></div></div>`;
+  bars(document.getElementById("c1"), point("visitors"), "방문자");
+  bars(document.getElementById("c2"), point("plays"), "재생");
+  bars(document.getElementById("c3"), signDays.map(([day, v], i) => ({ v, when: day, tick: signDays.length <= 14 || i % 7 === 0 ? day.slice(5).replace("-", "/") : "" })), "가입");
+  document.getElementById("out").onclick = () => { store.set(""); askKey(); };
+  document.getElementById("now").onclick = () => load();
+  document.getElementById("live").onclick = () => { live = !live; try { localStorage.setItem("th.adminLive", live ? "1" : "0"); } catch {} load(); };
+}
+
+// live: every LIVE_SEC seconds while this tab is visible; a hidden tab asks nothing
+const LIVE_SEC = 5;
+let live = (() => { try { return localStorage.getItem("th.adminLive") !== "0"; } catch { return true; } })();
+let busy = false;
+async function tick() {
+  if (!live || busy || document.hidden || !store.get() || app.querySelector("form")) return;
+  busy = true;
+  try { await load(); } finally { busy = false; }
+}
+load();
+setInterval(tick, LIVE_SEC * 1000);
+let resizeT;
+addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (!app.querySelector("form")) load(); }, 250); });
+document.addEventListener("visibilitychange", tick);
+</script>
+</body>
+</html>

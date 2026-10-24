@@ -55,6 +55,8 @@ def env_int(key, default):
 
 
 MAX_CONN = env_int("HT_MAX_CONNECTIONS", 256)            # requests handled at the same time
+# the key for the usage page (/y/admin.html, public instances); empty = no such page
+ADMIN_TOKEN = env("HT_ADMIN_TOKEN", "")
 MAX_VIEWERS = env_int("HT_MAX_VIEWERS", 0)               # people watching at once (by IP, 3 min window)
 RATE_PER_MIN = env_int("HT_RATE_PER_MIN", 120 if PUBLIC_MODE else 0)   # API requests per IP per minute
 MAX_HEIGHT = env_int("HT_MAX_HEIGHT", 0)                 # highest quality offered to players, e.g. 1080
@@ -2171,6 +2173,27 @@ def stats_loop():
             log("stats", "save FAIL %s" % repr(ex)[:80])
 
 
+admin_fails = {}                              # ip -> times of wrong admin keys (last 10 minutes)
+
+
+def admin_stats():
+    """Everything the usage page shows: live numbers, the hourly counts and sign-ups per day."""
+    now = time.time()
+    with stats_lk:
+        hours = {h: dict(r) for h, r in stats.items()}
+    with load_lk:
+        watching = len([1 for t in viewers.values() if now - t < 180])
+    users = jload(USERS, {}) if ACCOUNTS else {}
+    by_day = {}
+    for u in users.values():
+        c = u.get("created") if isinstance(u, dict) else None
+        if c:
+            d = time.strftime("%Y-%m-%d", time.gmtime(c))
+            by_day[d] = by_day.get(d, 0) + 1
+    return {"now": int(now), "watching": watching, "max_viewers": MAX_VIEWERS or None,
+            "accounts": len(users), "signups_by_day": by_day, "hours": hours}
+
+
 def health():
     now = time.time()
     return {"ok": True, "warp_proxy": bool(YT_PROXY), "warp_rotate": WARP_ROTATE,
@@ -2350,6 +2373,20 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, {"accounts": ACCOUNTS, "user": self.cookie_user() if ACCOUNTS else None})
         if self.over_limit(p):
             return
+        if p.endswith("/api/p/admin/stats"):
+            # the key, not the account, opens it; after 10 wrong keys in 10 minutes nothing is checked
+            if not (PUBLIC_MODE and ADMIN_TOKEN):
+                return self.send(404, {"error": "not found"})
+            ip, now = self.client_ip(), time.time()
+            with auth_lk:
+                fails = admin_fails[ip] = [t for t in admin_fails.get(ip, []) if now - t < 600]
+            if len(fails) >= 10:
+                return self.send(429, {"error": "Too many wrong keys. Please wait a few minutes"})
+            if not hmac.compare_digest(self.headers.get("X-Admin-Token", "").encode(), ADMIN_TOKEN.encode()):
+                with auth_lk:
+                    admin_fails.setdefault(ip, []).append(now)
+                return self.send(403, {"error": "Wrong key"})
+            return self.send(200, admin_stats())
         if public_blocked("GET", p):
             return self.send(403, {"error": "Not available on public instances"})
         if PUBLIC_MODE and p.endswith("/yt/feed"):

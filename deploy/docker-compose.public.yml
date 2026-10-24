@@ -67,6 +67,7 @@ services:
       HT_PUBLIC_MODE: "1"
       HT_ACCOUNTS: "1"
       HT_MAX_VIEWERS: ${TUBEHAUS_MAX_VIEWERS:-15}
+      HT_ADMIN_TOKEN: ${TUBEHAUS_ADMIN_TOKEN:-}     # opens /y/admin.html (usage counts); empty = off
       HT_MAX_HEIGHT: ${TUBEHAUS_MAX_HEIGHT:-720}
       HT_RATE_PER_MIN: ${TUBEHAUS_RATE_PER_MIN:-120}
       HT_MAX_CONNECTIONS: "128"
