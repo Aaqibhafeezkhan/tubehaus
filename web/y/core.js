@@ -96,6 +96,7 @@ function badge(v) {
 }
 export function metaLine(v) {
   const parts = [];
+  let tip = "";
   if (v.live) parts.push(v.views != null ? `${fmtViewsLive(v.views)}` : $t("실시간"));
   else if (v.upcoming) parts.push(v.premiere ? `${$t("{0} 공개 예정", new Date(v.premiere * 1000).toLocaleString(LOCALE, { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }))}` : $t("공개 예정"));
   else {
@@ -103,8 +104,9 @@ export function metaLine(v) {
     else if (v.viewsText) parts.push(v.viewsText);
     const a = v.published ? ago(v.published) : v.publishedText;
     if (a) parts.push(a);
+    if (v.published && a) tip = new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeStyle: "short" }).format(v.published * 1000);
   }
-  return parts.map(esc).join(" • ");
+  return parts.map((p, i) => tip && i === parts.length - 1 ? `<span title="${esc(tip)}">${esc(p)}</span>` : esc(p)).join(" • ");
 }
 const fmtViewsLive = (n) => $t("{0}명 시청 중", fmtShort(+n));
 

@@ -300,7 +300,7 @@ function renderInfo(page, info) {
       </div>
     </div>
     <div class="w-desc collapsed">
-      <div class="w-dmeta"><b>${info.liveNow ? `${$t("{0}명 시청 중", fmtCount(info.viewCount))}` : fmtViews(info.viewCount)}</b> <b>${pub ? (info.liveNow ? $t("실시간 스트리밍 시작: ") + ago(info.published) : ago(info.published)) : esc(info.publishedText || "")}</b>
+      <div class="w-dmeta"><b>${info.liveNow ? `${$t("{0}명 시청 중", fmtCount(info.viewCount))}` : fmtViews(info.viewCount)}</b> <b${pub ? ` title="${esc(new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeStyle: "short" }).format(info.published * 1000))}"` : ""}>${pub ? (info.liveNow ? $t("실시간 스트리밍 시작: ") + ago(info.published) : ago(info.published)) : esc(info.publishedText || "")}</b>
         ${pub ? `<span class="full-date">${pub.toLocaleDateString(LOCALE)}</span>` : ""}</div>
       <div class="w-dtext">${info.descriptionHtml ? safeHtml(info.descriptionHtml.replace(/\n/g, "<br>")) : linkify(info.description || "")}</div>
       ${player.chapters.length ? `<div class="w-dchap"><h4>${$t("챕터")}</h4><div class="chap-row">${player.chapters.map((c) => `<button data-seek="${c.start}"><span class="ct">${fmtTime(c.start)}</span><span>${esc(c.title)}</span></button>`).join("")}</div></div>` : ""}
