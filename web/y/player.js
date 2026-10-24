@@ -242,7 +242,7 @@ export class Player {
       this.onError(e);
       return;
     }
-    this.video.playbackRate = +sessionStorage.getItem("yt.speed") || 1;
+    this.video.playbackRate = settings.rememberSpeed ? (+settings.speed || 1) : (+sessionStorage.getItem("yt.speed") || 1);
     await this.rateTracks();
     this.applyDefaultQuality();
     this.dropWatch();
@@ -674,7 +674,10 @@ export class Player {
       if (!v.muted && this.autoMuted) { this.autoMuted = false; this.root.classList.remove("automuted"); }
       this.setIcons();
     });
-    v.addEventListener("ratechange", () => sessionStorage.setItem("yt.speed", v.playbackRate));
+    v.addEventListener("ratechange", () => {
+      sessionStorage.setItem("yt.speed", v.playbackRate);
+      if (settings.rememberSpeed) settings.speed = v.playbackRate;
+    });
     v.addEventListener("ended", () => {
       if (v.loop) return;
       this.ended = true;
