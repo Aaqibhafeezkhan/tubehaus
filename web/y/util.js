@@ -1,5 +1,5 @@
 // Shared helpers: DOM, number/time formats (local style), server API, settings, icons
-import { $t, $tMsg, fmtShort, fmtAgo, LANG } from "./i18n.js";
+import { $t, $tMsg, fmtShort, fmtAgo, LANG, LOCALE } from "./i18n.js";
 import * as L from "./locallib.js";
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -26,10 +26,21 @@ export const fmtViews = (n) => (n == null ? "" : $t("조회수 {0}회", fmtShort
 export const fmtSubs = (n) => (n == null || n === "" ? "" : $t("구독자 {0}명", typeof n === "number" ? fmtShort(n) : String(n).replace(/subscribers?/i, "").trim()));
 export const fmtCount = (n) => (n == null ? "" : fmtShort(+n));
 
+/** a usable epoch-seconds time, or 0: some sources give strings or nothing */
+export const epoch = (ts) => (Number.isFinite(+ts) && +ts > 0 && +ts < 1e11 ? +ts : 0);
+
 export function ago(ts) {
-  if (!ts) return "";
-  const d = Date.now() / 1000 - ts;
+  if (!epoch(ts)) return "";
+  const d = Date.now() / 1000 - epoch(ts);
   return d < 60 ? $t("방금 전") : fmtAgo(d);
+}
+
+/** "Oct 21, 2026, 9:00 AM" for a tooltip; "" when the time isn't usable, so a bad value never breaks a page */
+export function exactTime(ts) {
+  if (!epoch(ts)) return "";
+  try {
+    return new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeStyle: "short" }).format(epoch(ts) * 1000);
+  } catch { return ""; }
 }
 
 export function parseT(t) {

@@ -1,5 +1,5 @@
 // App skeleton: router, shared state (my library), cards, popup menus, dialogs
-import { $, $$, el, esc, icon, api, lib, settings, local, toast, copy, fmtTime, fmtViews, ago, thumb, normVideo, metaOf, pickThumb, dropCache, PUBLIC } from "./util.js";
+import { $, $$, el, esc, icon, api, lib, settings, local, toast, copy, fmtTime, fmtViews, ago, exactTime, thumb, normVideo, metaOf, pickThumb, dropCache, PUBLIC } from "./util.js";
 import { Player } from "./player.js";
 import { $t, $tMsg, fmtShort, LANG, LOCALE } from "./i18n.js";
 
@@ -104,7 +104,7 @@ export function metaLine(v) {
     else if (v.viewsText) parts.push(v.viewsText);
     const a = v.published ? ago(v.published) : v.publishedText;
     if (a) parts.push(a);
-    if (v.published && a) tip = new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeStyle: "short" }).format(v.published * 1000);
+    if (v.published && a) tip = exactTime(v.published);
   }
   return parts.map((p, i) => tip && i === parts.length - 1 ? `<span title="${esc(tip)}">${esc(p)}</span>` : esc(p)).join(" • ");
 }

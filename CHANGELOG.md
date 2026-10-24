@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.9 — 2026-10-24
+
+### Fixed
+- A video whose upload time wasn't a plain number (on the page or in its related videos) stopped the watch page with "Invalid time value": the exact-date tooltip from v0.7.6 now skips times it can't read instead of failing
+
 ## v0.7.8 — 2026-10-24
 
 ### Fixed

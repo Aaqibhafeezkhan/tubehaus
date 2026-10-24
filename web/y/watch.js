@@ -1,5 +1,5 @@
 // Watch page, Shorts, mini player
-import { $, $$, el, esc, icon, api, lib, settings, toast, fmtTime, fmtViews, fmtCount, ago, thumb, normVideo, metaOf, pickThumb, safeHtml, linkify, parseT, copy, PUBLIC } from "./util.js";
+import { $, $$, el, esc, icon, api, lib, settings, toast, fmtTime, fmtViews, fmtCount, ago, epoch, exactTime, thumb, normVideo, metaOf, pickThumb, safeHtml, linkify, parseT, copy, PUBLIC } from "./util.js";
 import { videoInfo, prefetch, player, state, card, norm, remember, known, fillProgress, avatar, subBtn, navigate, videoMenu, shareDialog, saveDialog, downloadDialog, keysDialog, setList, inList, queue, setPosCache, getPos, pageCleanup, popup, mi } from "./core.js";
 import { loadPlaylist } from "./pages.js";
 import { $t, LANG, LOCALE, REGION } from "./i18n.js";
@@ -279,7 +279,7 @@ function renderInfo(page, info) {
   const v = W.v;
   const av = pickThumb(info.authorThumbnails, 88);
   const liked = inList("likes", v.id), disliked = inList("dislikes", v.id);
-  const pub = info.published ? new Date(info.published * 1000) : null;
+  const pub = epoch(info.published) ? new Date(epoch(info.published) * 1000) : null;
   const hashtags = (info.keywords || []).slice(0, 3);
   box.innerHTML = `
     <div class="w-tags">${hashtags.map((k) => `<a href="/results?search_query=${encodeURIComponent(k)}" data-nav>#${esc(k.replace(/\s+/g, ""))}</a>`).join(" ")}</div>
@@ -300,7 +300,7 @@ function renderInfo(page, info) {
       </div>
     </div>
     <div class="w-desc collapsed">
-      <div class="w-dmeta"><b>${info.liveNow ? `${$t("{0}명 시청 중", fmtCount(info.viewCount))}` : fmtViews(info.viewCount)}</b> <b${pub ? ` title="${esc(new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeStyle: "short" }).format(info.published * 1000))}"` : ""}>${pub ? (info.liveNow ? $t("실시간 스트리밍 시작: ") + ago(info.published) : ago(info.published)) : esc(info.publishedText || "")}</b>
+      <div class="w-dmeta"><b>${info.liveNow ? `${$t("{0}명 시청 중", fmtCount(info.viewCount))}` : fmtViews(info.viewCount)}</b> <b${pub ? ` title="${esc(exactTime(info.published))}"` : ""}>${pub ? (info.liveNow ? $t("실시간 스트리밍 시작: ") + ago(info.published) : ago(info.published)) : esc(info.publishedText || "")}</b>
         ${pub ? `<span class="full-date">${pub.toLocaleDateString(LOCALE)}</span>` : ""}</div>
       <div class="w-dtext">${info.descriptionHtml ? safeHtml(info.descriptionHtml.replace(/\n/g, "<br>")) : linkify(info.description || "")}</div>
       ${player.chapters.length ? `<div class="w-dchap"><h4>${$t("챕터")}</h4><div class="chap-row">${player.chapters.map((c) => `<button data-seek="${c.start}"><span class="ct">${fmtTime(c.start)}</span><span>${esc(c.title)}</span></button>`).join("")}</div></div>` : ""}
