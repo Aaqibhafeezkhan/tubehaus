@@ -9,27 +9,40 @@
 
 **English** · [한국어](README.ko.md)
 
-**Your own YouTube, on your own server: fast, private, and it doesn't get blocked.**
+**YouTube without ads, a Google account or tracking: run it on your own server, or install the app on your device.**
 
-It looks and works exactly like YouTube (same layout, same URLs, same keyboard shortcuts),
-with no ads and no tracking. It also plays live streams with real-time captions, keeps one
-library for all your devices, and keeps working even from a cheap cloud VPS.
+Both look and work like YouTube (same layout, same keyboard shortcuts), and both keep your subscriptions and
+history to yourself instead of in a Google account.
 
-**👉 Try it without installing: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (a small public
-instance: up to 15 viewers at a time, 720p; your history stays in your own browser)
+## Two ways to use TubeHaus
 
-**📱 No server? Get the app: [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.apk)
-(Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-x86_64.rpm)**
-(beta). It runs entirely on your device with its own YouTube engine: no server, no account.
-Source and install notes per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app) and [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app).
+TubeHaus comes in two separate forms. They share the look and the name, but they work differently:
 
-TubeHaus is built on top of [Invidious](https://invidious.io) and
+| | 🖥️ **Server version** (this branch, `main`) | 📱 **App** (branches `android-app`, `windows-app`, `mac-app`, `linux-app`) |
+|---|---|---|
+| **What you install** | A server: docker compose on a VPS, a home PC or a Raspberry Pi | An app on each device: Android, Windows, macOS or Linux |
+| **How you watch** | In any browser: phones, iPhone/iPad, PCs, TVs. Add it to the home screen to use it like an app | In the app on that device |
+| **Who talks to YouTube** | Your server, through Invidious and Cloudflare WARP. Your devices only ever talk to your server | The device itself, with the app's own YouTube engine. No Invidious and no TubeHaus server in between |
+| **What YouTube sees** | A Cloudflare WARP address, not your home or your device | Your device's own internet address, like any YouTube app |
+| **Where your library lives** | On the server, shared by every device and person using it | On that device only. Move it between devices with export/import |
+| **Only here** | Live captions (whisper.cpp), send to TV, full-quality downloads, TV mode, iPhone/iPad | Background play and picture-in-picture (Android), mpv player (desktop), recommendations learned on the device |
+| **You need** | A server and basic Docker | Nothing else |
+
+**Not sure?** Want it on one phone or PC, today, with nothing to set up? Get the app.
+Want one library for the whole household, iPhone/iPad support, or to keep YouTube away from your devices' addresses? Run the server.
+
+- **📱 Get the app (beta):** [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.apk) (Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-x86_64.rpm) · [all files](https://github.com/biolend83/tubehaus/releases/latest).
+  Install notes and source per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app)
+- **🖥️ Run the server:** see [Quick start (Docker)](#quick-start-docker) below. The rest of this README is about the server version.
+- **👉 Try the server version without installing anything:** [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io). It's a small public instance I run: sign-up required, up to 15 viewers at a time, 720p. There your library stays in your own browser, not on the server.
+
+The server version is built on top of [Invidious](https://invidious.io) and
 [invidious-companion](https://github.com/iv-org/invidious-companion), which do the hard work of talking to
 YouTube. TubeHaus adds its own front end and a small server next to them. All credit to the Invidious team.
 
 ![TubeHaus home screen](docs/screenshot-home.jpg)
 
-## Why TubeHaus
+## Why the server version
 
 **⚡ Fast**
 - **Instant clicks.** Video pages come from a local cache that refreshes in the background, and the videos you are most likely to open next are fetched before you click (measured: about 1-2 s cold, a few milliseconds warm)

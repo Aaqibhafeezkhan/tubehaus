@@ -4,25 +4,39 @@
 
 [English](README.md) · **한국어**
 
-**내 서버에서 돌리는 나만의 유튜브: 빠르고, 기록이 밖으로 새지 않고, 막히지 않아요.**
+**광고도, 구글 계정도, 추적도 없는 유튜브: 내 서버에서 돌리거나, 기기에 앱으로 깔거나.**
 
-생김새와 쓰는 법이 유튜브와 똑같아요(화면 구성, 주소, 단축키까지). 광고와 추적은 없어요.
-라이브 방송을 실시간 자막과 함께 볼 수 있고, 모든 기기가 같은 구독과 기록을 쓰고, 값싼 클라우드 서버에서도 잘 돌아가요.
+둘 다 생김새와 쓰는 법이 유튜브와 같고(화면 구성, 단축키), 구독과 시청 기록을 구글 계정이 아니라 내 쪽에 둬요.
 
-**👉 설치 없이 써 보기: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (작은 공개 서버: 동시 15명, 720p, 기록은 내 브라우저에만 저장)
+## 두 가지 TubeHaus
 
-**📱 서버가 없다면 앱으로: [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.apk)
-(안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-x86_64.rpm)**
-(베타). 자체 유튜브 엔진으로 기기 안에서만 돌아가요. 서버도 계정도 필요 없어요.
-플랫폼별 소스와 설치 안내는 [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app) 브랜치에 있어요.
+TubeHaus는 따로 동작하는 두 가지가 있어요. 이름과 생김새는 같지만, 돌아가는 방식이 달라요.
 
-TubeHaus는 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
+| | 🖥️ **서버판** (이 브랜치, `main`) | 📱 **앱** (`android-app`, `windows-app`, `mac-app`, `linux-app` 브랜치) |
+|---|---|---|
+| **설치하는 것** | 서버 한 대: 클라우드 서버, 집 PC, 라즈베리파이에 docker compose | 기기마다 앱: 안드로이드, Windows, macOS, 리눅스 |
+| **보는 방법** | 아무 브라우저: 폰, 아이폰/아이패드, PC, TV. 홈 화면에 추가하면 앱처럼 써요 | 그 기기의 앱에서 |
+| **유튜브와 통신하는 쪽** | 내 서버가 Invidious와 Cloudflare WARP를 거쳐서. 기기는 내 서버하고만 통신해요 | 기기가 직접, 앱 안의 자체 유튜브 엔진으로. 중간에 Invidious도 TubeHaus 서버도 없어요 |
+| **유튜브가 보는 주소** | Cloudflare WARP 주소. 집이나 기기 주소가 아니에요 | 내 기기의 인터넷 주소. 다른 유튜브 앱과 같아요 |
+| **구독·기록이 있는 곳** | 서버에. 그 서버를 쓰는 모든 기기와 사람이 같이 써요 | 그 기기에만. 다른 기기로 옮길 땐 내보내기/가져오기 |
+| **여기에만 있는 것** | 라이브 실시간 자막(whisper.cpp), TV로 보내기, 원본 화질 저장, TV 모드, 아이폰/아이패드 | 백그라운드 재생과 PIP(안드로이드), mpv 플레이어(PC), 기기 안에서 배우는 추천 |
+| **필요한 것** | 서버와 Docker 기초 | 없음 |
+
+**고르기 어렵다면:** 폰이나 PC 한 대에서, 오늘 바로, 아무 설정 없이 쓰고 싶다면 앱을 받으세요.
+온 가족이 구독과 기록을 같이 쓰고 싶거나, 아이폰/아이패드에서 보거나, 유튜브가 내 기기 주소를 모르게 하고 싶다면 서버판을 돌리세요.
+
+- **📱 앱 받기 (베타):** [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.apk) (안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-x86_64.rpm) · [전체 파일](https://github.com/biolend83/tubehaus/releases/latest).
+  플랫폼별 설치 안내와 소스: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app)
+- **🖥️ 서버판 돌리기:** 아래 [빠른 설치 (Docker)](#빠른-설치-docker)를 보세요. 이 README의 나머지는 모두 서버판 이야기예요.
+- **👉 설치 없이 서버판 써 보기:** [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io). 제가 운영하는 작은 공개 서버예요(가입 필요, 동시 15명, 720p). 여기서는 구독과 기록이 서버가 아니라 내 브라우저에만 저장돼요.
+
+서버판은 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
 유튜브와 데이터를 주고받는 어려운 일은 이 두 프로젝트가 하고, TubeHaus는 그 옆에 화면과 작은 서버를 붙여요.
 Invidious 팀에 감사드려요.
 
 ![TubeHaus 첫 화면](docs/screenshot-home.jpg)
 
-## 왜 TubeHaus인가
+## 서버판이 좋은 점
 
 **⚡ 빨라요**
 - **누르자마자 열려요.** 영상 정보를 서버에 미리 받아 두고 뒤에서 새로 고쳐요. 다음에 누를 만한 영상도 미리 받아 둬요(처음 1~2초, 그다음부터는 수 밀리초)
