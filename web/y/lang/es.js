@@ -9,7 +9,7 @@ export default {
  "(일시중지 중) 한 프레임 뒤 / 앞": "(en pausa) fotograma anterior / siguiente",
  "10초 뒤로 / 앞으로": "Retroceder / avanzar 10 s",
  "20분 초과": "Más de 20 minutos",
- "480p 이하, 미리 받는 양을 줄여요": "Reduce la precarga en vídeos de 480p o menos",
+ "480p 이하, 미리 받는 양을 줄여요": "480p o menos, con menos precarga",
  "4~20분": "4–20 minutos",
  "4분 미만": "Menos de 4 minutos",
  "5초 뒤로 / 앞으로": "Retroceder / avanzar 5 s",
