@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+- docker compose always published Caddy on ports 80 and 443, so `TUBEHAUS_SITE=:8080` didn't work and running behind your own nginx clashed with it. The host ports now come from `TUBEHAUS_HTTP_BIND` / `TUBEHAUS_HTTPS_BIND` in `.env` (default 80/443), and the README shows the LAN and own-proxy setups
+
 ### Added
 - A usage page for public instances, `/y/admin.html`: people watching now, accounts, today's totals, visitors and plays per hour for the last 48 hours, sign-ups per day and a daily table. It refreshes every 5 seconds while open. It needs a key, `TUBEHAUS_ADMIN_TOKEN` in `.env`; without one the page is off. After 10 wrong keys in 10 minutes nothing is checked
 

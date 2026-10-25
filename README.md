@@ -114,6 +114,30 @@ To build the TubeHaus image yourself instead (for example after changing the cod
 Then open your domain. WARP registers itself on first start and keeps its registration in a
 volume; the companion reaches YouTube through it as well.
 
+**No domain, or your own reverse proxy?** Caddy can serve plain HTTP on any port. In `.env`:
+
+```sh
+# plain HTTP on a LAN, at http://192.168.1.10:8080
+TUBEHAUS_SITE=:80
+TUBEHAUS_HTTP_BIND=8080
+TUBEHAUS_URL=http://192.168.1.10:8080
+TUBEHAUS_DOMAIN=192.168.1.10
+TUBEHAUS_HTTPS=false
+TUBEHAUS_EXTERNAL_PORT=8080
+
+# behind your own nginx, Traefik or Caddy, which handles HTTPS for tube.example.com
+TUBEHAUS_SITE=:80
+TUBEHAUS_HTTP_BIND=127.0.0.1:8080       # only your proxy reaches it
+TUBEHAUS_HTTPS_BIND=127.0.0.1:8443      # unused, kept off the public 443
+TUBEHAUS_URL=https://tube.example.com
+TUBEHAUS_DOMAIN=tube.example.com
+TUBEHAUS_HTTPS=true
+TUBEHAUS_EXTERNAL_PORT=443
+```
+
+Then point your proxy at `http://127.0.0.1:8080` for everything, unbuffered (video and live streams), e.g. in nginx:
+`proxy_pass http://127.0.0.1:8080; proxy_buffering off; proxy_read_timeout 1h; proxy_set_header Host $host;`
+
 **Add a login before you expose it.** TubeHaus has no accounts of its own. The simplest option is the built-in
 password: set `TUBEHAUS_AUTH=basic`, `TUBEHAUS_USER` and `TUBEHAUS_PASSWORD_HASH` in `.env` (the hash comes from
 `docker compose run --rm caddy caddy hash-password`; write every `$` as `$$`). Or put Authelia, Authentik or a

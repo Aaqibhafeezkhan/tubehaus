@@ -8,9 +8,10 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    # host ports from .env: e.g. TUBEHAUS_HTTP_BIND=127.0.0.1:8080 behind your own nginx (see README)
     ports:
-      - "80:80"
-      - "443:443"
+      - "${TUBEHAUS_HTTP_BIND:-80}:80"
+      - "${TUBEHAUS_HTTPS_BIND:-443}:443"
     environment:
       TUBEHAUS_SITE: ${TUBEHAUS_SITE}
       TUBEHAUS_AUTH: ${TUBEHAUS_AUTH:-none}

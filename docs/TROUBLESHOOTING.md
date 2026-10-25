@@ -58,8 +58,9 @@ Pull the prebuilt image (`docker compose pull tubehaus && docker compose up -d`)
 ## HTTPS certificate errors
 
 Caddy gets a certificate automatically only if `TUBEHAUS_SITE` is a real hostname that points at your server and
-ports 80 and 443 are reachable from the internet. On a LAN without a domain, use `TUBEHAUS_SITE=:8080`,
-`TUBEHAUS_HTTPS=false` and `TUBEHAUS_EXTERNAL_PORT=8080`.
+ports 80 and 443 are reachable from the internet. On a LAN without a domain, or behind your own reverse proxy,
+use `TUBEHAUS_SITE=:80` with `TUBEHAUS_HTTP_BIND` for the host port: see "No domain, or your own reverse proxy?"
+in the README.
 
 ## `COMPANION_KEY` errors in the Invidious logs
 
