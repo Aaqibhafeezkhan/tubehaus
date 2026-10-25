@@ -1,5 +1,7 @@
 # TubeHaus (튜브하우스)
 한국인이 만들었어요!
+[![Featured in selfh.st Weekly](https://img.shields.io/badge/featured%20in-selfh.st%20weekly-2ea44f)](https://selfh.st/weekly/2026-10-23/)
+
 [English](README.md) · **한국어**
 
 **내 서버에서 돌리는 나만의 유튜브: 빠르고, 기록이 밖으로 새지 않고, 막히지 않아요.**
