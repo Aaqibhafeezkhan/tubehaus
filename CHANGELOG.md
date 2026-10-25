@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Spanish: clearer wording for Calm mode, rate limits, account privacy and user names (#31, thanks @Aaqibhafeezkhan)
+
 ### Fixed
 - docker compose always published Caddy on ports 80 and 443, so `TUBEHAUS_SITE=:8080` didn't work and running behind your own nginx clashed with it. The host ports now come from `TUBEHAUS_HTTP_BIND` / `TUBEHAUS_HTTPS_BIND` in `.env` (default 80/443), and the README shows the LAN and own-proxy setups
 
