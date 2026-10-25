@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.7.11 — 2026-10-25
 
 ### Changed
 - Spanish: clearer wording for Calm mode, rate limits, account privacy and user names (#31, thanks @Aaqibhafeezkhan)
