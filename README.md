@@ -17,8 +17,8 @@ library for all your devices, and keeps working even from a cheap cloud VPS.
 **👉 Try it without installing: [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io)** (a small public
 instance: up to 15 viewers at a time, 720p; your history stays in your own browser)
 
-**📱 No server? Get the app: [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.9/TubeHaus-0.3.9.apk)
-(Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.9/TubeHaus-0.3.9.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.9/TubeHaus-0.3.9-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.9/TubeHaus-0.3.9-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.3.9/TubeHaus-0.3.9-linux-x86_64.rpm)**
+**📱 No server? Get the app: [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.apk)
+(Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-x86_64.rpm)**
 (beta). It runs entirely on your device with its own YouTube engine: no server, no account.
 Source and install notes per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app) and [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app).
 
