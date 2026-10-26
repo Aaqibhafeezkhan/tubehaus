@@ -614,10 +614,15 @@ body[data-route="shorts"] { overflow: hidden; }
 /* volume slider */
 .ytp-vol { display: flex; align-items: center; }
 .ytp-volbar { width: 0; overflow: hidden; transition: width .2s; display: flex; align-items: center; }
-.ytp-vol:hover .ytp-volbar, .ytp-volbar:focus-within { width: 68px; }
-.ytp-volbar input { appearance: none; width: 60px; height: 3px; background: linear-gradient(90deg, #fff var(--p, 100%), rgba(255,255,255,.2) var(--p, 100%)); margin: 0 4px; cursor: pointer; }
-.ytp-volbar input::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
-.ytp-volbar input::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: #fff; }
+.ytp-vol:hover .ytp-volbar, .ytp-volbar:focus-within { width: 84px; }
+/* the bar is thin but the whole 32px-tall strip around it takes clicks and drags (#32) */
+.ytp-volbar input { appearance: none; width: 72px; height: 32px; background: transparent; margin: 0 6px; cursor: pointer; }
+.ytp-volbar input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, #fff var(--p, 100%), rgba(255,255,255,.25) var(--p, 100%)); }
+.ytp-volbar input::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, #fff var(--p, 100%), rgba(255,255,255,.25) var(--p, 100%)); }
+.ytp-volbar input::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: #fff; transition: transform .1s; }
+.ytp-volbar input::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; transition: transform .1s; }
+.ytp-volbar input:hover::-webkit-slider-thumb, .ytp-volbar input:active::-webkit-slider-thumb { transform: scale(1.25); }
+.ytp-volbar input:hover::-moz-range-thumb, .ytp-volbar input:active::-moz-range-thumb { transform: scale(1.25); }
 .ytp-time { font-size: 13px; padding: 0 8px; white-space: nowrap; text-shadow: 0 0 2px rgba(0,0,0,.5); }
 .ytp.live .ytp-time { display: none; }
 .ytp-livebadge { display: none !important; width: auto !important; padding: 0 8px; gap: 6px; font-size: 13px; font-weight: 500; text-transform: uppercase; }
