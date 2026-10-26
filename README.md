@@ -20,7 +20,7 @@ TubeHaus comes in two separate forms. They share the look and the name, but they
 
 | | 🖥️ **Server version** (this branch, `main`) | 📱 **App** (branches `android-app`, `windows-app`, `mac-app`, `linux-app`) |
 |---|---|---|
-| **What you install** | A server: docker compose on a VPS, a home PC or a Raspberry Pi | An app on each device: Android, Windows, macOS or Linux |
+| **What you install** | A server: docker compose on a VPS, a home PC or a Raspberry Pi | An app on each device: Android (phones, tablets, Android TV / Google TV), Windows, macOS or Linux |
 | **How you watch** | In any browser: phones, iPhone/iPad, PCs, TVs. Add it to the home screen to use it like an app | In the app on that device |
 | **Who talks to YouTube** | Your server, through Invidious and Cloudflare WARP. Your devices only ever talk to your server | The device itself, with the app's own YouTube engine. No Invidious and no TubeHaus server in between |
 | **What YouTube sees** | A Cloudflare WARP address, not your home or your device | Your device's own internet address, like any YouTube app |
@@ -31,7 +31,7 @@ TubeHaus comes in two separate forms. They share the look and the name, but they
 **Not sure?** Want it on one phone or PC, today, with nothing to set up? Get the app.
 Want one library for the whole household, iPhone/iPad support, or to keep YouTube away from your devices' addresses? Run the server.
 
-- **📱 Get the app (beta):** [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.apk) (Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.4.0/TubeHaus-0.4.0-linux-x86_64.rpm) · [all files](https://github.com/biolend83/tubehaus/releases/latest).
+- **📱 Get the app (beta):** [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.0/TubeHaus-0.5.0.apk) (Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.0/TubeHaus-0.5.0.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.0/TubeHaus-0.5.0-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.0/TubeHaus-0.5.0-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.0/TubeHaus-0.5.0-linux-x86_64.rpm) · [all files](https://github.com/biolend83/tubehaus/releases/latest).
   Install notes and source per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app)
 - **🖥️ Run the server:** see [Quick start (Docker)](#quick-start-docker) below. The rest of this README is about the server version.
 - **👉 Try the server version without installing anything:** [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io). It's a small public instance I run: sign-up required, up to 15 viewers at a time, 720p. There your library stays in your own browser, not on the server.

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.12 — 2026-10-26
+
+### Fixed
+- The player's volume slider was only a few pixels tall to click on. It now takes clicks and drags anywhere on a 32px-tall strip, with a bigger handle that grows under the pointer (#32, thanks @JamesMowery)
+
+### Changed
+- README: the server version and the apps compared side by side (what each installs, who talks to YouTube, where your library lives), and the app links point to 0.5.0, which adds Android TV / Google TV
+
 ## v0.7.11 — 2026-10-25
 
 ### Changed
