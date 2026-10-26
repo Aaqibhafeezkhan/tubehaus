@@ -19,13 +19,13 @@ TubeHaus는 따로 동작하는 두 가지가 있어요. 이름과 생김새는 
 | **유튜브와 통신하는 쪽** | 내 서버가 Invidious와 Cloudflare WARP를 거쳐서. 기기는 내 서버하고만 통신해요 | 기기가 직접, 앱 안의 자체 유튜브 엔진으로. 중간에 Invidious도 TubeHaus 서버도 없어요 |
 | **유튜브가 보는 주소** | Cloudflare WARP 주소. 집이나 기기 주소가 아니에요 | 내 기기의 인터넷 주소. 다른 유튜브 앱과 같아요 |
 | **구독·기록이 있는 곳** | 서버에. 그 서버를 쓰는 모든 기기와 사람이 같이 써요 | 그 기기에만. 다른 기기로 옮길 땐 내보내기/가져오기 |
-| **여기에만 있는 것** | 라이브 실시간 자막(whisper.cpp), TV로 보내기, 원본 화질 저장, TV 모드, 아이폰/아이패드 | 백그라운드 재생과 PIP(안드로이드), mpv 플레이어(PC), 기기 안에서 배우는 추천 |
+| **여기에만 있는 것** | 라이브 실시간 자막(whisper.cpp), TV로 보내기, 원본 화질 저장, TV 모드, 아이폰/아이패드 | 오프라인 저장, 백그라운드 재생과 PIP(안드로이드), mpv 플레이어(PC), 기기 안에서 배우는 추천 |
 | **필요한 것** | 서버와 Docker 기초 | 없음 |
 
 **고르기 어렵다면:** 폰이나 PC 한 대에서, 오늘 바로, 아무 설정 없이 쓰고 싶다면 앱을 받으세요.
 온 가족이 구독과 기록을 같이 쓰고 싶거나, 아이폰/아이패드에서 보거나, 유튜브가 내 기기 주소를 모르게 하고 싶다면 서버판을 돌리세요.
 
-- **📱 앱 받기 (베타):** [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.1/TubeHaus-0.5.1.apk) (안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.1/TubeHaus-0.5.1.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.1/TubeHaus-0.5.1-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.1/TubeHaus-0.5.1-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.1/TubeHaus-0.5.1-linux-x86_64.rpm) · [전체 파일](https://github.com/biolend83/tubehaus/releases/latest).
+- **📱 앱 받기 (베타):** [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.2/TubeHaus-0.5.2.apk) (안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.2/TubeHaus-0.5.2.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.2/TubeHaus-0.5.2-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.2/TubeHaus-0.5.2-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.2/TubeHaus-0.5.2-linux-x86_64.rpm) · [전체 파일](https://github.com/biolend83/tubehaus/releases/latest).
   플랫폼별 설치 안내와 소스: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app)
 - **🖥️ 서버판 돌리기:** 아래 [빠른 설치 (Docker)](#빠른-설치-docker)를 보세요. 이 README의 나머지는 모두 서버판 이야기예요.
 - **👉 설치 없이 서버판 써 보기:** [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io). 제가 운영하는 작은 공개 서버예요(가입 필요, 동시 15명, 720p). 여기서는 구독과 기록이 서버가 아니라 내 브라우저에만 저장돼요.
