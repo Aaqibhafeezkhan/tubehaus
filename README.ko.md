@@ -28,7 +28,6 @@ TubeHaus는 따로 동작하는 두 가지가 있어요. 이름과 생김새는 
 - **📱 앱 받기 (베타):** [안드로이드 APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3.apk) (안드로이드 8 이상) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3-mac-arm64.dmg) · [리눅스 .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3-linux-x86_64.rpm) · [전체 파일](https://github.com/biolend83/tubehaus/releases/latest).
   플랫폼별 설치 안내와 소스: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app)
 - **🖥️ 서버판 돌리기:** 아래 [빠른 설치 (Docker)](#빠른-설치-docker)를 보세요. 이 README의 나머지는 모두 서버판 이야기예요.
-- **👉 설치 없이 서버판 써 보기:** [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io). 제가 운영하는 작은 공개 서버예요(가입 필요, 동시 15명, 720p). 여기서는 구독과 기록이 서버가 아니라 내 브라우저에만 저장돼요.
 
 서버판은 [Invidious](https://invidious.io)와 [invidious-companion](https://github.com/iv-org/invidious-companion) 위에서 동작해요.
 유튜브와 데이터를 주고받는 어려운 일은 이 두 프로젝트가 하고, TubeHaus는 그 옆에 화면과 작은 서버를 붙여요.
@@ -183,6 +182,15 @@ Invidious, NewPipe, FreeTube 내보내기 파일, OPML, TubeHaus 백업을 가�
 
 유용한 이슈를 열었거나, PR을 보냈거나, 앱을 테스트해 주셨나요? 여기에 함께 올려 드릴게요.
 
+## 면책 고지
+
+TubeHaus는 개인이 만든 무료 오픈소스 소프트웨어예요. 유튜브나 구글과 제휴하거나 승인·후원을 받은 프로젝트가 아니에요. "YouTube"는 Google LLC의 상표예요.
+
+- TubeHaus는 영상을 저장하거나 올리거나 배포하지 않아요. 영상은 유튜브에서 내 기기(앱)나 내가 직접 운영하는 서버(서버판)로 바로 와요.
+- 라이선스에 적힌 대로 "있는 그대로" 제공되며 어떤 보증도 하지 않아요. 만든 사람과 기여자는 사용으로 생기는 일에 책임지지 않아요.
+- 사는 곳의 법과 연결하는 서비스의 약관에 맞게 쓰는 건 사용하는 사람의 책임이에요.
+- 만든 사람은 공개 서버나 그 밖의 서비스를 운영하지 않아요.
+
 ## 라이선스
 
-AGPL-3.0, Invidious와 같아요. 유튜브나 구글과는 관계없는 프로젝트예요. 우리 집에서 쓰는 용도로, 연결하는 서비스의 약관을 지키며 써 주세요.
+AGPL-3.0, Invidious와 같아요. 위의 [면책 고지](#면책-고지)도 함께 봐 주세요.

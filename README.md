@@ -34,7 +34,6 @@ Want one library for the whole household, iPhone/iPad support, or to keep YouTub
 - **📱 Get the app (beta):** [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3.apk) (Android 8+) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3.msi) · [macOS](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3-mac-arm64.dmg) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.3/TubeHaus-0.5.3-linux-x86_64.rpm) · [all files](https://github.com/biolend83/tubehaus/releases/latest).
   Install notes and source per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app)
 - **🖥️ Run the server:** see [Quick start (Docker)](#quick-start-docker) below. The rest of this README is about the server version.
-- **👉 Try the server version without installing anything:** [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io). It's a small public instance I run: sign-up required, up to 15 viewers at a time, 720p. There your library stays in your own browser, not on the server.
 
 The server version is built on top of [Invidious](https://invidious.io) and
 [invidious-companion](https://github.com/iv-org/invidious-companion), which do the hard work of talking to
@@ -319,7 +318,7 @@ Before you open one, keep in mind:
 
 | Address | Region | Limits | Run by |
 |---|---|---|---|
-| [try.168-107-27-85.sslip.io](https://try.168-107-27-85.sslip.io) | South Korea | 15 viewers, 720p | the maintainer |
+| *none listed yet* | | | |
 
 Running one? [Add it here](https://github.com/biolend83/tubehaus/issues/new?template=public_instance.yml) (or in the [discussion](https://github.com/biolend83/tubehaus/discussions/18)) so
 others can find it.
@@ -392,9 +391,21 @@ Opened a useful issue, sent a pull request or tested an app? You belong here too
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (MIT), [SponsorBlock](https://sponsor.ajay.app), [Return YouTube Dislike](https://returnyoutubedislike.com)
 - Cloudflare WARP
 
+## Disclaimer
+
+TubeHaus is independent, free, open-source software. It is not affiliated with, endorsed by or
+sponsored by YouTube or Google. "YouTube" is a trademark of Google LLC.
+
+- TubeHaus does not host, store or distribute any videos. They come straight from YouTube to your
+  own device (the app) or to a server you run yourself (the server version).
+- It is provided "as is", without warranty of any kind, as the license says. The authors and
+  contributors are not responsible for how it is used.
+- You are responsible for using it in line with the laws where you live and the terms of the
+  services you connect to.
+- The maintainer does not run a public instance or any other service for it.
+
 ## License
 
 AGPL-3.0, like Invidious.
 
-This project is not affiliated with YouTube or Google. Use it for your own household, and
-respect the terms of the services you connect to.
+See the [disclaimer](#disclaimer) above.
