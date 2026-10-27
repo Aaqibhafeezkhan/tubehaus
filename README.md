@@ -19,8 +19,9 @@
 > - It is provided "as is", without warranty of any kind, as the license says. The authors and contributors are not responsible for how it is used or for anything that results from using it.
 > - You are responsible for using it in line with the laws where you live and the terms of the services you connect to.
 > - The maintainer does not run a public instance or any other service for it.
+> - **Rights holders:** if you believe something in this repository infringes your rights, [open an issue](https://github.com/biolend83/tubehaus/issues/new) with the details (or ask there for a private contact). It will be looked at and, where justified, removed promptly.
 
-**YouTube without ads, a Google account or tracking: run it on your own server, or install the app on your device.**
+**A private YouTube client with no Google account and no tracking: run it on your own server, or install the app on your device.**
 
 Both look and work like YouTube (same layout, same keyboard shortcuts), and both keep your subscriptions and
 history to yourself instead of in a Google account.
@@ -64,8 +65,8 @@ YouTube. TubeHaus adds its own front end and a small server next to them. All cr
 - **YouTube never sees your home IP.** Everything your server asks YouTube goes out through Cloudflare WARP
 - **No accounts, no telemetry.** Subscriptions, history, resume positions and playlists are files on your server, shared by your household and nobody else
 
-**🛡️ Doesn't get blocked**
-- YouTube refuses most VPS and cloud addresses ("Sign in to confirm you're not a bot"). TubeHaus routes YouTube traffic through **Cloudflare WARP in proxy mode**, and when YouTube flags the address anyway it **reconnects WARP for a fresh one and replays the request automatically** (rate-limited). Playback, live streams and downloads keep working on a cheap cloud VM
+**☁️ Runs on a cloud server**
+- Many cloud addresses get "Sign in to confirm you're not a bot" from YouTube. TubeHaus sends its YouTube traffic through **Cloudflare WARP in proxy mode**, and reconnects WARP and retries when requests start failing (rate-limited), so it works on a cheap cloud VM
 
 **🎙️ Live captions**
 - YouTube gives no captions for live streams. TubeHaus transcribes them on the fly with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), a few seconds ahead of playback, on a single CPU core

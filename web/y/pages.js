@@ -616,7 +616,7 @@ export function settingsPage(page) {
     ${row($t("자막 언어"), sel("capLang", LANGS))}
     ${tog("autoTranslate", $t("자동 번역 자막"), $t("내 언어 자막이 없으면 서버가 번역한 자막을 써요"))}
     ${row($t("자막 크기"), sel("capSize", [[50, "50%"], [75, "75%"], [100, "100%"], [150, "150%"], [200, "200%"]]))}
-    <h3>${$t("광고 없는 시청")}</h3>
+    <h3>${$t("SponsorBlock · 싫어요 수")}</h3>
     ${tog("sponsor", "SponsorBlock", $t("영상 속 협찬·광고 구간을 건너뛰어요 (sponsor.ajay.app, 영상 ID 앞 4글자만 보내요)"))}
     <div class="sbcats">${Object.entries(SB_CATS).map(([k, [l, c]]) => `<label class="chk"><input type="checkbox" data-cat="${k}" ${S.sponsorCats.includes(k) ? "checked" : ""}><i style="background:${c}"></i>${$t("{0} 자동 건너뛰기", l)}</label>`).join("")}</div>
     ${tog("dislikes", $t("싫어요 수 보기"), $t("Return YouTube Dislike 의 추정치"))}

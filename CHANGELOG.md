@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Wording: no more "ad-free" in the interface (the SponsorBlock settings are now called "SponsorBlock and dislikes", the home footer says "No tracking · on your own server") or in the README, and the WARP section describes what it does instead of "doesn't get blocked"
+- README: a contact for rights holders in the disclaimer
+
 ## v0.7.14 — 2026-10-27
 
 ### Fixed
