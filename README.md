@@ -9,6 +9,17 @@
 
 **English** · [한국어](README.ko.md)
 
+## Disclaimer
+
+> [!CAUTION]
+> **TubeHaus is independent, free, open-source software. It is not affiliated with, endorsed by or sponsored by YouTube or Google.** "YouTube" is a trademark of Google LLC.
+>
+> - TubeHaus does not host, store or distribute any videos. They come straight from YouTube to your own device (the app) or to a server you run yourself (the server version).
+> - **Downloaded videos are for your own personal viewing.** Their copyright belongs to their owners. If you share, upload, sell or otherwise distribute them, that is entirely your own responsibility, and the authors are not liable for it.
+> - It is provided "as is", without warranty of any kind, as the license says. The authors and contributors are not responsible for how it is used or for anything that results from using it.
+> - You are responsible for using it in line with the laws where you live and the terms of the services you connect to.
+> - The maintainer does not run a public instance or any other service for it.
+
 **YouTube without ads, a Google account or tracking: run it on your own server, or install the app on your device.**
 
 Both look and work like YouTube (same layout, same keyboard shortcuts), and both keep your subscriptions and
@@ -390,19 +401,6 @@ Opened a useful issue, sent a pull request or tested an app? You belong here too
 - Icons: Material Symbols (Apache-2.0)
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (MIT), [SponsorBlock](https://sponsor.ajay.app), [Return YouTube Dislike](https://returnyoutubedislike.com)
 - Cloudflare WARP
-
-## Disclaimer
-
-TubeHaus is independent, free, open-source software. It is not affiliated with, endorsed by or
-sponsored by YouTube or Google. "YouTube" is a trademark of Google LLC.
-
-- TubeHaus does not host, store or distribute any videos. They come straight from YouTube to your
-  own device (the app) or to a server you run yourself (the server version).
-- It is provided "as is", without warranty of any kind, as the license says. The authors and
-  contributors are not responsible for how it is used.
-- You are responsible for using it in line with the laws where you live and the terms of the
-  services you connect to.
-- The maintainer does not run a public instance or any other service for it.
 
 ## License
 
