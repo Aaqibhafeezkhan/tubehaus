@@ -626,6 +626,8 @@ export function settingsPage(page) {
     <button class="pill ghost simp">${$t("{0} 파일에서 가져오기", icon("upload"))}</button><input type="file" class="simpfile" hidden accept=".json,.csv,.opml,.xml,.db,.txt">
     <button class="pill ghost sexp">${$t("{0} 내보내기", icon("download"))}</button><button class="pill ghost unhide">${$t("'관심 없음' {0}개 되돌리기", state.hidden.size)}</button>
     <button class="pill ghost keys">${$t("단축키")}</button></div>
+    <h3>${$t("면책 조항")}</h3>
+    <p class="sub">${esc($t("TubeHaus는 개인이 만든 무료 오픈소스 소프트웨어이고, 유튜브나 구글과 관계가 없어요. 영상을 저장하거나 배포하지 않고, 어떤 보증도 하지 않아요. 내려받은 영상은 본인이 보는 용도로만 쓰세요. 공유하거나 다시 올리는 건 그렇게 한 사람의 책임이에요. 사는 곳의 법과 연결하는 서비스의 약관에 맞게 써 주세요."))} <a href="https://github.com/biolend83/tubehaus#disclaimer" target="_blank" rel="noopener">${$t("전체 면책 조항 보기")}</a></p>
   </div>`;
   page.addEventListener("change", (e) => {
     const t = e.target;

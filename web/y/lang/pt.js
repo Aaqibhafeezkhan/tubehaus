@@ -449,5 +449,8 @@ export default {
  "시도가 너무 많아요. 몇 분 뒤에 다시 해 주세요": "Tentativas demais. Aguarde alguns minutos",
  "사용자 이름이나 비밀번호가 틀렸어요": "Usuário ou senha incorretos",
  "계정을 만들지 못했어요": "Não foi possível criar a conta",
- "로그인해 주세요": "Faça login"
+ "로그인해 주세요": "Faça login",
+ "면책 조항": "Aviso legal",
+ "TubeHaus는 개인이 만든 무료 오픈소스 소프트웨어이고, 유튜브나 구글과 관계가 없어요. 영상을 저장하거나 배포하지 않고, 어떤 보증도 하지 않아요. 내려받은 영상은 본인이 보는 용도로만 쓰세요. 공유하거나 다시 올리는 건 그렇게 한 사람의 책임이에요. 사는 곳의 법과 연결하는 서비스의 약관에 맞게 써 주세요.": "O TubeHaus é um software livre e de código aberto independente, sem ligação com o YouTube ou o Google. Ele não hospeda nem distribui vídeos e não oferece nenhuma garantia. Os vídeos baixados são apenas para uso pessoal: compartilhá-los ou reenviá-los é responsabilidade sua. Use-o de acordo com as leis do seu país e os termos dos serviços aos quais ele se conecta.",
+ "전체 면책 조항 보기": "Ler o aviso completo"
 };

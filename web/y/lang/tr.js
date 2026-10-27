@@ -449,5 +449,8 @@ export default {
  "시도가 너무 많아요. 몇 분 뒤에 다시 해 주세요": "Çok fazla deneme. Lütfen birkaç dakika bekleyin",
  "사용자 이름이나 비밀번호가 틀렸어요": "Kullanıcı adı veya şifre yanlış",
  "계정을 만들지 못했어요": "Hesap oluşturulamadı",
- "로그인해 주세요": "Lütfen giriş yapın"
+ "로그인해 주세요": "Lütfen giriş yapın",
+ "면책 조항": "Sorumluluk reddi",
+ "TubeHaus는 개인이 만든 무료 오픈소스 소프트웨어이고, 유튜브나 구글과 관계가 없어요. 영상을 저장하거나 배포하지 않고, 어떤 보증도 하지 않아요. 내려받은 영상은 본인이 보는 용도로만 쓰세요. 공유하거나 다시 올리는 건 그렇게 한 사람의 책임이에요. 사는 곳의 법과 연결하는 서비스의 약관에 맞게 써 주세요.": "TubeHaus, YouTube veya Google ile bağlantısı olmayan bağımsız, ücretsiz ve açık kaynaklı bir yazılımdır. Hiçbir videoyu barındırmaz veya dağıtmaz ve hiçbir garanti vermez. İndirilen videolar yalnızca kişisel izleme içindir: paylaşmak veya yeniden yüklemek tamamen sizin sorumluluğunuzdadır. Yaşadığınız yerin yasalarına ve bağlandığı hizmetlerin koşullarına uygun kullanın.",
+ "전체 면책 조항 보기": "Sorumluluk reddinin tamamını oku"
 };

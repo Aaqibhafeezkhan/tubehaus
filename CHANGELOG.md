@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.13 — 2026-10-27
+
+### Added
+- Settings: a Disclaimer section at the bottom, in all 13 languages. TubeHaus is independent and not affiliated with YouTube or Google, hosts no videos and comes with no warranty; downloaded videos are for your own viewing, and sharing or re-uploading them is your own responsibility
+
+### Changed
+- README: the disclaimer is at the top. The maintainer's public instance is closed and no longer listed
+
 ## v0.7.12 — 2026-10-26
 
 ### Fixed

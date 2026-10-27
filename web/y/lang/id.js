@@ -449,5 +449,8 @@ export default {
  "시도가 너무 많아요. 몇 분 뒤에 다시 해 주세요": "Terlalu banyak percobaan. Tunggu beberapa menit",
  "사용자 이름이나 비밀번호가 틀렸어요": "Nama pengguna atau kata sandi salah",
  "계정을 만들지 못했어요": "Akun tidak dapat dibuat",
- "로그인해 주세요": "Silakan masuk"
+ "로그인해 주세요": "Silakan masuk",
+ "면책 조항": "Penafian",
+ "TubeHaus는 개인이 만든 무료 오픈소스 소프트웨어이고, 유튜브나 구글과 관계가 없어요. 영상을 저장하거나 배포하지 않고, 어떤 보증도 하지 않아요. 내려받은 영상은 본인이 보는 용도로만 쓰세요. 공유하거나 다시 올리는 건 그렇게 한 사람의 책임이에요. 사는 곳의 법과 연결하는 서비스의 약관에 맞게 써 주세요.": "TubeHaus adalah perangkat lunak gratis dan sumber terbuka yang independen, tidak berafiliasi dengan YouTube atau Google. TubeHaus tidak menyimpan atau mendistribusikan video dan tidak memberikan jaminan apa pun. Video yang diunduh hanya untuk ditonton sendiri: membagikan atau mengunggah ulang menjadi tanggung jawab Anda sendiri. Gunakan sesuai hukum di tempat Anda dan ketentuan layanan yang terhubung.",
+ "전체 면책 조항 보기": "Baca penafian lengkap"
 };
