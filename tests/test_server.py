@@ -538,17 +538,17 @@ class FeedFallback(unittest.TestCase):
     def setUp(self):
         self.old_get = ts.get
         self.calls = []
-        ts.RSS_DOWN["until"] = 0
+        ts.RSS_DOWN.update(until=0, fails=0)
         ts.yt_feed["items"].clear()
 
     def tearDown(self):
         ts.get = self.old_get
-        ts.RSS_DOWN["until"] = 0
+        ts.RSS_DOWN.update(until=0, fails=0)
         ts.yt_feed["items"].clear()
 
-    def fake(self, rss=None, rss_error=None):
-        inv = json.dumps({"videos": [{"videoId": "inv00000001", "title": "From Invidious", "author": "Chan",
-                                       "published": 1790000000, "viewCount": 5}]}).encode()
+    def fake(self, rss=None, rss_error=None, videos=None):
+        inv = json.dumps({"videos": videos or [{"videoId": "inv00000001", "title": "From Invidious", "author": "Chan",
+                                                "published": 1790000000, "viewCount": 5}]}).encode()
         def get(url, *a, **k):
             self.calls.append(url)
             if "feeds/videos.xml" in url:
@@ -562,10 +562,26 @@ class FeedFallback(unittest.TestCase):
         self.fake(rss_error=404)
         ts.yt_feed_one(self.CID)
         self.assertEqual([v["id"] for v in ts.yt_feed["items"][self.CID]], ["inv00000001"])
+        self.assertEqual(ts.RSS_DOWN["until"], 0)    # one 404 is probably a deleted channel
+        for _ in range(ts.RSS_DOWN_AFTER - 1):
+            ts.yt_feed_one(self.CID)
         self.assertGreater(ts.RSS_DOWN["until"], time.time())
         self.calls.clear()
         ts.yt_feed_one(self.CID)                     # RSS is down: straight to Invidious
         self.assertFalse(any("feeds/videos.xml" in u for u in self.calls))
+
+    def test_invidious_just_now_with_no_views_is_not_trusted(self):
+        now = int(time.time())
+        bogus = {"title": "Old", "author": "Chan", "published": now, "viewCount": 0}
+        self.fake(rss_error=404, videos=[dict(bogus, videoId="old00000001")])
+        ts.yt_feed_one(self.CID)                     # nothing known yet: no date rather than "just now"
+        self.assertEqual(ts.yt_feed["items"][self.CID][0]["published"], 0)
+        ts.yt_feed["items"][self.CID] = [{"id": "old00000001", "published": 1780000000, "views": 900}]
+        self.fake(rss_error=404, videos=[dict(bogus, videoId="old00000001"), dict(bogus, videoId="new00000001")])
+        ts.yt_feed_one(self.CID)
+        got = {v["id"]: v for v in ts.yt_feed["items"][self.CID]}
+        self.assertEqual((got["old00000001"]["published"], got["old00000001"]["views"]), (1780000000, 900))
+        self.assertGreaterEqual(got["new00000001"]["published"], now)   # the channel was known: really new
 
     def test_working_rss_is_used(self):
         rss = ('<feed xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://www.youtube.com/xml/schemas/2015">'

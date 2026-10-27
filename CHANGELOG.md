@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Subscription feed: old videos showed up on top as "just now, 0 views" (#33, thanks @DarekRobert). One deleted channel answering 404 made the server think YouTube's RSS was down and fetch every channel from Invidious for an hour, and Invidious reports some videos as "0 seconds ago, 0 views". Now RSS counts as down only after 8 failures in a row, and such Invidious entries keep the date and views known before (or get no date, instead of "just now")
+
 ## v0.7.13 — 2026-10-27
 
 ### Added

@@ -1476,7 +1476,8 @@ def shorts_next(qs):
             "learned": {"channels": len([1 for s in d["ch"].values() if s > 0]), "keywords": len(d["kw"])}}
 
 
-RSS_DOWN = {"until": 0}   # YouTube takes its RSS feeds down now and then (404 for every channel)
+RSS_DOWN = {"until": 0, "fails": 0}   # YouTube takes its RSS feeds down now and then (404 for every channel)
+RSS_DOWN_AFTER = 8        # failures in a row before that's assumed; one 404 is often just a deleted channel
 
 
 def yt_feed_invidious(cid):
@@ -1486,9 +1487,23 @@ def yt_feed_invidious(cid):
     except Exception as ex:
         log("ytfeed", f"{cid} invidious FAIL {repr(ex)[:100]}")
         return None
-    return [{"id": v.get("videoId"), "title": v.get("title") or "", "author": v.get("author") or "", "authorId": cid,
-             "published": int(v.get("published") or 0), "views": v.get("viewCount"), "short": False}
-            for v in (d.get("videos") or [])[:15] if v.get("videoId")]
+    old = {e["id"]: e for e in yt_feed["items"].get(cid) or []}
+    now = time.time()
+    out = []
+    for v in (d.get("videos") or [])[:15]:
+        if not v.get("videoId"):
+            continue
+        pub, views = int(v.get("published") or 0), v.get("viewCount")
+        # Invidious can't read the date and views of some videos in YouTube's newer layout and
+        # says "0 seconds ago, 0 views" for them, which put months-old videos on top as new (#33).
+        # Keep what was known; a video never seen before gets no date (unless the channel was
+        # already known, so it really is new) rather than "just now"
+        if now - pub < 600 and not views:
+            o = old.get(v["videoId"])
+            pub, views = (o["published"], o.get("views")) if o else (int(now) if old else 0, None)
+        out.append({"id": v["videoId"], "title": v.get("title") or "", "author": v.get("author") or "", "authorId": cid,
+                    "published": pub, "views": views, "short": False})
+    return out
 
 
 def yt_feed_one(cid):
@@ -1500,9 +1515,15 @@ def yt_feed_one(cid):
             root = ET.fromstring(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}", 15))
         except Exception as ex:
             log("ytfeed", f"{cid} FAIL {repr(ex)[:100]}")
-            # a 404 or 5xx here is YouTube's feed service, not the channel: skip RSS for an hour
+            # many 404s or 5xx in a row are YouTube's feed service, not the channels: skip RSS for an
+            # hour. One alone is usually a deleted channel, and with a big subscription list that used
+            # to send every channel to Invidious all the time (#33)
             if isinstance(ex, urllib.error.HTTPError) and (ex.code == 404 or ex.code >= 500):
-                RSS_DOWN["until"] = time.time() + 3600
+                RSS_DOWN["fails"] += 1
+                if RSS_DOWN["fails"] >= RSS_DOWN_AFTER:
+                    RSS_DOWN.update(until=time.time() + 3600, fails=0)
+        else:
+            RSS_DOWN["fails"] = 0
     if root is None:
         got = yt_feed_invidious(cid)
         if got is not None:
