@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.7.15 — 2026-10-28
 
 ### Added
 - For the apps' new server sync: a playlist made in an app keeps its ID on the server, and `POST /api/p/yt/pl/move` reorders a playlist
