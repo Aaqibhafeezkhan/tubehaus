@@ -125,6 +125,18 @@ class Library(unittest.TestCase):
         self.assertEqual(ts.ytlib_post("/api/p/yt/sub", {"id": "not-a-channel", "on": True})[0], 400)
         self.assertEqual(ts.ytlib_query("/api/p/yt/pos", {"ids": "bad,also bad"}), {})
 
+    def test_app_playlists_keep_their_id_and_reorder(self):
+        pid = "HP" + "1" * 16
+        code, r = ts.ytlib_post("/api/p/yt/pl/new", {"title": "Mix", "id": pid, "video": {"id": "aaaaaaaaaaa"}})
+        self.assertEqual((code, r["id"]), (200, pid))
+        code, r = ts.ytlib_post("/api/p/yt/pl/new", {"title": "Again", "id": pid})    # taken: the server picks one
+        self.assertNotEqual(r["id"], pid)
+        ts.ytlib_post("/api/p/yt/list", {"list": pid, "on": True, "video": {"id": "bbbbbbbbbbb"}})
+        ts.ytlib_post("/api/p/yt/list", {"list": pid, "on": True, "video": {"id": "ccccccccccc"}})
+        self.assertEqual(ts.ytlib_post("/api/p/yt/pl/move", {"id": pid, "from": 2, "to": 0})[0], 200)
+        self.assertEqual(ts.ytlib_query("/api/p/yt/pl", {"id": pid})["items"][0]["id"], "ccccccccccc")
+        self.assertEqual(ts.ytlib_post("/api/p/yt/pl/move", {"id": pid, "from": 9, "to": 0})[0], 400)
+
     def test_history_search_and_delete(self):
         for vid, title in (("aaaaaaaaaaa", "Cooking pasta"), ("bbbbbbbbbbb", "Live news")):
             ts.ytlib_post("/api/p/yt/pos", {"id": vid, "t": 1, "len": 60, "meta": {"id": vid, "title": title}})

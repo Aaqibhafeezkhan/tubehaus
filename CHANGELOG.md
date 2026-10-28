@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- For the apps' new server sync: a playlist made in an app keeps its ID on the server, and `POST /api/p/yt/pl/move` reorders a playlist
+
 ### Changed
 - Wording: no more "ad-free" in the interface (the SponsorBlock settings are now called "SponsorBlock and dislikes", the home footer says "No tracking · on your own server") or in the README, and the WARP section describes what it does instead of "doesn't get blocked"
 - README: a contact for rights holders in the disclaimer

@@ -963,12 +963,28 @@ def ytlib_post(path, b):
             title = str(b.get("title") or "").strip()[:150]
             if not title:
                 return 400, {"error": "Please enter a name"}
-            pid = "HP" + secrets.token_hex(8)
+            # the apps make the ID themselves (so a playlist made offline keeps it); the web lets the server choose
+            pid = str(b.get("id") or "")
+            if not re.fullmatch(r"HP[0-9a-f]{16}", pid) or pid in d["playlists"]:
+                pid = "HP" + secrets.token_hex(8)
             meta = _yt_meta(b.get("video")) if b.get("video") else None
             d["playlists"][pid] = {"title": title, "items": [meta] if meta else [], "updated": now}
             res.update(id=pid, playlist=_pl_summary(d["playlists"][pid]))
         elif path.endswith("/yt/pl/del"):
             d["playlists"].pop(str(b.get("id")), None)
+        elif path.endswith("/yt/pl/move"):          # the apps reorder a playlist one video at a time
+            pl = d["playlists"].get(str(b.get("id")))
+            if not pl:
+                return 404, {"error": "Playlist not found"}
+            try:
+                i, j = int(b.get("from")), int(b.get("to"))
+            except (TypeError, ValueError):
+                return 400, {"error": "bad position"}
+            if not (0 <= i < len(pl["items"]) and 0 <= j < len(pl["items"])):
+                return 400, {"error": "bad position"}
+            pl["items"].insert(j, pl["items"].pop(i))
+            pl["updated"] = now
+            res["playlist"] = _pl_summary(pl)
         elif path.endswith("/yt/pl/rename"):
             pl = d["playlists"].get(str(b.get("id")))
             if not pl:
