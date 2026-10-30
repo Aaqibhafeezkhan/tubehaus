@@ -193,6 +193,13 @@ def vid_fetch(key):
         if exact:
             d["published"] = exact
             body = json.dumps(d, ensure_ascii=False).encode()
+        # Invidious fetches captions from this server's own address and gets nothing back;
+        # the companion fetches them through WARP
+        caps = [c for c in d.get("captions") or [] if (c.get("url") or "").startswith("/api/v1/captions/")]
+        for c in caps:
+            c["url"] = "/companion" + c["url"]
+        if caps:
+            body = json.dumps(d, ensure_ascii=False).encode()
     vid_store(key, code, body)
     return code, body
 
@@ -338,14 +345,15 @@ def sub_vtt(vid, tl=SUB_LANG):
     if os.path.exists(cache):
         return open(cache, "rb").read()
     t0 = time.time()
-    lst = json.loads(_inv("/api/v1/captions/" + vid))
+    # through the companion (WARP): Invidious' own captions come back empty
+    lst = json.loads(urllib.request.urlopen(f"{COMPANION}/companion/api/v1/captions/{vid}", timeout=60).read())
     tracks = lst.get("captions") or []
     # prefer English, else whatever the video has
     pick = next((c for c in tracks if (c.get("languageCode") or "").startswith("en")), None) \
         or (tracks[0] if tracks else None)
     if not pick:
         raise ValueError("This video has no captions to translate")
-    raw = _inv(pick["url"]).decode("utf-8", "replace")
+    raw = urllib.request.urlopen(COMPANION + pick["url"], timeout=60).read().decode("utf-8", "replace")
     cues = _vtt_cues(raw)[:SUB_MAX]
     if not cues:
         raise ValueError("Couldn't read the captions")
