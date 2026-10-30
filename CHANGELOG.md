@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.16 — 2026-10-30
+
+### Added
+- For the apps (0.5.8), which now play videos through the connected server: `GET /api/p/hls/<id>.m3u8` lists a video's MP4 streams as HLS (byte ranges from the file's index, segments through the companion), because Apple's player on the iPad/iPhone plays only HLS
+
+### Fixed
+- Captions in the web player, the apps and translated subtitles (`/api/p/sub`) came back empty: Invidious' own caption requests go to YouTube from the server's address. They now come from the companion, through WARP like the videos
+
 ## v0.7.15 — 2026-10-28
 
 ### Added
