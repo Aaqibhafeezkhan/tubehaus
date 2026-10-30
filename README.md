@@ -30,22 +30,26 @@ history to yourself instead of in a Google account.
 
 TubeHaus comes in two separate forms. They share the look and the name, but they work differently:
 
-| | 🖥️ **Server version** (this branch, `main`) | 📱 **App** (branches `android-app`, `windows-app`, `mac-app`, `linux-app`) |
+| | 🖥️ **Server version** (this branch, `main`) | 📱 **App** (branches `android-app`, `windows-app`, `mac-app`, `linux-app`, `ios-app`) |
 |---|---|---|
 | **What you install** | A server: docker compose on a VPS, a home PC or a Raspberry Pi | An app on each device: Android (phones, tablets, Android TV / Google TV), Windows, macOS, Linux, or iPad/iPhone (installed with Sideloadly) |
 | **How you watch** | In any browser: phones, iPhone/iPad, PCs, TVs. Add it to the home screen to use it like an app | In the app on that device |
 | **Who talks to YouTube** | Your server, through Invidious and Cloudflare WARP. Your devices only ever talk to your server | The device itself, with the app's own YouTube engine. No Invidious and no TubeHaus server in between |
 | **What YouTube sees** | A Cloudflare WARP address, not your home or your device | Your device's own internet address, like any YouTube app |
 | **Where your library lives** | On the server, shared by every device and person using it | On the device. Or connect the app to your TubeHaus server (0.5.4+) and share one library with it and your other devices |
-| **Only here** | Live captions (whisper.cpp), send to TV, full-quality downloads, TV mode, iPhone/iPad in the browser (no sideloading) | Offline downloads, background play and picture-in-picture (Android), mpv player (desktop), recommendations learned on the device |
+| **Only here** | Live captions (whisper.cpp), send to TV, full-quality downloads, TV mode, iPhone/iPad in the browser (no sideloading) | Offline downloads, background play and picture-in-picture (Android, iPad/iPhone), mpv player (desktop), recommendations learned on the device |
 | **You need** | A server and basic Docker | Nothing else |
 
 **Not sure?** Want it on one phone or PC, today, with nothing to set up? Get the app.
-Want one library for the whole household, iPhone/iPad support, or to keep YouTube away from your devices' addresses? Run the server.
+Want one library for the whole household, iPhone/iPad without sideloading, or to keep YouTube away from your devices' addresses? Run the server.
 **Both?** Since 0.5.4 the app can connect to your server (Settings → *TubeHaus server*): one library on every device and in the browser, while each app still plays videos itself.
 
 - **📱 Get the app (beta):** [Android APK](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7.apk) (Android 8+; on Android TV, Downloader code **3155410**) · [Windows](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7.msi) · macOS ([Apple Silicon](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7-mac-arm64.dmg), [Intel](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7-mac-x64.dmg)) · [Linux .deb](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7-linux-amd64.deb) · [.rpm](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7-linux-x86_64.rpm) · [iPad/iPhone .ipa](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7-ipad.ipa) (beta; install it with [Sideloadly](https://sideloadly.io/)) · [all files](https://github.com/biolend83/tubehaus/releases/latest) (Windows portable and ARM, Linux ARM64) · Android updates with [Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%20%22io.github.biolend83.tubehaus%22%2C%20%22url%22%3A%20%22https%3A%2F%2Fgithub.com%2Fbiolend83%2Ftubehaus%22%2C%20%22author%22%3A%20%22biolend83%22%2C%20%22name%22%3A%20%22TubeHaus%22%2C%20%22additionalSettings%22%3A%20%22%7B%5C%22filterReleaseTitlesByRegEx%5C%22%3A%20%5C%22%5ETubeHaus%20%5C%22%2C%20%5C%22fallbackToOlderReleases%5C%22%3A%20true%2C%20%5C%22includePrereleases%5C%22%3A%20false%2C%20%5C%22apkFilterRegEx%5C%22%3A%20%5C%22TubeHaus-%5C%5C%5C%5Cd%5C%22%7D%22%7D).
-  Install notes and source per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app)
+  Install notes and source per platform: [`android-app`](https://github.com/biolend83/tubehaus/tree/android-app), [`windows-app`](https://github.com/biolend83/tubehaus/tree/windows-app), [`mac-app`](https://github.com/biolend83/tubehaus/tree/mac-app), [`linux-app`](https://github.com/biolend83/tubehaus/tree/linux-app), [`ios-app`](https://github.com/biolend83/tubehaus/tree/ios-app)
+- **🍎 iPad / iPhone:** the same app, built for iOS 16+ (beta): Apple's player up to 4K, background play, picture-in-picture,
+  offline downloads, and a YouTube engine that updates itself without reinstalling. It isn't in the App Store, so you install the
+  [.ipa](https://github.com/biolend83/tubehaus/releases/download/app-v0.5.7/TubeHaus-0.5.7-ipad.ipa) with **[Sideloadly](https://sideloadly.io/)** (free, Windows or Mac)
+  and your Apple ID; with a free Apple ID it is re-signed every 7 days. Step by step: [`ios-app`](https://github.com/biolend83/tubehaus/tree/ios-app). No sideloading wanted? Use the server version in Safari.
 - **🖥️ Run the server:** see [Quick start (Docker)](#quick-start-docker) below. The rest of this README is about the server version.
 
 The server version is built on top of [Invidious](https://invidious.io) and
