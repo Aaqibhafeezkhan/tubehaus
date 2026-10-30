@@ -237,6 +237,119 @@ def vid_bg(key, prefetch_from=None):
     except Exception as ex:
         log("videos", "prefetch FAIL %s" % repr(ex)[:80])
 
+# ---------- HLS for ordinary videos (the iPad/iPhone app) ----------
+# Apple's player plays HLS, not DASH, and YouTube's own HLS is only handed to its
+# iOS client. The same MP4 streams the DASH manifest lists work as HLS too: each
+# format's index (sidx box) gives its segments as byte ranges of the one file,
+# fetched through the companion like everything else.
+HLS_KEEP = 300
+hls_cache = {}         # (id, itag) -> (ts, playlist text)
+hls_lk = threading.Lock()
+
+
+def _video_json(vid):
+    key = "/api/v1/videos/" + vid
+    with vid_lk:
+        hit = vid_cache.get(key)
+    code, body = (hit[1], hit[2]) if hit and time.time() - hit[0] < VID_STALE else vid_fetch_once(key)
+    if code != 200:
+        raise ValueError("HTTP %d" % code)
+    return json.loads(body)
+
+
+def _companion_url(url):
+    """a googlevideo.com stream address as the companion's proxy path for it (as in its DASH manifest)"""
+    u = urllib.parse.urlsplit(url)
+    return "/companion/videoplayback?%s&host=%s" % (u.query, u.netloc)
+
+
+def _hls_formats(d):
+    """(video formats, the audio one) Apple's player can take: H.264 and AAC in MP4"""
+    fs = [f for f in d.get("adaptiveFormats") or [] if f.get("url") and f.get("init") and f.get("index")]
+    video = [f for f in fs if (f.get("type") or "").startswith("video/mp4") and 'codecs="avc1' in f["type"]]
+    audio = [f for f in fs if (f.get("type") or "").startswith("audio/mp4")]
+    main = [f for f in audio if (f.get("audioTrack") or {}).get("isDefault")] or audio
+    return video, max(main, key=lambda f: int(f.get("bitrate") or 0), default=None)
+
+
+def _codecs(f):
+    m = re.search(r'codecs="([^"]+)"', f.get("type") or "")
+    return m.group(1) if m else ""
+
+
+def hls_master(vid):
+    d = _video_json(vid)
+    video, audio = _hls_formats(d)
+    if not video or not audio:
+        raise ValueError("no H.264/AAC streams")
+    out = ["#EXTM3U", "#EXT-X-VERSION:7", "#EXT-X-INDEPENDENT-SEGMENTS",
+           '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",NAME="Audio",DEFAULT=YES,AUTOSELECT=YES,URI="%s/%s.m3u8"' % (vid, audio["itag"])]
+    for f in sorted(video, key=lambda f: int(f.get("bitrate") or 0)):
+        bw = int(f.get("bitrate") or 0) + int(audio.get("bitrate") or 0)
+        attrs = 'BANDWIDTH=%d,CODECS="%s,%s",AUDIO="a"' % (bw, _codecs(f), _codecs(audio))
+        if f.get("size"):
+            attrs += ",RESOLUTION=" + f["size"]
+        if f.get("fps"):
+            attrs += ",FRAME-RATE=%d" % int(f["fps"])
+        out += ["#EXT-X-STREAM-INF:" + attrs, "%s/%s.m3u8" % (vid, f["itag"])]
+    return "\n".join(out) + "\n"
+
+
+def _sidx(b):
+    """[(size, duration in seconds)] and the offset of the first segment after the box, from an MP4 sidx box"""
+    i = b.find(b"sidx")
+    if i < 4:
+        raise ValueError("no sidx box")
+    box_end = i - 4 + int.from_bytes(b[i - 4:i], "big")
+    p = i + 4
+    version = b[p]
+    p += 4 + 4                                           # version+flags, reference_ID
+    scale = int.from_bytes(b[p:p + 4], "big"); p += 4
+    n = 8 if version else 4
+    p += n                                               # earliest_presentation_time
+    first = int.from_bytes(b[p:p + n], "big"); p += n
+    p += 2
+    count = int.from_bytes(b[p:p + 2], "big"); p += 2
+    refs = []
+    for _ in range(count):
+        size = int.from_bytes(b[p:p + 4], "big") & 0x7FFFFFFF
+        dur = int.from_bytes(b[p + 4:p + 8], "big")
+        refs.append((size, dur / scale))
+        p += 12
+    return refs, box_end + first
+
+
+def hls_media(vid, itag):
+    with hls_lk:
+        hit = hls_cache.get((vid, itag))
+    if hit and time.time() - hit[0] < VID_FRESH:
+        return hit[1]
+    d = _video_json(vid)
+    f = next((f for f in d.get("adaptiveFormats") or [] if str(f.get("itag")) == itag and f.get("index")), None)
+    if not f:
+        raise ValueError("no such format")
+    url = _companion_url(f["url"])
+    i0, i1 = (int(x) for x in f["index"].split("-"))
+    init_end = int(f["init"].split("-")[1])
+    req = urllib.request.Request(COMPANION + url, headers={"Range": "bytes=%d-%d" % (i0, i1)})
+    refs, pos = _sidx(urllib.request.urlopen(req, timeout=30).read())
+    pos += i0                                            # the box was read from the index range's start
+    out = ["#EXTM3U", "#EXT-X-VERSION:7", "#EXT-X-TARGETDURATION:%d" % max(1, int(max(r[1] for r in refs) + 0.999)),
+           "#EXT-X-PLAYLIST-TYPE:VOD", "#EXT-X-INDEPENDENT-SEGMENTS",
+           '#EXT-X-MAP:URI="%s",BYTERANGE="%d@0"' % (url, init_end + 1)]
+    for size, dur in refs:
+        out += ["#EXTINF:%.3f," % dur, "#EXT-X-BYTERANGE:%d@%d" % (size, pos), url]
+        pos += size
+    out.append("#EXT-X-ENDLIST")
+    text = "\n".join(out) + "\n"
+    with hls_lk:
+        hls_cache[(vid, itag)] = (time.time(), text)
+        if len(hls_cache) > HLS_KEEP:
+            for k in sorted(hls_cache, key=lambda k: hls_cache[k][0])[:len(hls_cache) - HLS_KEEP]:
+                del hls_cache[k]
+    return text
+
+
 # ---------- journal logging ----------
 # Failures here used to be silent, so a dead proxy or an expired live URL
 # looked like "the video just doesn't play". One compact line per event, and
@@ -2479,6 +2592,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, ytlib_get())
             d = ytlib_query(p, self.qs())
             return self.send(404 if d.get("error") else 200, d)
+        if "/hls/" in p:
+            return self.hls(p)
         if "/live/" in p:
             if p.endswith("/cc.json") and not (WHISPER_BIN and WHISPER_MODEL):
                 return self.send(200, {"status": "off", "lag": None, "cues": {}})
@@ -2810,6 +2925,25 @@ class H(BaseHTTPRequestHandler):
             log("download", f"stream {vid}/{itag} FAIL at {pos}/{size} {repr(ex)[:120]}", t0, every=0)
         if pos < size:
             self.close_connection = True   # short body: the socket must not be reused
+
+    def hls(self, p):
+        # /api/p/hls/<id>.m3u8 (the list of qualities), /api/p/hls/<id>/<itag>.m3u8 (one of them)
+        m = re.search(r"/hls/([\w-]{11})(?:/(\d+))?\.m3u8$", p)
+        if not m:
+            return self.send(404, {"error": "not found"})
+        t0 = time.time()
+        try:
+            text = hls_media(m.group(1), m.group(2)) if m.group(2) else hls_master(m.group(1))
+        except Exception as ex:
+            log("hls", "%s FAIL %s" % (p.rsplit("/hls/", 1)[-1][:24], repr(ex)[:120]), t0)
+            return self.send(502, {"error": "Couldn't make the stream list: %s" % ex})
+        b = text.encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/vnd.apple.mpegurl")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
 
     def live(self, p):
         qs = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
